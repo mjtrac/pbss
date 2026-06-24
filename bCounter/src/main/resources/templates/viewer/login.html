@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><meta charset="UTF-8"/><title>Ballot Viewer — Sign In</title>
+<link rel="stylesheet" th:href="@{/css/viewer.css}"/></head>
+<body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
+<div class="login-wrap">
+  <div class="login-card">
+    <div th:if="${viewerLoginLogo != null and !viewerLoginLogo.isEmpty()}" style="text-align:center;margin-bottom:1rem">
+      <img th:src="${viewerLoginLogo}" alt="Logo" style="max-height:80px;max-width:200px">
+    </div>
+    <h1 th:text="${viewerLoginTitle ?: 'bSuite Ballot Viewer'}">bSuite Ballot Viewer</h1>
+    <div th:if="${error}"   class="alert-error" th:text="${error}"></div>
+    <div th:if="${message}" class="alert-error" style="background:#052e16;color:#86efac;border-color:#14532d"
+         th:text="${message}"></div>
+    <form method="post" action="/viewer/login">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autofocus required/>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required/>
+      <button type="submit" class="login-btn">Sign In</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

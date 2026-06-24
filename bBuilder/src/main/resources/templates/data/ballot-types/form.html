@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2 th:text="${formTitle}">Ballot Type</h2>
+
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <form method="post" th:action="@{/data/ballot-types/save}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="id" th:if="${ballotType.id != null}" th:value="${ballotType.id}"/>
+
+    <label>Name *
+      <input type="text" name="name" th:value="${ballotType.name}"
+             required maxlength="100" autofocus
+             placeholder="e.g. Precinct, Mail-In, Absentee, Provisional"/>
+      <small style="color:#666">
+        Common types: <strong>Precinct</strong> (voted in person),
+        <strong>Mail-In</strong> (returned by mail),
+        <strong>Absentee</strong> (requested absentee ballot),
+        <strong>Provisional</strong> (eligibility pending verification).
+      </small>
+    </label>
+
+    <label>Jurisdiction *
+      <select name="jurisdictionId" required>
+        <option value="">-- select jurisdiction --</option>
+        <option th:each="j : ${jurisdictions}"
+                th:value="${j.id}" th:text="${j.name}"
+                th:selected="${ballotType.jurisdiction != null
+                              and ballotType.jurisdiction.id == j.id}">
+        </option>
+      </select>
+    </label>
+
+    <label>Description
+      <input type="text" name="description" th:value="${ballotType.description}"
+             maxlength="500" placeholder="Optional additional description"/>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Ballot Type</button>
+      <a th:href="@{/data/ballot-types}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</main>
+</body>
+</html>

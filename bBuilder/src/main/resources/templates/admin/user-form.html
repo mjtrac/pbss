@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('New User')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2>Create New User</h2>
+
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <form method="post" th:action="@{/admin/users}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <label>Username *
+      <input type="text" name="username" required autocomplete="off" autofocus
+             placeholder="e.g. jsmith"/>
+    </label>
+
+    <label>Password *
+      <input type="password" name="password" required autocomplete="new-password" minlength="12"/>
+      <small style="color:#666">Minimum 12 characters.</small>
+    </label>
+
+    <label>Jurisdiction *
+      <select name="jurisdictionId" required>
+        <option value="">-- select jurisdiction --</option>
+        <option th:each="j : ${jurisdictions}" th:value="${j.id}" th:text="${j.name}"></option>
+      </select>
+    </label>
+
+    <fieldset style="border:1px solid #ccc;border-radius:4px;padding:.75rem 1rem;margin-bottom:1rem">
+      <legend style="font-weight:600;padding:0 .4rem">Roles * (select at least one)</legend>
+      <div class="checkbox-row" th:each="r : ${roles}">
+        <input type="checkbox" th:id="'role_' + ${r}" name="roles" th:value="${r}"/>
+        <label th:for="'role_' + ${r}" style="font-weight:normal">
+          <strong th:text="${r}"></strong>
+          <span th:switch="${r.name()}" style="color:#666;font-size:.88rem">
+            <span th:case="'ADMIN'"> — full access: manage users, data, and print</span>
+            <span th:case="'DATA_ENTRY'"> — enter contests, candidates, and ballot data</span>
+            <span th:case="'PRINTER'"> — print ballots only (read-only data access)</span>
+          </span>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Create User</button>
+      <a th:href="@{/admin}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</main>
+</body>
+</html>

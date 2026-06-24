@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head><meta charset="UTF-8"/><title>Ballot Viewer</title>
+<link rel="stylesheet" th:href="@{/css/viewer.css}"/>
+<style>
+  .count-tag { color:#64748b; font-size:.8rem; }
+  .empty { color:#475569; text-align:center; padding:3rem; }
+</style></head>
+<body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
+<header class="app-header">
+  <h1>&#128196; Ballot Viewer</h1>
+  <span class="subtitle">Election Ballot Image Review</span>
+  <div class="header-user" sec:authorize="isAuthenticated()">
+    <span sec:authentication="name"></span>
+    <form method="post" action="/logout" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<div class="page-body">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem">
+    <h2 style="color:#94a3b8;font-size:1rem">Scanned Ballots</h2>
+    <span class="count-tag" th:text="${count + ' image(s) in database'}"></span>
+  </div>
+
+  <div class="search-bar" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+    <div style="position:relative;flex:1;min-width:200px">
+      <input type="text" id="searchInput"
+             placeholder="Filter by text, or use * as wildcard (e.g. Precinct_1/clean/b*messy*)"
+             oninput="onFilterInput()"
+             onkeydown="onFilterKeyDown(event)"
+             onclick="onFilterClick()"
+             autocomplete="off"
+             style="width:100%;box-sizing:border-box;padding-right:2rem"/>
+      <button id="historyToggle"
+              onclick="toggleDropdown()"
+              title="Show filter history"
+              style="position:absolute;right:.25rem;top:50%;transform:translateY(-50%);
+                     background:none;border:none;color:#94a3b8;cursor:pointer;
+                     font-size:.8rem;padding:.2rem .4rem;line-height:1">▾</button>
+      <ul id="historyDropdown"
+          style="display:none;position:absolute;top:100%;left:0;right:0;
+                 background:#1e293b;border:1px solid #334155;border-radius:4px;
+                 margin:2px 0 0;padding:0;list-style:none;z-index:100;
+                 max-height:260px;overflow-y:auto"></ul>
+    </div>
+    <button onclick="clearFilter()"
+            title="Clear filter"
+            style="padding:.4rem .8rem;background:#334155;border:1px solid #475569;
+                   border-radius:4px;color:#e2e8f0;cursor:pointer;white-space:nowrap">
+      ✕ Clear
+    </button>
+  </div>
+
+  <div th:if="${images.isEmpty()}" class="empty">
+    No ballot images in the database yet.<br/>
+    Run the Election Counter first to scan ballot images.
+  </div>
+
+  <table class="image-table" th:unless="${images.isEmpty()}">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Image Name</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="imageTable">
+      <tr th:each="img : ${images}" th:data-path="${img.imagePath}">
+        <td th:text="${img.id}" style="color:#475569"></td>
+        <td>
+          <a th:href="@{/view(id=${img.id})}" th:text="${img.imageName}"></a>
+        </td>
+        <td>
+          <a th:href="@{/view(id=${img.id})}" class="btn"
+             style="font-size:.75rem;padding:.3rem .65rem">View</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+// ── Filter history (persisted in localStorage) ──────────────────────────────
+const HISTORY_KEY   = 'bviewer_filter_history';
+const FILTER_KEY    = 'bviewer_filter_last';
+const MAX_HISTORY   = 10;
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveHistory(hist) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(hist)); } catch {}
+}
+
+function pushHistory(value) {
+  if (!value) return;
+  let hist = loadHistory().filter(h => h !== value);
+  hist.unshift(value);
+  if (hist.length > MAX_HISTORY) hist = hist.slice(0, MAX_HISTORY);
+  saveHistory(hist);
+  const btn = document.getElementById('historyToggle');
+  if (btn) btn.style.display = 'block';
+}
+
+function saveLastFilter(value) {
+  try { localStorage.setItem(FILTER_KEY, value); } catch {}
+}
+
+function loadLastFilter() {
+  try { return localStorage.getItem(FILTER_KEY) || ''; } catch { return ''; }
+}
+
+function renderDropdown() {
+  const hist = loadHistory();
+  const dd   = document.getElementById('historyDropdown');
+  if (!hist.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = hist.map((h, i) =>
+    `<li data-idx="${i}"
+         style="padding:.4rem .75rem;cursor:pointer;font-size:.85rem;
+                border-bottom:1px solid #334155;color:#cbd5e1"
+         onmousedown="selectHistory(${i})"
+         onmouseover="this.style.background='#334155'"
+         onmouseout="this.style.background=''">${escHtml(h)}</li>`
+  ).join('');
+  dd.style.display = 'block';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function selectHistory(idx) {
+  const hist = loadHistory();
+  const val  = hist[idx] || '';
+  document.getElementById('searchInput').value = val;
+  saveLastFilter(val);
+  hideDropdown();
+  filterTable();
+}
+
+function hideDropdown() {
+  document.getElementById('historyDropdown').style.display = 'none';
+}
+
+function clearFilter() {
+  document.getElementById('searchInput').value = '';
+  saveLastFilter('');
+  hideDropdown();
+  filterTable();
+}
+
+function onFilterInput() {
+  const val = document.getElementById('searchInput').value;
+  saveLastFilter(val);
+  filterTable();
+}
+
+function onFilterClick() {
+  if (loadHistory().length) renderDropdown();
+}
+
+function toggleDropdown() {
+  const dd = document.getElementById('historyDropdown');
+  if (dd.style.display === 'none' || !dd.style.display) {
+    renderDropdown();
+  } else {
+    hideDropdown();
+  }
+}
+
+function onFilterKeyDown(e) {
+  if (e.key === 'Enter') {
+    const val = document.getElementById('searchInput').value.trim();
+    if (val) pushHistory(val);
+    hideDropdown();
+  } else if (e.key === 'Escape') {
+    hideDropdown();
+  } else if (e.key === 'ArrowDown') {
+    // Show history on arrow down
+    renderDropdown();
+  }
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-bar')) hideDropdown();
+});
+
+// Restore last filter on page load
+window.addEventListener('DOMContentLoaded', function() {
+  const last = loadLastFilter();
+  if (last) {
+    document.getElementById('searchInput').value = last;
+    filterTable();
+  }
+  // Show/hide history toggle button based on history availability
+  function updateHistoryToggle() {
+    document.getElementById('historyToggle').style.display =
+      loadHistory().length ? 'block' : 'none';
+  }
+  updateHistoryToggle();
+  // Re-check after each filter entry
+  document.getElementById('searchInput').addEventListener('focus', function() {
+    updateHistoryToggle();
+  });
+});
+
+function globToRegex(pattern) {
+  // Convert a glob pattern to a RegExp.
+  // * matches anything including path separators (/).
+  // If the pattern contains / it is end-anchored so that
+  // Precinct_1/clean/b*messy* only matches paths ending with that sequence.
+  // Without /, the regex is unanchored and matches anywhere in the path.
+  // Only dots are escaped since user path patterns won't contain other
+  // regex special characters.
+  const re = pattern
+    .replace(/\.(?![*?])/g, '\\.')  // escape literal dots
+    .replace(/[?]/g, '.')              // ? → any single char
+    .replace(/[*]/g, '.*');            // * → anything incl. /
+  // If pattern contains / (path-style) but doesn't end with *,
+  // append .* so the user doesn't need to type a trailing wildcard.
+  // e.g. precinct_2/clean/*mess matches the same as precinct_2/clean/*mess*
+  const suffix = (pattern.includes('/') && !pattern.endsWith('*')) ? '.*' : '';
+  return pattern.includes('/')
+    ? new RegExp(re + suffix + '$', 'i')  // end-anchored
+    : new RegExp(re, 'i');                // unanchored
+}
+
+function filterTable() {
+  const raw = document.getElementById('searchInput').value.trim();
+  const q   = raw.toLowerCase();
+  let testFn;
+  if (q === '') {
+    testFn = () => true;
+  } else if (q.includes('*') || q.includes('?')) {
+    const re = globToRegex(q);
+    console.log('glob pattern:', q, 'regex:', re);
+    testFn = (name, path) => re.test(path) || re.test(name);
+  } else {
+    testFn = (name, path) => path.includes(q) || name.includes(q);
+  }
+  document.querySelectorAll('#imageTable tr').forEach(row => {
+    const name = (row.cells[1]?.textContent ?? '').toLowerCase();
+    const path = (row.dataset.path ?? name).toLowerCase();
+    row.style.display = testFn(name, path) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

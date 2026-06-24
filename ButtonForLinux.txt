@@ -1,0 +1,95 @@
+Starting bSuite on Linux / Unix
+================================
+
+The bSuite folder contains bBuilder, bCounter, and bViewer.
+
+OPTION 1 — Shell script (works everywhere):
+------------------------------------------------------------
+Create start-bsuite.sh inside the bSuite folder:
+
+#!/bin/bash
+SUITE_DIR="$(dirname "$0")"
+
+echo "Starting bBuilder..."
+cd "$SUITE_DIR/bBuilder"
+./mvnw spring-boot:run >> "$SUITE_DIR/bBuilder.log" 2>&1 &
+sleep 30 && xdg-open http://localhost:8080 &
+
+echo "Starting bCounter..."
+cd "$SUITE_DIR/bCounter"
+./mvnw spring-boot:run >> "$SUITE_DIR/bCounter.log" 2>&1 &
+sleep 30 && xdg-open http://localhost:8081 &
+
+echo "Starting bViewer..."
+cd "$SUITE_DIR/bViewer"
+COUNTER_DB="$SUITE_DIR/bCounter/counter_results.db" \
+  ./mvnw spring-boot:run >> "$SUITE_DIR/bViewer.log" 2>&1 &
+sleep 30 && xdg-open http://localhost:8082 &
+
+echo "All programs started. Logs in bSuite/*.log"
+------------------------------------------------------------
+
+Make executable and run:
+  chmod +x start-bsuite.sh
+  ./start-bsuite.sh
+
+
+OPTION 2 — Desktop shortcut (.desktop file):
+------------------------------------------------------------
+[Desktop Entry]
+Name=bSuite
+Comment=Start bBuilder, bCounter, and bViewer
+Exec=bash -c 'SUITE=%h/bSuite; cd $SUITE/bBuilder && ./mvnw spring-boot:run >> $SUITE/bBuilder.log 2>&1 & sleep 30 && xdg-open http://localhost:8080; cd $SUITE/bCounter && ./mvnw spring-boot:run >> $SUITE/bCounter.log 2>&1 & sleep 30 && xdg-open http://localhost:8081; cd $SUITE/bViewer && COUNTER_DB=$SUITE/bCounter/counter_results.db ./mvnw spring-boot:run >> $SUITE/bViewer.log 2>&1 & sleep 30 && xdg-open http://localhost:8082'
+Terminal=false
+Type=Application
+------------------------------------------------------------
+
+Replace %h with your home directory path.
+Save as ~/Desktop/bSuite.desktop, then: chmod +x ~/Desktop/bSuite.desktop
+
+
+OPTION 3 — Zenity dialog (GNOME; install with: sudo apt install zenity):
+------------------------------------------------------------
+#!/bin/bash
+SUITE_DIR="$(dirname "$0")"
+
+while true; do
+  CHOICE=$(zenity --list \
+    --title="bSuite" \
+    --text="Choose an action:" \
+    --column="Action" \
+    "Start bBuilder" "Start bCounter" "Start bViewer" \
+    "Open bBuilder in Browser" "Open bCounter in Browser" "Open bViewer in Browser" \
+    "Stop All" "Quit" --height=320 2>/dev/null)
+
+  case "$CHOICE" in
+    "Start bBuilder")
+      cd "$SUITE_DIR/bBuilder"
+      ./mvnw spring-boot:run >> "$SUITE_DIR/bBuilder.log" 2>&1 &
+      sleep 30 && xdg-open http://localhost:8080 & ;;
+    "Start bCounter")
+      cd "$SUITE_DIR/bCounter"
+      ./mvnw spring-boot:run >> "$SUITE_DIR/bCounter.log" 2>&1 &
+      sleep 30 && xdg-open http://localhost:8081 & ;;
+    "Start bViewer")
+      cd "$SUITE_DIR/bViewer"
+      COUNTER_DB="$SUITE_DIR/bCounter/counter_results.db" \
+        ./mvnw spring-boot:run >> "$SUITE_DIR/bViewer.log" 2>&1 &
+      sleep 30 && xdg-open http://localhost:8082 & ;;
+    "Open bBuilder in Browser")   xdg-open http://localhost:8080 ;;
+    "Open bCounter in Browser")   xdg-open http://localhost:8081 ;;
+    "Open bViewer in Browser")    xdg-open http://localhost:8082 ;;
+    "Stop All")
+      pkill -f "spring-boot:run"
+      zenity --info --text="All programs stopped." --title="bSuite" ;;
+    "Quit"|"") exit 0 ;;
+  esac
+done
+------------------------------------------------------------
+
+
+STOPPING:
+  pkill -f "spring-boot:run"
+
+LOG FILES (written to bSuite folder):
+  bBuilder.log  bCounter.log  bViewer.log

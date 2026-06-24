@@ -1,0 +1,1 @@
+/Users/mjtrac/bSuite/test-harness/images/Precinct_1/clean/ballot_1_1_1_1_1_1__messy_marks__clean__c02.png — Unexpected scan error: ConcurrentModificationException

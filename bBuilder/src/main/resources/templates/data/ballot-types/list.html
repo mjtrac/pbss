@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Ballot Types')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <h2>Ballot Types</h2>
+    <a th:href="@{/data/ballot-types/new}" class="btn">+ New Ballot Type</a>
+  </div>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Jurisdiction</th><th>Description</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      <tr th:each="bt : ${ballotTypes}">
+        <td th:text="${bt.name}"></td>
+        <td th:text="${bt.jurisdiction.name}"></td>
+        <td th:text="${bt.description}"></td>
+        <td class="actions">
+          <a th:href="@{'/data/ballot-types/' + ${bt.id} + '/edit'}" class="btn btn-sm">Edit</a>
+          <form method="post"
+                th:action="@{'/data/ballot-types/' + ${bt.id} + '/delete'}"
+                style="display:inline"
+                onsubmit="return confirm('Delete &quot;' + [[${bt.name}]] + '&quot;?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(ballotTypes)}">
+        <td colspan="4" class="empty">No ballot types yet.</td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${errorTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="error-box">
+    <h2 th:text="${errorTitle}">Error</h2>
+    <p th:text="${errorMessage}"></p>
+    <a th:href="${backUrl != null ? backUrl : '/dashboard'}" class="btn">
+      Go Back
+    </a>
+  </div>
+</main>
+</body>
+</html>
