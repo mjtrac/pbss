@@ -1,0 +1,63 @@
+Starting bSuite on macOS
+=========================
+
+The bSuite folder should contain:
+  ElectionSuite.app     (the launcher — keep this)
+  bBuilder/             (Ballot Builder, port 8080)
+  bCounter/             (Ballot Counter, port 8081)
+  bViewer/              (Ballot Viewer,  port 8082)
+  LaunchElection.app    (the clickable launcher you create below)
+  README.md
+
+STEP 1 — Remove the quarantine flag from ElectionSuite.app:
+
+  xattr -cr /Users/yourname/bSuite/ElectionSuite.app
+  chmod +x /Users/yourname/bSuite/ElectionSuite.app/Contents/MacOS/ElectionSuite
+
+Replace "yourname" with your actual username.
+
+STEP 2 — Create the Automator launcher:
+
+  In Terminal, run (replacing "yourname"):
+
+    osacompile -o /Users/yourname/bSuite/LaunchElection.app << 'EOF2'
+    on run
+        do shell script "/Users/yourname/bSuite/ElectionSuite.app/Contents/MacOS/ElectionSuite"
+    end run
+    EOF2
+
+  LaunchElection.app is signed by Apple's Automator framework and opens
+  without any Gatekeeper warnings.
+
+STEP 3 — Double-click LaunchElection.app in Finder.
+
+  A menu appears with:
+    • Start bBuilder         (Ballot Builder  → http://localhost:8080)
+    • Start bCounter         (Ballot Counter  → http://localhost:8081)
+    • Start bViewer          (Ballot Viewer   → http://localhost:8082)
+    • Open bBuilder in Browser
+    • Open bCounter in Browser
+    • Open bViewer in Browser
+    • Stop All
+    • Quit
+
+  The browser opens automatically once each program is ready.
+  First run takes 1-3 minutes while Maven downloads dependencies.
+
+ADDING TO THE DOCK:
+  Drag LaunchElection.app to the Dock (right of the divider).
+
+COMMAND LINE ALIAS (alternative to double-clicking):
+  echo 'alias bsuite="/Users/yourname/bSuite/ElectionSuite.app/Contents/MacOS/ElectionSuite"' >> ~/.zshrc
+  source ~/.zshrc
+  # Then type: bsuite
+
+LOG FILES (written to the bSuite folder):
+  bBuilder.log    bCounter.log    bViewer.log
+
+WHERE OUTPUT FILES ARE WRITTEN:
+  Ballot PDFs and YAML/XML exports  →  bSuite/bBuilder/ folder
+  counter_audit.log                 →  bSuite/bCounter/ folder
+  vote_summary.yaml, overvotes,
+  write-in images                   →  your ballot images folder
+  counter_results.db                →  bSuite/bCounter/ folder

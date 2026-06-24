@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2 th:text="${formTitle}">Jurisdiction</h2>
+
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <form method="post" th:action="@{/admin/jurisdictions/save}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="id" th:if="${jurisdiction.id != null}" th:value="${jurisdiction.id}"/>
+
+    <label>Jurisdiction Name *
+      <input type="text" name="name" th:value="${jurisdiction.name}"
+             required maxlength="200" autofocus
+             placeholder="e.g. Sample County, City of Springfield"/>
+      <small style="color:#666">This is the master jurisdiction — the top-level entity
+        that all elections, regions, and parties belong to.</small>
+    </label>
+
+    <label>Address
+      <input type="text" name="address" th:value="${jurisdiction.address}" maxlength="500"
+             placeholder="e.g. 1 Courthouse Square, Sampleville, CA 00000"/>
+    </label>
+
+    <label>Contact Email
+      <input type="email" name="contactEmail" th:value="${jurisdiction.contactEmail}" maxlength="200"
+             placeholder="e.g. elections@samplecounty.gov"/>
+    </label>
+
+    <label>General Voting Instructions
+      <small style="font-weight:normal;color:#666">
+        Printed at the top of every ballot from this jurisdiction.
+      </small>
+      <textarea name="generalVotingInstructions" rows="3"
+                th:text="${jurisdiction.generalVotingInstructions}"
+                placeholder="e.g. To vote, completely fill in the oval next to your choice."></textarea>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Jurisdiction</button>
+      <a th:href="@{/admin/jurisdictions}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</main>
+</body>
+</html>

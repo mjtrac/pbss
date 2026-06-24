@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Admin')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2>Administration</h2>
+
+  <section>
+    <h3>Users <a th:href="@{/admin/users/new}" class="btn btn-sm">+ New User</a></h3>
+    <table>
+      <thead>
+        <tr><th>Username</th><th>Jurisdiction</th><th>Roles</th><th>Enabled</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="u : ${users}">
+          <td th:text="${u.username}"></td>
+          <td th:text="${u.jurisdiction != null ? u.jurisdiction.name : '—'}"></td>
+          <td th:text="${u.roles}"></td>
+          <td th:text="${u.enabled ? 'Yes' : 'No'}"></td>
+          <td>
+            <form method="post"
+                  th:action="@{'/admin/users/' + ${u.id} + '/toggle'}"
+                  style="display:inline">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button type="submit" class="btn btn-sm"
+                      th:text="${u.enabled ? 'Disable' : 'Enable'}">Toggle</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h3>Print Audit Log</h3>
+    <table>
+      <thead>
+        <tr><th>User</th><th>Combination ID</th><th>Paper Size</th><th>Copies</th><th>Printed At</th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="l : ${printLogs}">
+          <td th:text="${l.printedBy.username}"></td>
+          <td th:text="${l.ballotCombination.id}"></td>
+          <td th:text="${l.paperSize}"></td>
+          <td th:text="${l.copies}"></td>
+          <td th:text="${l.printedAt}"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(printLogs)}">
+          <td colspan="5" class="empty">No ballots printed yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>

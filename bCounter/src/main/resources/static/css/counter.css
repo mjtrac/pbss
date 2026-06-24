@@ -1,0 +1,348 @@
+/*
+ * Copyright (C) 2026 Mitch Trachtenberg
+ * Election Counter — licensed under the GNU General Public License v3.
+ * See <https://www.gnu.org/licenses/> for the full license text.
+ *
+ * Design: civic navy + amber. The amber tally mark is the signature element.
+ */
+
+/* ── Tokens ────────────────────────────────────────────────────────────────── */
+:root {
+  --navy:     #1a2744;
+  --navy-mid: #2c5f8a;
+  --amber:    #c8962b;
+  --amber-lt: #f5d98a;
+  --surface:  #f4f6f9;
+  --surface2: #e8ecf2;
+  --ink:      #1c1f26;
+  --muted:    #5a6478;
+  --green:    #2a7a45;
+  --red:      #b83232;
+  --border:   #cdd3de;
+  --radius:   4px;
+  font-size: 15px;
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  line-height: 1.55;
+  min-height: 100vh;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+.app-header {
+  background: var(--navy);
+  color: white;
+  padding: .75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 3px solid var(--amber);
+}
+.app-header h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+/* The signature tally mark: IIII with a diagonal slash — drawn in CSS */
+.tally-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 1.2em;
+  opacity: .85;
+}
+.tally-mark span {
+  display: block;
+  width: 3px;
+  height: 100%;
+  background: var(--amber);
+  border-radius: 1px;
+}
+.tally-mark .slash {
+  width: 3px;
+  height: 140%;
+  background: var(--amber);
+  transform: rotate(18deg) translateY(-8%);
+}
+
+.app-body {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 52px);
+}
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--navy);
+  color: #c8d3e8;
+  padding: 1.25rem 1rem;
+  font-size: .85rem;
+}
+.sidebar h3 {
+  color: var(--amber);
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: .5rem;
+  border-bottom: 1px solid #2c3f62;
+  padding-bottom: .25rem;
+}
+.sidebar .stat { margin-bottom: .5rem; }
+.sidebar .stat-num {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: white;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.sidebar .stat-label { font-size: .78rem; color: #8fa0c0; }
+.sidebar .path {
+  word-break: break-all;
+  color: #8fa0c0;
+  font-size: .78rem;
+  margin-top: .25rem;
+}
+.progress-bar-wrap {
+  margin: .75rem 0;
+  background: #2c3f62;
+  border-radius: 3px;
+  height: 6px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--amber);
+  transition: width .3s ease;
+}
+.sidebar nav { margin-top: 1.5rem; }
+.sidebar nav a {
+  display: block;
+  color: #8fa0c0;
+  text-decoration: none;
+  padding: .35rem 0;
+  border-bottom: 1px solid #2c3f62;
+  font-size: .82rem;
+  transition: color .15s;
+}
+.sidebar nav a:hover { color: var(--amber-lt); }
+
+.main { flex: 1; padding: 1.75rem 2rem; max-width: 900px; }
+h2 { font-size: 1.3rem; color: var(--navy); margin-bottom: 1.25rem;
+     border-bottom: 2px solid var(--amber); padding-bottom: .4rem; display: inline-block; }
+
+/* ── Form ──────────────────────────────────────────────────────────────────── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.form-grid .full { grid-column: 1 / -1; }
+label { display: block; font-size: .82rem; color: var(--muted);
+        font-weight: 600; margin-bottom: .2rem; }
+input[type=text], input[type=number] {
+  width: 100%;
+  padding: .5rem .65rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: .95rem;
+  background: white;
+  color: var(--ink);
+  transition: border-color .15s;
+}
+input:focus { outline: none; border-color: var(--navy-mid); }
+.field-hint { font-size: .76rem; color: var(--muted); margin-top: .2rem; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .6rem 1.25rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, transform .08s;
+}
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--navy); color: white; }
+.btn-primary:hover { background: var(--navy-mid); }
+.btn-amber { background: var(--amber); color: white; }
+.btn-amber:hover { background: #a87a20; }
+.btn-outline { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); }
+.btn-outline:hover { background: var(--surface2); }
+.btn-danger { background: var(--red); color: white; }
+.btn-sm { padding: .35rem .75rem; font-size: .82rem; }
+.btn-row { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+
+/* ── Alert ─────────────────────────────────────────────────────────────────── */
+.alert {
+  padding: .75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  font-size: .88rem;
+}
+.alert-error   { background: #fde8e8; border-left: 4px solid var(--red); color: #7a1c1c; }
+.alert-info    { background: #e6f0fb; border-left: 4px solid var(--navy-mid); color: var(--navy); }
+.alert-success { background: #e6f4ec; border-left: 4px solid var(--green); color: #1c5a30; }
+
+/* ── Scan result ───────────────────────────────────────────────────────────── */
+.result-header {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.result-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: .5rem .75rem;
+  font-size: .82rem;
+  color: var(--muted);
+}
+.result-meta span { display: block; }
+.result-meta strong { color: var(--ink); }
+.badge {
+  display: inline-block;
+  padding: .1rem .4rem;
+  border-radius: 3px;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.badge-ok   { background: #d4eddb; color: var(--green); }
+.badge-warn { background: #fef3cd; color: #7a5a10; }
+.badge-err  { background: #fde8e8; color: var(--red); }
+
+.contest-block {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.contest-title {
+  background: var(--navy);
+  color: white;
+  padding: .55rem 1rem;
+  font-size: .88rem;
+  font-weight: 700;
+}
+.indicator-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .84rem;
+}
+.indicator-table th {
+  background: var(--surface2);
+  padding: .4rem .75rem;
+  text-align: left;
+  font-size: .76rem;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1px solid var(--border);
+}
+.indicator-table td { padding: .45rem .75rem; border-bottom: 1px solid var(--surface2); }
+.indicator-table tr:last-child td { border-bottom: none; }
+.indicator-table tr.marked { background: #fffbea; }
+.mark-cell {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.mark-yes { color: var(--amber); }
+.mark-no  { color: var(--surface2); }
+.dark-bar-wrap {
+  width: 80px;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 3px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: .4rem;
+}
+.dark-bar { height: 100%; border-radius: 3px; background: var(--amber); }
+.dark-bar.over { background: var(--green); }
+
+/* ── Report / tallies ──────────────────────────────────────────────────────── */
+.tally-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+}
+.tally-table th {
+  background: var(--navy);
+  color: white;
+  padding: .5rem .85rem;
+  text-align: left;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.tally-table td { padding: .5rem .85rem; border-bottom: 1px solid var(--surface2); }
+.tally-table tr:hover td { background: var(--surface); }
+.vote-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--amber);
+}
+.contest-section { margin-bottom: 2rem; }
+.contest-section h3 {
+  font-size: .95rem;
+  color: var(--navy);
+  margin-bottom: .5rem;
+  padding: .4rem .75rem;
+  background: var(--surface2);
+  border-left: 3px solid var(--amber);
+}
+
+/* ── Auto-advance notice ─────────────────────────────────────────────────────*/
+.scanning-notice {
+  background: var(--navy);
+  color: var(--amber-lt);
+  padding: .6rem 1rem;
+  border-radius: var(--radius);
+  font-size: .85rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.pulse { animation: pulse 1s infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .4; }
+}
+
+/* ── Login/logout header ────────────────────────────────────────────────── */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  font-size: .85rem;
+  color: rgba(255,255,255,.85);
+  margin-left: auto;
+}
+
+.logout-btn {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.4);
+  color: #fff;
+  padding: .3rem .75rem;
+  border-radius: 4px;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: background .15s;
+}
+.logout-btn:hover {
+  background: rgba(255,255,255,.28);
+}

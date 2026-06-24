@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Translate Candidate')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h1>Translate Candidate</h1>
+  <h2 th:text="${candidate.name}" style="color:#444;font-weight:normal"></h2>
+  <p class="help-text" th:text="'Contest: ' + ${contest.title}"></p>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+  <div th:if="${languages == null or languages.isEmpty()}" class="alert alert-info">
+    No additional languages configured. Add languages under Setup → Languages.
+  </div>
+
+  <form method="post"
+        th:action="@{/data/candidates/{id}/translate(id=${candidate.id})}"
+        th:if="${languages != null and !languages.isEmpty()}">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <div th:each="lang : ${languages}" style="margin-bottom:2rem;padding:1rem;
+         border:1px solid #ddd;border-radius:6px">
+      <h3 th:text="${lang.languageName + ' (' + lang.languageCode + ')'}"></h3>
+
+      <div class="form-group">
+        <label>Candidate Name</label>
+        <input type="text" th:name="'name_' + ${lang.languageCode}"
+               th:value="${translations.?[languageCode == __${lang.languageCode}__].^[true]?.name}"
+               th:placeholder="${candidate.name}"
+               style="width:100%"/>
+      </div>
+      <div class="form-group" th:if="${candidate.printExplanatoryText}">
+        <label>Explanatory Text</label>
+        <textarea th:name="'explanatoryText_' + ${lang.languageCode}"
+                  rows="2" style="width:100%"
+                  th:text="${translations.?[languageCode == __${lang.languageCode}__].^[true]?.explanatoryText}"></textarea>
+      </div>
+    </div>
+
+    <button type="submit" class="btn">Save Translations</button>
+    <a th:href="@{/data/contests/{id}(id=${contest.id})}"
+       class="btn btn-secondary" style="margin-left:1rem">
+      Back to Contest
+    </a>
+  </form>
+</main>
+</body>
+</html>

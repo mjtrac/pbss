@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg — GPL v3
+  Minimal scanning progress page — shows current image and counts only.
+  Triggers the /scan loop immediately via JavaScript fetch, then polls
+  /progress every 2 seconds to update the display.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Scanning — Election Counter</title>
+  <link rel="stylesheet" th:href="@{/css/counter.css}"/>
+  <style>
+    .scan-status {
+      max-width: 680px;
+      margin: 4rem auto;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.12);
+    }
+    .scan-status h2 { margin: 0 0 1.5rem; color: #0d2b2b; }
+    .count-row {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .count-box {
+      flex: 1;
+      text-align: center;
+      padding: 1rem;
+      background: #f0f7f7;
+      border-radius: 6px;
+    }
+    .count-box .big { font-size: 2.5rem; font-weight: 700; color: #1a6a6a; }
+    .count-box .lbl { font-size: .8rem; color: #555; margin-top: .2rem; }
+    .current-path {
+      font-family: monospace;
+      font-size: .78rem;
+      color: #444;
+      background: #f5f5f5;
+      padding: .5rem .75rem;
+      border-radius: 4px;
+      word-break: break-all;
+      min-height: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .progress-bar-wrap {
+      height: 8px;
+      background: #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #1a6a6a;
+      border-radius: 4px;
+      transition: width .3s ease;
+    }
+    .done-msg { color: #1a6a6a; font-weight: 600; text-align: center; padding: 1rem; }
+  </style>
+</head>
+<body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
+
+<header class="app-header">
+  <div class="tally-mark" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span class="slash"></span>
+  </div>
+  <h1>Election Counter</h1>
+  <div class="header-user" sec:authorize="isAuthenticated()">
+    <span sec:authentication="name">user</span>
+    <form method="post" action="/logout" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<div class="scan-status">
+  <h2>&#9654; Scanning Ballots…</h2>
+
+  <div class="count-row">
+    <div class="count-box">
+      <div class="big" id="scanned">0</div>
+      <div class="lbl">Scanned</div>
+    </div>
+    <div class="count-box">
+      <div class="big" id="remaining">…</div>
+      <div class="lbl">Remaining</div>
+    </div>
+    <div class="count-box">
+      <div class="big" id="total">…</div>
+      <div class="lbl">Total</div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="pbar" style="width:0%"></div>
+  </div>
+
+  <div class="current-path" id="currentPath">Starting…</div>
+  <div class="current-path" id="yamlPath" style="font-size:.8rem;color:#666;margin-top:.2rem"></div>
+
+  <div style="margin-bottom:1rem;display:flex;gap:.75rem;align-items:center">
+    <button id="stopBtn" onclick="stopScan()"
+            style="background:#b91c1c;color:#fff;border:none;padding:.4rem 1.1rem;
+                   border-radius:5px;font-size:.88rem;cursor:pointer">
+      &#9632; Stop Scanning
+    </button>
+    <a id="restartBtn" href="/" style="display:none;
+       background:#1a6a6a;color:#fff;text-decoration:none;padding:.4rem 1.1rem;
+       border-radius:5px;font-size:.88rem">
+      &#8635; New Scan
+    </a>
+    <a id="resultsBtn" href="/results" style="display:none;
+       background:#1a6a6a;color:#fff;text-decoration:none;padding:.4rem 1.1rem;
+       border-radius:5px;font-size:.88rem">
+      &#128202; View Results
+    </a>
+    <a id="viewerBtn" href="/viewer/" style="display:none;
+       background:#1a3a6a;color:#fff;text-decoration:none;padding:.4rem 1.1rem;
+       border-radius:5px;font-size:.88rem"
+       title="Review scanned ballot images with vote indicator overlays">
+      &#128270; View Scanned Ballots
+    </a>
+  </div>
+
+  <div id="doneMsg" class="done-msg" style="display:none">
+    &#10003; Scanning complete — loading results…
+  </div>
+  <div id="errorMsg" style="display:none;margin-top:1rem;padding:.75rem;
+       background:#fde8e8;color:#b91c1c;border-radius:5px;font-size:.85rem">
+    <strong>Scan error:</strong> <span id="errorText"></span><br/>
+    <small>Check the server log for details. You may need to delete
+    counter_results.db and restart if this is a database schema error.</small>
+  </div>
+
+  <div id="reviewWarning" style="display:none;margin-top:1rem;padding:.75rem 1rem;
+       background:#fef2f2;border:1px solid #dc2626;border-radius:5px;font-size:.85rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
+      <div>
+        <strong style="color:#991b1b">&#9888; Ballots requiring manual review</strong>
+        — corner marks could not be detected. These have NOT been counted:
+        <ul id="reviewList" style="margin:.5rem 0 0 1.25rem;padding:0;font-size:.8rem;
+            font-family:monospace;color:#7f1d1d;word-break:break-all"></ul>
+      </div>
+      <button onclick="clearReviewWarning()" style="
+          flex-shrink:0;background:none;border:1px solid #dc2626;
+          color:#991b1b;border-radius:4px;padding:.2rem .6rem;
+          font-size:.8rem;cursor:pointer;white-space:nowrap">&#10005; Clear</button>
+    </div>
+  </div>
+
+  <div id="dupWarning" style="display:none;margin-top:1rem;padding:.75rem 1rem;
+       background:#fff7ed;border:1px solid #f97316;border-radius:5px;font-size:.85rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
+      <div>
+        <strong style="color:#c2410c">&#9888; Duplicate ballots skipped</strong>
+        — the following images were already in the database and have not been re-counted:
+        <ul id="dupList" style="margin:.5rem 0 0 1.25rem;padding:0;font-size:.8rem;
+            font-family:monospace;color:#92400e;word-break:break-all"></ul>
+      </div>
+      <button onclick="clearDupWarning()" style="
+          flex-shrink:0;background:none;border:1px solid #f97316;
+          color:#c2410c;border-radius:4px;padding:.2rem .6rem;
+          font-size:.8rem;cursor:pointer;white-space:nowrap">
+        &#10005; Clear
+      </button>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  // CSRF token for the fetch that kicks off /scan
+  const csrfHeader = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+  const csrfToken  = /*[[${_csrf.token}]]*/ '';
+
+  // /scan is a long-running server-side loop. Navigate to it once.
+  // While it runs, this page (loaded in a separate iframe or tab) shows progress.
+  // Actually: we embed /scan in a hidden iframe so it runs in background,
+  // while this page polls /progress to show live updates.
+
+  function poll() {
+    fetch('/progress', { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('scanned').textContent   = data.processed ?? 0;
+        document.getElementById('total').textContent     = data.total ?? '…';
+        document.getElementById('remaining').textContent =
+          data.total != null ? (data.total - data.processed) : '…';
+        const pct = data.total > 0
+          ? Math.round(100 * data.processed / data.total) : 0;
+        document.getElementById('pbar').style.width = pct + '%';
+        const path = data.current || '';
+        document.getElementById('currentPath').textContent =
+          path ? path : 'Starting…';
+        const yaml = data.yamlSource || '';
+        const yamlEl = document.getElementById('yamlPath');
+        if (yamlEl) yamlEl.textContent = yaml ? 'YAML: ' + yaml : '';
+
+        if (data.error) {
+          clearInterval(pollTimer);
+          document.getElementById('errorMsg').style.display = 'block';
+          document.getElementById('errorText').textContent = data.error;
+          return;
+        }
+        if (data.duplicates && data.duplicates.length > 0) {
+          showDuplicates(data.duplicates);
+        }
+        if (data.reviewRequired && data.reviewRequired.length > 0) {
+          showReviewRequired(data.reviewRequired);
+        }
+        if (data.stopped) {
+          onStopped();
+          return;
+        }
+        if (data.complete || data.pauseForResults) {
+          if (data.complete)
+            document.getElementById('doneMsg').style.display = 'block';
+          clearInterval(pollTimer);
+          fetch('/resume', { method: 'POST', credentials: 'same-origin',
+            headers: {'X-CSRF-TOKEN': document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''} })
+            .finally(() => { window.location.href = '/results'; });
+        }
+      })
+      .catch(() => {});
+  }
+
+  let pollTimer;
+  window.addEventListener('DOMContentLoaded', () => {
+    poll();
+    pollTimer = setInterval(poll, 1500);
+  });
+  // ── Duplicate warning ──────────────────────────────────────────────────
+  const shownDups = new Set();
+
+  function showDuplicates(paths) {
+    const warn = document.getElementById('dupWarning');
+    const list = document.getElementById('dupList');
+    let added = false;
+    paths.forEach(p => {
+      if (!shownDups.has(p)) {
+        shownDups.add(p);
+        const li = document.createElement('li');
+        li.textContent = p;
+        list.appendChild(li);
+        added = true;
+      }
+    });
+    if (added) warn.style.display = 'block';
+  }
+
+  // ── Review required warning ──────────────────────────────────────────────
+  const shownReview = new Set();
+
+  function showReviewRequired(paths) {
+    const warn = document.getElementById('reviewWarning');
+    const list = document.getElementById('reviewList');
+    let added = false;
+    paths.forEach(p => {
+      if (!shownReview.has(p)) {
+        shownReview.add(p);
+        const li = document.createElement('li');
+        li.textContent = p;
+        list.appendChild(li);
+        added = true;
+      }
+    });
+    if (added) warn.style.display = 'block';
+  }
+
+  function clearReviewWarning() {
+    document.getElementById('reviewWarning').style.display = 'none';
+    document.getElementById('reviewList').innerHTML = '';
+    shownReview.clear();
+  }
+
+  function clearDupWarning() {
+    document.getElementById('dupWarning').style.display = 'none';
+    document.getElementById('dupList').innerHTML = '';
+    shownDups.clear();
+  }
+
+  function stopScan() {
+    const btn = document.getElementById('stopBtn');
+    btn.disabled = true;
+    btn.textContent = 'Stopping…';
+    fetch('/stop', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {[csrfHeader]: csrfToken}
+    }).catch(() => {});
+  }
+
+  function onStopped() {
+    clearInterval(pollTimer);
+    document.getElementById('stopBtn').style.display = 'none';
+    document.getElementById('restartBtn').style.display = '';
+    document.getElementById('resultsBtn').style.display = '';
+    document.getElementById('viewerBtn').style.display = '';
+    document.getElementById('currentPath').textContent = 'Scanning stopped by user.';
+  }
+</script>
+</body>
+</html>

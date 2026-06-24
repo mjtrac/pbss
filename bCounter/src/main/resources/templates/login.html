@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  Election Counter — licensed under the GNU General Public License v3.
+-->
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Election Counter — Sign In</title>
+  <link rel="stylesheet" th:href="@{/css/counter.css}"/>
+  <style>
+    /* ── Counter login — distinct teal/dark theme ───────────────────── */
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0d2b2b;
+      margin: 0;
+      font-family: system-ui, sans-serif;
+    }
+
+    .login-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.45);
+      padding: 2.5rem 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    /* Tally-mark icon */
+    .tally {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: .75rem;
+    }
+    .tally span {
+      display: block;
+      width: 6px;
+      height: 32px;
+      background: #1a6a6a;
+      border-radius: 3px;
+    }
+    .tally .slash {
+      width: 6px;
+      height: 32px;
+      background: #1a6a6a;
+      border-radius: 3px;
+      transform: rotate(-20deg) translateX(-8px);
+    }
+
+    .login-header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #0d2b2b;
+      margin: 0 0 .2rem;
+    }
+    .login-header p {
+      font-size: .82rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .login-card label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: .25rem;
+    }
+
+    .login-card input[type="text"],
+    .login-card input[type="password"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: .55rem .7rem;
+      border: 1.5px solid #ccc;
+      border-radius: 5px;
+      font-size: .95rem;
+      margin-bottom: 1rem;
+      transition: border-color .15s;
+    }
+    .login-card input:focus {
+      outline: none;
+      border-color: #1a6a6a;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: .65rem;
+      background: #1a6a6a;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .login-btn:hover { background: #145555; }
+
+    .alert-error {
+      background: #fde8e8;
+      color: #b91c1c;
+      border: 1px solid #f5c6c6;
+      border-radius: 5px;
+      padding: .6rem .8rem;
+      font-size: .87rem;
+      margin-bottom: 1rem;
+    }
+    .alert-success {
+      background: #e8f5e9;
+      color: #1b5e20;
+      border: 1px solid #c8e6c9;
+      border-radius: 5px;
+      padding: .6rem .8rem;
+      font-size: .87rem;
+      margin-bottom: 1rem;
+    }
+    .login-footer {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: .78rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+
+  <div class="login-header">
+    <div th:if="${loginLogo != null and !loginLogo.isEmpty()}" style="text-align:center;margin-bottom:1rem">
+      <img th:src="${loginLogo}" alt="Logo" style="max-height:80px;max-width:200px">
+    </div>
+    <h1 th:text="${loginTitle ?: 'bSuite Ballot Counter'}">bSuite Ballot Counter</h1>
+  </div>
+
+  <div th:if="${error}"   class="alert-error"   th:text="${error}"></div>
+  <div th:if="${message}" class="alert-success" th:text="${message}"></div>
+
+  <form method="post" action="/login">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username"
+           autocomplete="username" autofocus required/>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password"
+           autocomplete="current-password" required/>
+
+    <button type="submit" class="login-btn">Sign In</button>
+  </form>
+
+  <div class="login-footer">
+    Sample County Elections &mdash; Official Use Only
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2>Welcome, <span sec:authentication="name"></span></h2>
+
+  <section sec:authorize="hasRole('ADMIN')">
+    <h3>Administration</h3>
+    <div class="card-grid">
+      <a class="card" th:href="@{/admin/jurisdictions}">
+        <h4>Jurisdictions</h4>
+        <p>Manage top-level jurisdictions (counties, cities, etc.).</p>
+      </a>
+      <a class="card" th:href="@{/admin}">
+        <h4>Users &amp; Audit Log</h4>
+        <p>Manage user accounts and view the ballot print history.</p>
+      </a>
+    </div>
+  </section>
+
+  <section sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">
+    <h3>Quick Start</h3>
+    <div class="card-grid">
+      <a class="card" th:href="@{/setup/simple-election/new}"
+         style="border-color:#1a4a7a;background:#f0f4fb">
+        <h4>⚡ Quick Election Setup</h4>
+        <p>Create a complete uniform election — one ballot for everyone — in a single
+           form. Sets up the election, ballot combinations, and design template in
+           one step. Best for simple general elections with no party variants.</p>
+      </a>
+    </div>
+  </section>
+
+  <section sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">
+    <h3>Manual Election Setup <small style="font-weight:normal;color:#666;font-size:.85rem">(complete steps 1–5 in order)</small></h3>
+    <div class="card-grid">
+      <a class="card" th:href="@{/data/elections}">
+        <h4>1. Elections</h4>
+        <p>Create an election and set its type and date.</p>
+      </a>
+      <a class="card" th:href="@{/data/regions}">
+        <h4>2. Regions</h4>
+        <p>Create SinglePrecincts, then PrecinctGroups (Districts, Cities, etc.)
+           and assign precincts to them.</p>
+      </a>
+      <a class="card" th:href="@{/data/parties}">
+        <h4>3. Parties</h4>
+        <p>Pre-seeded with "Everyone" for general/nonpartisan elections. Add party-specific entries for primaries.</p>
+      </a>
+      <a class="card" th:href="@{/data/ballot-types}">
+        <h4>4. Ballot Types</h4>
+        <p>Precinct, Mail-In, Absentee, Provisional — pre-seeded for you.</p>
+      </a>
+      <a class="card" th:href="@{/data/contests}">
+        <h4>5. Contests &amp; Candidates</h4>
+        <p>Add races and measures, assign each to regions, then add candidates.</p>
+      </a>
+    </div>
+  </section>
+
+  <section sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">
+    <h3>Ballot Configuration <small style="font-weight:normal;color:#666;font-size:.85rem">(complete steps 6–7 before printing)</small></h3>
+    <div class="card-grid">
+      <a class="card" th:href="@{/data/ballot-combinations}">
+        <h4>6. Ballot Combinations</h4>
+        <p>Define each unique ballot variant: Election + Precinct + Party + Ballot Type.
+           Shows which contests will appear on each ballot.</p>
+      </a>
+      <a class="card" th:href="@{/data/ballot-templates}">
+        <h4>7. Design Templates</h4>
+        <p>Set paper size, vote indicator style (oval/checkbox), columns, fonts,
+           and barcode position for each election.</p>
+      </a>
+    </div>
+  </section>
+
+  <section sec:authorize="hasAnyRole('ADMIN','PRINTER')">
+    <h3>Ballot Printing</h3>
+    <div class="card-grid">
+      <a class="card" th:href="@{/print}">
+        <h4>Print Ballot</h4>
+        <p>Select a ballot combination and generate a PDF for a voter.
+           Requires steps 1–7 above to be complete.</p>
+      </a>
+    </div>
+  </section>
+
+  <section sec:authorize="hasRole('ADMIN')">
+    <h3>Sample Data</h3>
+    <div class="card-grid">
+      <div class="card" style="border-color:#b45309">
+        <h4>Add Sample Contests &amp; Print</h4>
+        <p>Adds cheese and federal contests to the initial sample election,
+           assigns them to all precinct groups, and triggers ballot generation.
+           Safe to run more than once.</p>
+        <form method="post" th:action="@{/setup/seed-contests}"
+              style="margin-top:.75rem">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn"
+                  style="background:#b45309;border-color:#92400e">
+            Add Sample Contests &amp; Generate Ballot
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

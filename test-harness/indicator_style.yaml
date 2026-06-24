@@ -1,0 +1,12 @@
+# indicator_style.yaml
+# Controls which vote indicator style the test harness uses when marking ballots.
+#
+# Options:
+#   oval   — filled ellipse (default; matches OVAL and CHECKBOX templates)
+#   arrow  — fills the central zone between the two triangles
+#
+# This should match the VoteIndicatorStyle configured in bBuilder's
+# ballot design template.  Ranked-choice contests always use rectangles
+# regardless of this setting.
+
+indicator_style: oval

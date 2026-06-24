@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Quick Election Setup')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <div>
+      <h2>⚡ Quick Election Setup</h2>
+      <p class="help-text" style="max-width:640px;margin-top:.35rem">
+        Creates a complete, print-ready election in one step. Everything needed
+        to generate a ballot PDF is created automatically. After saving you will
+        be taken directly to the contest screen to rename and configure your contests.
+      </p>
+    </div>
+    <a th:href="@{/dashboard}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <form method="post" th:action="@{/setup/simple-election/create}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <!-- Jurisdiction -->
+    <label>Jurisdiction *
+      <select name="jurisdictionId" required>
+        <option value="">-- select --</option>
+        <option th:each="j : ${jurisdictions}"
+                th:value="${j.id}" th:text="${j.name}">
+        </option>
+      </select>
+      <small style="color:#666">
+        The jurisdiction (county, city, etc.) this election belongs to.
+        Everything needed — party, region, ballot type — is created automatically
+        if it doesn't already exist.
+      </small>
+    </label>
+
+    <!-- Election name -->
+    <label>Election Name
+      <input type="text" name="electionName" value="Election"
+             maxlength="200" autofocus
+             placeholder="Election"/>
+      <small style="color:#666">Default is "Election". Change to anything you like.</small>
+    </label>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+      <label style="flex:1;min-width:200px">Election Type
+        <select name="electionType">
+          <option th:each="t : ${electionTypes}"
+                  th:value="${t.name()}"
+                  th:text="${t.name() == 'GENERAL' ? 'General (default)' : t.name()}"
+                  th:selected="${t.name() == 'GENERAL'}">
+          </option>
+        </select>
+      </label>
+      <label style="flex:1;min-width:160px">Election Date
+        <input type="date" name="electionDate"/>
+      </label>
+    </div>
+
+    <h3 style="border-bottom:1px solid #ddd;padding-bottom:.35rem;
+               margin:1.5rem 0 .75rem">
+      Ballot Layout
+    </h3>
+
+    <label>Paper Size *
+      <select name="paperSize" required>
+        <option value="">-- select --</option>
+        <option th:each="ps : ${paperSizes}"
+                th:value="${ps.name()}"
+                th:selected="${ps.name() == 'LETTER_8_5x11'}"
+                th:text="${ps.name() == 'LETTER_8_5x11' ? '8.5 × 11  (US Letter — default)' :
+                           ps.name() == 'LEGAL_8_5x14'  ? '8.5 × 14  (US Legal)' :
+                           ps.name() == 'HALF_LETTER_8_5x5_5' ? '8.5 × 5.5  (Half Letter)' :
+                           ps.name() == 'HALF_LEGAL_8_5x7'    ? '8.5 × 7    (Half Legal)'  :
+                           ps.name() == 'A4' ? 'A4  (210 × 297 mm)' :
+                           ps.name() == 'A3' ? 'A3  (297 × 420 mm)' :
+                           ps.name() == 'A5' ? 'A5  (148 × 210 mm)' : ps.name()}">
+        </option>
+      </select>
+    </label>
+
+    <fieldset class="voting-method-fieldset">
+      <legend>Vote Indicator Style *</legend>
+      <label class="radio-label" th:each="s : ${indicatorStyles}">
+        <input type="radio" name="voteIndicatorStyle" th:value="${s.name()}"
+               th:checked="${s.name() == 'OVAL'}"/>
+        <span class="radio-title" th:text="${s.name()}"></span>
+        <span class="radio-desc"
+              th:text="${s.name() == 'OVAL' ?       'Fill an oval — recommended for optical scan.' :
+                         s.name() == 'CHECKBOX' ?   'Check a box.' :
+                         s.name() == 'ARROW' ?      'Complete an arrow pointing to the candidate.' :
+                         s.name() == 'NUMBER_FIELD'? 'Write a rank numeral — for ranked-choice ballots.' :
+                         s.name()}">
+        </span>
+      </label>
+    </fieldset>
+
+    <label style="max-width:200px">Contest Columns
+      <input type="number" name="columns" value="2" min="1" max="5"/>
+    </label>
+
+    <div class="form-actions" style="margin-top:1.5rem">
+      <button type="submit" class="btn">Create &amp; Edit Contests →</button>
+      <a th:href="@{/dashboard}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+
+  <!-- What gets created -->
+  <div style="margin-top:2rem;padding:1rem 1.25rem;background:#f9f9f9;
+              border:1px solid #ddd;border-radius:4px;font-size:.875rem">
+    <strong>What this creates automatically:</strong>
+    <ol style="margin:.5rem 0 0 1.2rem;line-height:1.8">
+      <li>A Party named <strong>All</strong> (if one doesn't exist for this jurisdiction)</li>
+      <li>A SinglePrecinct region named <strong>All</strong> (if one doesn't exist)</li>
+      <li>A BallotType named <strong>Precinct</strong> (if one doesn't exist)</li>
+      <li>The <strong>Election</strong> with the name you entered</li>
+      <li>A <strong>Ballot Design Template</strong> with the layout settings above</li>
+      <li>A <strong>Ballot Combination</strong> (Election + All region + All party + Precinct type)</li>
+      <li>A placeholder <strong>Contest</strong> named "EditMe" with two candidates
+          "EditMe1" and "EditMe2" — you will be taken directly to this contest to rename it</li>
+    </ol>
+    <p style="margin:.75rem 0 0;color:#555">
+      After saving: rename the contest and candidates, set the voting method and max choices,
+      then go to <strong>Print Ballot</strong> and select the combination to test your ballot.
+    </p>
+  </div>
+
+</main>
+</body>
+</html>

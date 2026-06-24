@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Ballot Design Templates')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <h2>Ballot Design Templates</h2>
+    <a th:href="@{/data/ballot-templates/new}" class="btn">+ New Template</a>
+  </div>
+
+  <p class="help-text">
+    A <strong>ballot design template</strong> controls the physical layout of printed ballots
+    for an election: paper size, vote indicator style (oval/checkbox), column count, fonts,
+    and barcode position. One template is required per election before ballots can be printed.
+  </p>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Election</th><th>Paper Size</th><th>Vote Style</th>
+        <th>Columns</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="t : ${templates}">
+        <td th:text="${t.election.name}"></td>
+        <td th:text="${t.paperSize}"></td>
+        <td th:text="${t.voteIndicatorStyle}"></td>
+        <td th:text="${t.columns}"></td>
+        <td class="actions">
+          <a th:href="@{'/data/ballot-templates/' + ${t.id} + '/edit'}" class="btn btn-sm">Edit</a>
+          <form method="post"
+                th:action="@{'/data/ballot-templates/' + ${t.id} + '/delete'}"
+                style="display:inline"
+                onsubmit="return confirm('Delete this template?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(templates)}">
+        <td colspan="5" class="empty">
+          No templates yet. <a th:href="@{/data/ballot-templates/new}">Create one</a>
+          for your election before printing.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

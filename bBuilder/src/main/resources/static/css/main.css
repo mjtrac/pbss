@@ -1,0 +1,271 @@
+/*
+ * Copyright (C) 2026 Mitch Trachtenberg
+ * Election Ballot System — licensed under the GNU General Public License v3.
+ * See <https://www.gnu.org/licenses/> for the full license text.
+ */
+/* Election Ballot System — base stylesheet */
+:root {
+  --blue:    #1a4a7a;
+  --blue-lt: #e8f0fb;
+  --red:     #c0392b;
+  --gray:    #555;
+  --gray-lt: #f4f4f4;
+  --border:  #ccc;
+  --radius:  4px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; color: #222; background: #fff; }
+
+/* Nav */
+nav { display:flex; flex-direction:column;
+      background:var(--blue); color:#fff; padding:.5rem 1.5rem .6rem; gap:.3rem; }
+nav a { color:#fff; text-decoration:none; }
+nav a:hover { text-decoration:underline; }
+.nav-brand { font-weight:700; font-size:1.4rem; letter-spacing:.02em;
+             border-bottom:1px solid rgba(255,255,255,.25); padding-bottom:.35rem; }
+
+/* Main */
+main { max-width:1100px; margin:2rem auto; padding:0 1.5rem; }
+h2 { font-size:1.4rem; margin-bottom:1rem; color:var(--blue); }
+h3 { font-size:1.1rem; margin:1.5rem 0 .75rem; }
+
+/* Forms */
+label { display:block; margin-bottom:.75rem; font-weight:600; }
+label input, label select, label textarea {
+  display:block; width:100%; margin-top:.25rem;
+  padding:.4rem .6rem; border:1px solid var(--border);
+  border-radius:var(--radius); font-size:.95rem;
+}
+input[type=number] { width:120px; }
+button, .btn { background:var(--blue); color:#fff; border:none;
+               padding:.45rem 1rem; border-radius:var(--radius);
+               cursor:pointer; font-size:.9rem; text-decoration:none;
+               display:inline-block; }
+button:hover, .btn:hover { background:#163d68; }
+.btn-sm { font-size:.8rem; padding:.3rem .7rem; }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; margin-top:.5rem; font-size:.9rem; }
+th { background:var(--blue-lt); text-align:left; padding:.5rem .75rem; border-bottom:2px solid var(--border); }
+td { padding:.45rem .75rem; border-bottom:1px solid var(--border); }
+tr:hover td { background:var(--gray-lt); }
+
+/* Cards */
+.card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; margin-top:1rem; }
+.card { border:1px solid var(--border); border-radius:6px; padding:1.25rem;
+        text-decoration:none; color:inherit; display:block; transition:box-shadow .15s; }
+.card:hover { box-shadow:0 2px 8px rgba(0,0,0,.12); }
+.card h3 { color:var(--blue); margin-top:0; }
+
+/* Alerts */
+.alert { padding:.6rem 1rem; border-radius:var(--radius); margin-bottom:1rem; }
+.alert-error { background:#fdecea; border:1px solid #f5c6cb; color:var(--red); }
+.alert-info  { background:var(--blue-lt); border:1px solid #b8d0f0; color:var(--blue); }
+
+/* Login page */
+.login-wrapper { max-width:380px; margin:5rem auto; padding:2rem; border:1px solid var(--border); border-radius:8px; }
+.login-wrapper h1 { font-size:1.2rem; color:var(--blue); margin-bottom:1.5rem; text-align:center; }
+
+hr { margin:2rem 0; border:none; border-top:1px solid var(--border); }
+section { margin-bottom:2rem; }
+
+/* ── Additional styles for CRUD pages ─────────────────────────── */
+
+/* Page header row: title + action button side by side */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.page-header h2 { margin-bottom: 0; }
+
+/* Danger button */
+.btn-danger  { background: var(--red); }
+.btn-danger:hover { background: #a93226; }
+.btn-secondary { background: var(--gray); }
+.btn-secondary:hover { background: #444; }
+
+/* Empty table row */
+td.empty { color: var(--gray); font-style: italic; padding: 1rem .75rem; }
+
+/* Action cell — keep buttons compact */
+td.actions { white-space: nowrap; }
+td.actions form { margin: 0; }
+
+/* Data entry form — max width for readability */
+.data-form { max-width: 640px; }
+.data-form label { margin-bottom: 1rem; }
+.data-form small { font-weight: normal; color: var(--gray); margin-left: .4rem; }
+.data-form textarea { width: 100%; margin-top: .25rem; padding: .4rem .6rem;
+  border: 1px solid var(--border); border-radius: var(--radius); font-size: .95rem;
+  font-family: inherit; }
+
+/* Checkbox rows */
+.checkbox-row { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.checkbox-row input[type=checkbox] { width: auto; margin: 0; }
+
+/* Form action buttons row */
+.form-actions { display: flex; gap: .75rem; margin-top: 1.5rem; }
+
+/* Inline compact form (add candidate) */
+.inline-form { border-top: 1px solid var(--border); padding-top: 1rem; }
+
+/* Alert success */
+.alert-success { background: #eafaf1; border: 1px solid #a9dfbf; color: #1e8449; }
+
+/* Nav groups and labels */
+.nav-links { display:flex; flex-direction:column; gap:.2rem; }
+.nav-group { display: flex; align-items: center; gap: .75rem; }
+.nav-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em;
+             color: #aad4f5; margin-right: .25rem; }
+.nav-user  { color: #cce; font-size: .85rem; margin-top:.1rem; border-top:1px solid rgba(255,255,255,.2); padding-top:.3rem; }
+.nav-user a { color: #fff; }
+nav .nav-brand a { color: #fff; text-decoration: none; }
+
+/* Section spacing on dashboard */
+section { margin-bottom: 2.5rem; }
+section h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: .05em;
+             color: var(--gray); border-bottom: 1px solid var(--border);
+             padding-bottom: .4rem; margin-bottom: 1rem; }
+.card h4 { color: var(--blue); margin: 0 0 .5rem; font-size: 1rem; }
+.card p  { color: var(--gray); font-size: .88rem; margin: 0; }
+
+/* ── Sub-jurisdiction and contest assignment UI ─────────────────── */
+
+/* Two-column grid for precinct vs composite selection */
+.subjur-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: .5rem; }
+.subjur-group h4 { font-size: .9rem; color: var(--blue); margin: 0 0 .5rem; }
+
+/* Scrollable checkbox list */
+.checklist {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: .5rem;
+  background: var(--gray-lt);
+}
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .25rem .35rem;
+  border-radius: var(--radius);
+}
+.checklist-item:hover { background: #dde; }
+.checklist-item input[type=checkbox] { width: auto; margin: 0; flex-shrink: 0; }
+.checklist-item label { font-weight: normal; cursor: pointer; margin: 0; }
+
+/* Precinct coverage preview */
+.precinct-list { list-style: none; padding: 0; margin: 0; }
+.precinct-list li {
+  padding: .3rem .5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .9rem;
+}
+.precinct-list.muted li { color: var(--gray); }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: .15rem .5rem;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.badge-precinct  { background: #d5f5e3; color: #1e8449; }
+.badge-composite { background: #d6eaf8; color: #1a5276; }
+
+/* Help text */
+.help-text {
+  color: var(--gray);
+  font-size: .88rem;
+  margin: 0 0 1rem;
+  padding: .6rem .75rem;
+  background: var(--gray-lt);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* ── Error page ─────────────────────────────────────────────────── */
+.error-box {
+  max-width: 540px;
+  margin: 3rem auto;
+  padding: 2rem;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  background: #fdecea;
+}
+.error-box h2 { color: var(--red); margin-bottom: .75rem; }
+.error-box p  { margin-bottom: 1.5rem; color: #444; }
+
+/* ── Voting method radio group ──────────────────────────────────── */
+.voting-method-fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .75rem 1rem 1rem;
+  margin-bottom: 1rem;
+}
+.voting-method-fieldset legend {
+  font-weight: 600;
+  padding: 0 .4rem;
+  font-size: .95rem;
+}
+.radio-label {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  padding: .45rem .35rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: .1rem;
+}
+.radio-label:hover { background: var(--gray-lt); }
+.radio-label input[type=radio] {
+  margin-top: .2rem;
+  flex-shrink: 0;
+  width: auto;
+  accent-color: var(--blue);
+}
+.radio-title {
+  font-weight: 600;
+  min-width: 110px;
+  color: var(--blue);
+}
+.radio-desc {
+  font-size: .85rem;
+  color: var(--gray);
+  line-height: 1.4;
+}
+
+/* Alert info (blue) */
+.alert-info {
+  background: #e8f0fb;
+  border: 1px solid #b8d0f0;
+  color: #1a4a7a;
+  padding: .6rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+
+/* Checkbox that prints optional text — stacked directly below its field */
+.print-toggle {
+  margin-top: .3rem;
+  margin-bottom: .75rem;
+}
+.print-toggle label {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-weight: normal;
+  font-size: .875rem;
+  color: #444;
+  cursor: pointer;
+}
+.print-toggle input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  flex-shrink: 0;
+}
