@@ -6,8 +6,7 @@
 
 # bSuite — Election Ballot Management System
 
-bSuite is an open-source suite for government jurisdictions to design, print,
-scan, and audit paper election ballots.  It consists of two Spring Boot
+bSuite is an open-source suite for anyone in or out of government to design, print, scan, and audit paper election ballots.  It consists of two Spring Boot
 applications that can be run independently or together:
 
 | App | Port | Purpose |
@@ -18,7 +17,84 @@ applications that can be run independently or together:
 
 ---
 
-## Quick Start
+## Download & Run (No Development Tools Required)
+
+Pre-built JAR files are available on the [Releases page](https://github.com/mjtrac/bSuite/releases).
+You need only **Java 21 or later** — no Maven, no git, no IDE.
+
+### 1. Install Java 21+
+
+- **macOS:** `brew install openjdk@21` or download from [adoptium.net](https://adoptium.net)
+- **Windows:** Download from [adoptium.net](https://adoptium.net) and run the installer
+- **Linux:** `sudo apt install openjdk-21-jre` or equivalent
+
+Verify: `java -version` should show 21 or higher.
+
+### 2. Download the JARs
+
+From the [latest release](https://github.com/mjtrac/bSuite/releases/latest), download:
+- `bBuilder-1.0.0.jar`
+- `bCounter-1.0.0.jar`
+
+### 3. Run
+
+Open two terminal windows:
+
+```bash
+# Terminal 1 — Ballot Designer
+java -jar bBuilder-1.0.0.jar
+# Opens at http://localhost:8080
+
+# Terminal 2 — Scanner, Counter & Viewer
+java -jar bCounter-1.0.0.jar
+# Opens at http://localhost:8081
+# Ballot image viewer at http://localhost:8082/viewer/
+```
+
+### 4. Configure (optional)
+
+Override any setting on the command line:
+
+```bash
+java -jar bCounter-1.0.0.jar \
+  --reports.output.dir=/path/to/reports \
+  --viewer.password=YourPassword \
+  --viewer.server.port=8082
+
+java -jar bBuilder-1.0.0.jar \
+  --ballot.export.dir=/path/to/ballot/output \
+  --app.login-title="My County Election System"
+```
+
+Or create an `application.properties` file in the same directory as the JAR:
+
+```properties
+# bCounter — place alongside bCounter-1.0.0.jar
+reports.output.dir=/data/election/reports
+viewer.password=ChangeMe123!
+app.login-title=My County Election System
+```
+
+### macOS launcher (optional)
+
+Download `bSuite_app.zip` from the release, unzip it, place `bSuite.app` in the
+same folder as both JARs, then:
+
+```bash
+# One-time: remove macOS quarantine
+xattr -cr /path/to/bSuite.app
+
+# Launch
+open /path/to/bSuite.app
+```
+
+The launcher starts both JARs with a double-click and provides Start/Stop controls.
+
+---
+
+## Quick Start (Development / Source Build)
+
+> **Just want to run bSuite?** See [Download & Run](#download--run-no-development-tools-required) above.
 
 ### Requirements
 - Java 21+
@@ -270,18 +346,42 @@ Each service logs to a file in the bSuite root:
 
 ## Building Distributable JARs
 
+Build self-contained "fat JARs" that include all dependencies:
+
 ```bash
 # bBuilder
 cd bBuilder
 ./mvnw clean package -DskipTests
-java -jar target/bBuilder-1.0.0.jar
+# → target/bBuilder-1.0.0.jar  (~80 MB)
 
-# bCounter (includes bViewer)
+# bCounter (includes bViewer on port 8082)
 cd bCounter
 ./mvnw clean package -DskipTests
-java -jar target/bCounter-1.0.0.jar
-# bCounter runs on 8081, bViewer on 8082 — one process, one JAR
+# → target/bCounter-1.0.0.jar  (~80 MB)
 ```
+
+Run without Maven:
+
+```bash
+java -jar bBuilder/target/bBuilder-1.0.0.jar
+java -jar bCounter/target/bCounter-1.0.0.jar
+```
+
+### Publishing a GitHub Release
+
+```bash
+# Tag the release
+git tag -a v1.0.0 -m "bSuite v1.0.0"
+git push origin v1.0.0
+
+# Then on GitHub:
+# Releases → Draft a new release → select tag → attach:
+#   bBuilder/target/bBuilder-1.0.0.jar
+#   bCounter/target/bCounter-1.0.0.jar
+#   bSuite_app.zip  (macOS launcher)
+```
+
+Users download the JARs from the Releases page and run them with `java -jar`.
 
 ### Packaging with bundled JRE (no JDK on target machine)
 
