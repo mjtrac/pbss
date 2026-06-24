@@ -172,18 +172,55 @@ public class VoteRecordService {
         }
 
         Set<Long> overvotedContestIds = new HashSet<>();
+        // For RCV: track which rank positions have more than one marked candidate.
+        // Key: contestId → set of overvoted rank numbers.
+        // A candidate name like "Alexandria Washington (Rank 1)" encodes the rank.
+        Map<Long, Set<Integer>> rcvOvervotedRanks = new HashMap<>();
+
         for (Map.Entry<Long, List<MarkingResult>> e : byContest.entrySet()) {
             MarkingResult first = e.getValue().get(0);
-            boolean fptp = "PLURALITY".equals(first.contestType)
-                        || "MEASURE".equals(first.contestType);
-            if (!fptp) continue;
-            int maxVotes = first.maxVotes > 0 ? first.maxVotes : 1;
-            long uniqueMarked = e.getValue().stream()
-                .filter(m -> m.marked)
-                .map(m -> m.candidateId)
-                .distinct().count();
-            if (uniqueMarked > maxVotes)
-                overvotedContestIds.add(e.getKey());
+            String cType = first.contestType != null ? first.contestType : "PLURALITY";
+            Long contestKey = e.getKey();
+
+            if ("RANKED_CHOICE".equals(cType)) {
+                // Detect duplicate rank positions among marked candidates
+                Map<Integer, Integer> rankCount = new HashMap<>();
+                java.util.regex.Pattern rankPat =
+                    java.util.regex.Pattern.compile("\\(Rank (\\d+)\\)$");
+                for (MarkingResult mr : e.getValue()) {
+                    if (!mr.marked) continue;
+                    java.util.regex.Matcher m = rankPat.matcher(
+                        mr.candidateName != null ? mr.candidateName : "");
+                    if (m.find()) {
+                        int rank = Integer.parseInt(m.group(1));
+                        rankCount.merge(rank, 1, Integer::sum);
+                    }
+                }
+                Set<Integer> badRanks = new HashSet<>();
+                for (Map.Entry<Integer, Integer> re : rankCount.entrySet()) {
+                    if (re.getValue() > 1) {
+                        badRanks.add(re.getKey());
+                        log.warn("RCV overvote on contest {} image {}: "
+                            + "rank {} marked by {} candidates",
+                            contestKey, result.imageName, re.getKey(), re.getValue());
+                    }
+                }
+                if (!badRanks.isEmpty()) {
+                    rcvOvervotedRanks.put(contestKey, badRanks);
+                    overvotedContestIds.add(contestKey);
+                }
+            } else {
+                // FPTP / MEASURE / APPROVAL overvote check
+                boolean fptp = "PLURALITY".equals(cType) || "MEASURE".equals(cType);
+                if (!fptp) continue;
+                int maxVotes = first.maxVotes > 0 ? first.maxVotes : 1;
+                long uniqueMarked = e.getValue().stream()
+                    .filter(m -> m.marked)
+                    .map(m -> m.candidateId)
+                    .distinct().count();
+                if (uniqueMarked > maxVotes)
+                    overvotedContestIds.add(contestKey);
+            }
         }
 
         // ── Persist each indicator ────────────────────────────────────────────
@@ -208,7 +245,19 @@ public class VoteRecordService {
             Long contestKey = mr.contestId != null ? mr.contestId : -1L;
             VoteStatus status;
             if (overvotedContestIds.contains(contestKey) && mr.marked) {
-                status = VoteStatus.OVERVOTED;
+                // For RCV: only mark OVERVOTED if this candidate is at an overvoted rank
+                Set<Integer> badRanks = rcvOvervotedRanks.get(contestKey);
+                if (badRanks != null) {
+                    // Extract rank from candidate name
+                    java.util.regex.Matcher rm = java.util.regex.Pattern
+                        .compile("\\(Rank (\\d+)\\)$")
+                        .matcher(mr.candidateName != null ? mr.candidateName : "");
+                    int rank = rm.find() ? Integer.parseInt(rm.group(1)) : -1;
+                    status = (rank > 0 && badRanks.contains(rank))
+                        ? VoteStatus.OVERVOTED : VoteStatus.VOTED;
+                } else {
+                    status = VoteStatus.OVERVOTED;
+                }
             } else if (mr.marked) {
                 status = VoteStatus.VOTED;
             } else {

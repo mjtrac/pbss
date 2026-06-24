@@ -191,7 +191,7 @@ def build(client, out_path):
         "contestType":   "RANKED_CHOICE",
         "maxVotes":      4,
         "sectionHeader": "FEDERAL OFFICES",
-        "instruction":   "Rank candidates 1-4. Leave boxes blank to skip a rank.",
+        "instruction":   "Fill the larger box closest to the candidate for your first choice, and fill smaller boxes for your lower choices. The farther away the box, the lower the rank.",
         "preamble":      "The President serves a four-year term. You may rank up to "
                          "four candidates. The candidate with the most top-rank votes wins, "
                          "subject to runoff procedures.",
