@@ -97,8 +97,13 @@ public class RcvTabulationService {
     private List<List<String>> loadBallots(Long contestId) {
         List<VoteOpportunity> vos = voRepo.findByContest_Id(contestId);
 
-        // Keep only VOTED rank-box rows
-        Map<Long, Map<Integer, String>> byBallot = new LinkedHashMap<>();
+        // Keep only VOTED rank-box rows.
+        // Track overvoted ranks: if two candidates are marked at the same rank
+        // on the same ballot, that rank position is invalid and the ballot is
+        // exhausted at that point (cannot be counted or transferred past it).
+        Map<Long, Map<Integer, String>> byBallot  = new LinkedHashMap<>();
+        Map<Long, Set<Integer>>         overvoted = new LinkedHashMap<>();
+
         for (VoteOpportunity vo : vos) {
             String candName = vo.getCandidate().getCandidateName();
             if (!"VOTED".equals(vo.getVoteStatus() != null
@@ -107,18 +112,32 @@ public class RcvTabulationService {
             if (!m.matches()) continue;
             String baseName = m.group(1).strip();
             int    rank     = Integer.parseInt(m.group(2));
-            byBallot
-                .computeIfAbsent(vo.getBallotImage().getId(), k -> new TreeMap<>())
-                .put(rank, baseName);
+            Long   ballotId = vo.getBallotImage().getId();
+
+            Map<Integer, String> rankMap =
+                byBallot.computeIfAbsent(ballotId, k -> new TreeMap<>());
+            if (rankMap.containsKey(rank)) {
+                // Two candidates marked at same rank — overvote at this position
+                overvoted.computeIfAbsent(ballotId, k -> new java.util.HashSet<>())
+                         .add(rank);
+                log.debug("RCV overvote: ballot {} has two marks at Rank {} — "
+                    + "ballot exhausted at that rank", ballotId, rank);
+            } else {
+                rankMap.put(rank, baseName);
+            }
         }
 
-        // Convert to ordered preference lists (rank 1 first)
+        // Convert to ordered preference lists (rank 1 first).
+        // Truncate at any overvoted rank — the ballot is exhausted there.
         List<List<String>> ballots = new ArrayList<>();
-        for (Map<Integer, String> rankMap : byBallot.values()) {
+        for (Map.Entry<Long, Map<Integer, String>> e : byBallot.entrySet()) {
+            Map<Integer, String> rankMap = e.getValue();
+            Set<Integer> badRanks = overvoted.getOrDefault(e.getKey(), Set.of());
             if (rankMap.isEmpty()) continue;
             int maxRank = Collections.max(rankMap.keySet());
             List<String> prefs = new ArrayList<>();
             for (int r = 1; r <= maxRank; r++) {
+                if (badRanks.contains(r)) break; // exhausted at this rank
                 if (rankMap.containsKey(r)) prefs.add(rankMap.get(r));
             }
             if (!prefs.isEmpty()) ballots.add(prefs);
