@@ -744,7 +744,7 @@ public class BallotGenerationService {
 
         // Code zone height (QR height; Code128 is beside it, same height)
         int qrSz = (int) Math.min(tmpl.getBarcodeHeightPt(), HEADER_ZONE_PT - 20f);
-        float zoneH = qrSz + 8f;  // QR height plus small padding
+        float zoneH = HEADER_ZONE_PT;  // full header zone for text; QR sits within it
 
         // Vertical position of code zone top
         float codeZoneTop, codeZoneBottom;
