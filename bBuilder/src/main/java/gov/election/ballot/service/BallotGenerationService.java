@@ -459,7 +459,7 @@ public class BallotGenerationService {
                             candPositions.add(new BallotDimensions.CandidatePosition(
                                 candidate.getId(),
                                 candidate.getRecordName() + " (Rank " + rank + ")",
-                                false,
+                                candidate.isWriteIn(),
                                 rLeft, rTop, rW, rH,
                                 template.getVoteIndicatorStyle().name()));
                             rankX += bw + RANK_BOX_GAP;

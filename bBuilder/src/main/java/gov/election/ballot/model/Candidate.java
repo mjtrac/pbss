@@ -63,6 +63,7 @@ public class Candidate {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "write_in")
     private boolean writeIn      = false;
     private String  partyAffiliation;
     private int     displayOrder = 0;
