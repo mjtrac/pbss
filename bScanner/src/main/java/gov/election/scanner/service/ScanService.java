@@ -73,18 +73,19 @@ public class ScanService {
             List<String> cmd = buildCommand(outDir, prefix);
             log.info("Starting scan: {}", String.join(" ", cmd));
 
-            // Count files in output dir before scan
+            // Snapshot files in output dir BEFORE starting the process
             Set<Path> before = existingImages(outDir);
+
+            // Start monitor thread BEFORE launching the process so fast-exiting
+            // commands don't finish before the monitor is ready
+            Thread monitor = new Thread(() -> monitorOutput(outDir, before), "scan-monitor");
+            monitor.setDaemon(true);
+            monitor.start();
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.redirectErrorStream(true);
             pb.environment().put("HOME", System.getProperty("user.home"));
             Process proc = pb.start();
-
-            // Monitor output directory for new files while process runs
-            Thread monitor = new Thread(() -> monitorOutput(outDir, before), "scan-monitor");
-            monitor.setDaemon(true);
-            monitor.start();
 
             // Stream process output to log
             try (var reader = new java.io.BufferedReader(
@@ -98,7 +99,8 @@ public class ScanService {
             int exitCode = proc.waitFor();
             monitor.interrupt();
 
-            // Final count
+            // Final count — wait briefly for filesystem to settle
+            Thread.sleep(500);
             Set<Path> after = existingImages(outDir);
             after.removeAll(before);
             session.imagesScanned = after.size();
@@ -170,22 +172,36 @@ public class ScanService {
     }
 
     private List<String> buildNaps2Command(Path outDir, String prefix) {
-        // NAPS2 console mode:
-        // naps2 console --source feeder --duplex --dpi 300 --output /path/prefix_{0:D4}.png
+        // NAPS2 8.x console mode syntax:
+        // naps2 console --source duplex --dpi 300 --output /path/prefix_$(nnnn).png
+        // Source values: glass | feeder | duplex (duplex implies feeder + both sides)
         List<String> cmd = new ArrayList<>();
         cmd.add(config.naps2Path);
         cmd.add("console");
-        cmd.add("--source");
-        cmd.add(config.source.equalsIgnoreCase("feeder") ? "feeder" : "glass");
-        if (config.duplex && config.source.equalsIgnoreCase("feeder")) {
-            cmd.add("--duplex");
+        // Profile or device selection
+        if (config.naps2Profile != null && !config.naps2Profile.isBlank()) {
+            // When using a profile, let it control source/dpi — don't override
+            cmd.add("--profile");
+            cmd.add(config.naps2Profile);
+        } else {
+            // No profile — pass source and dpi explicitly
+            cmd.add("--source");
+            if (config.duplex && config.source.equalsIgnoreCase("feeder")) {
+                cmd.add("duplex");
+            } else {
+                cmd.add(config.source.equalsIgnoreCase("feeder") ? "feeder" : "glass");
+            }
+            cmd.add("--dpi");
+            cmd.add(String.valueOf(config.dpi));
+            if (config.naps2Device != null && !config.naps2Device.isBlank()) {
+                cmd.add("--device");
+                cmd.add(config.naps2Device);
+            }
         }
-        cmd.add("--dpi");
-        cmd.add(String.valueOf(config.dpi));
+        cmd.add("--verbose");
         cmd.add("--output");
-        cmd.add(outDir.resolve(prefix + "{0:D4}.png").toString());
-        cmd.add("--format");
-        cmd.add("png");
+        // NAPS2 uses $(nnnn) for zero-padded auto-incrementing page numbers
+        cmd.add(outDir.resolve(prefix + "$(nnnn).png").toString());
         return cmd;
     }
 

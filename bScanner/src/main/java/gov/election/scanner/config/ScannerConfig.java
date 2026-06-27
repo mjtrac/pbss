@@ -25,6 +25,12 @@ public class ScannerConfig {
     @Value("${scanner.custom.command:}")
     public String customCommand;
 
+    @Value("${scanner.naps2.profile:}")
+    public String naps2Profile;
+
+    @Value("${scanner.naps2.device:}")
+    public String naps2Device;
+
     @Value("${scanner.output.dir:${user.home}/bSuite/test-harness/images/scanned}")
     public String outputDir;
 

@@ -68,9 +68,12 @@
     <h3 style="margin-top:0;">Current Configuration</h3>
     <table class="config-summary">
       <tr><td><b>Backend</b></td><td th:text="${config.backend}"></td></tr>
+      <tr th:if="${config.naps2Profile != null and !config.naps2Profile.isBlank()}">
+        <td><b>NAPS2 Profile</b></td><td th:text="${config.naps2Profile}"></td></tr>
+      <tr th:if="${(config.naps2Profile == null or config.naps2Profile.isBlank()) and config.naps2Device != null and !config.naps2Device.isBlank()}">
+        <td><b>NAPS2 Device</b></td><td th:text="${config.naps2Device}"></td></tr>
       <tr><td><b>Source</b></td><td th:text="${config.source}"></td></tr>
       <tr><td><b>DPI</b></td><td th:text="${config.dpi}"></td></tr>
-      <tr><td><b>Duplex</b></td><td th:text="${config.duplex}"></td></tr>
       <tr><td><b>Output folder</b></td><td th:text="${config.outputDir}"></td></tr>
     </table>
     <div sec:authorize="hasRole('ADMINISTRATOR')" style="margin-top:.8rem;">

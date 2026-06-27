@@ -51,6 +51,17 @@
         <option value="command"   th:selected="${config.backend == 'command'}">Custom command</option>
       </select>
 
+      <label>NAPS2 Profile Name <span style="font-weight:normal;">(recommended)</span></label>
+      <input type="text" name="naps2Profile" th:value="${config.naps2Profile}"
+             placeholder="e.g. Ballot Scanner"/>
+      <div class="hint">Name of a profile saved in the NAPS2 GUI with your scanner configured.
+        Open NAPS2, set up your scanner, and save the profile. Leave blank to use --device instead.</div>
+
+      <label>NAPS2 Device Name <span style="font-weight:normal;">(alternative to profile)</span></label>
+      <input type="text" name="naps2Device" th:value="${config.naps2Device}"
+             placeholder="e.g. escl:http://192.168.1.10"/>
+      <div class="hint">Run NAPS2 with --listdevices to find your device name. Only used if Profile is blank.</div>
+
       <label>NAPS2 Executable Path</label>
       <input type="text" name="naps2Path" th:value="${config.naps2Path}"/>
       <div class="hint">macOS: /Applications/NAPS2.app/Contents/MacOS/naps2 &nbsp;|&nbsp; Windows: C:\Program Files\NAPS2\naps2.exe</div>
@@ -72,7 +83,8 @@
         <div>
           <label>Source</label>
           <select name="source">
-            <option value="feeder" th:selected="${config.source == 'feeder'}">ADF (document feeder)</option>
+            <option value="feeder" th:selected="${config.source == 'feeder'}">ADF (document feeder, single-sided)</option>
+            <option value="duplex" th:selected="${config.source == 'duplex'}">ADF Duplex (both sides automatically)</option>
             <option value="glass"  th:selected="${config.source == 'glass'}">Flatbed (glass)</option>
           </select>
         </div>
@@ -82,12 +94,15 @@
         </div>
       </div>
 
+      <div class="hint" style="margin-top:.5rem;">
+        For NAPS2: select "ADF Duplex" as source to scan both sides automatically.
+        The Duplex checkbox below is used for scanimage/custom backends only.
+      </div>
       <div style="margin-top:.8rem;">
         <label style="display:inline-flex; align-items:center; gap:.4rem; font-weight:normal;">
           <input type="checkbox" name="duplex" th:checked="${config.duplex}"/>
-          Duplex (scan both sides automatically)
+          Duplex flag (scanimage / custom backends only)
         </label>
-        <div class="hint">Only applicable with ADF source.</div>
       </div>
 
       <label>Filename Prefix</label>

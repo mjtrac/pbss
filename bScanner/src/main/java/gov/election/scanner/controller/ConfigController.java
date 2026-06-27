@@ -37,6 +37,8 @@ public class ConfigController {
             @RequestParam(required = false, defaultValue = "false") boolean duplex,
             @RequestParam String source,
             @RequestParam String filenamePrefix,
+            @RequestParam(required = false, defaultValue = "") String naps2Profile,
+            @RequestParam(required = false, defaultValue = "") String naps2Device,
             RedirectAttributes ra) {
 
         config.backend       = backend;
@@ -48,6 +50,8 @@ public class ConfigController {
         config.duplex        = duplex;
         config.source        = source;
         config.filenamePrefix = filenamePrefix;
+        config.naps2Profile  = naps2Profile;
+        config.naps2Device   = naps2Device;
 
         ra.addFlashAttribute("success", "Configuration saved.");
         return "redirect:/config";
