@@ -6,8 +6,7 @@
 
 # bSuite — Election Ballot Management System
 
-bSuite is an open-source suite for anyone in or out of government to design, print, scan, and audit paper election ballots.  It consists of two Spring Boot
-applications that can be run independently or together:
+bSuite is an open-source suite for anyone in or out of government to design, print, count, and audit paper election ballots.  (Scanning can be done by any scanner program you trust.)It consists of two Spring Boot applications that can be run independently or together:
 
 | App | Port | Purpose |
 |---|---|---|
@@ -172,6 +171,11 @@ Provides a web UI for election administrators to:
 - Write-in slots with fill lines
 - Multi-page ballots with sheet numbering
 - Barcodes encode: `JurisdictionId|RegionId|PartyId|BallotTypeId|ElectionId|Page`
+- Six registration marks per page: two 18×9pt page-level marks (PTL/PTR) just
+  inside the top margin at the left/right page edges, plus four content-box corner
+  marks (TL 18×9pt rectangle, TR/BL/BR 9×9pt squares) just outside the content border
+- Dynamic header zone sizing: zone height computed from actual headline and body text
+  content, font sizes, and word-wrap — never clips header text regardless of font size
 
 ### Admin password reset
 ```bash
@@ -190,6 +194,12 @@ for dark-pixel coverage.
 **Key features:**
 - Parallel scanning (configurable thread count)
 - Upside-down ballot detection and auto-rotation
+- Six-mark page geometry: two page-level marks (PTL/PTR) near the top margin plus
+  four content-box corner marks (TL/TR/BL/BR) — PTL/PTR anchor the page edges;
+  TL/TR are predicted geometrically from PTL+BL and PTR+BR for robust detection
+  under rotation, perspective warp, and translation
+- Failed ballots renamed to `.png.review` so multi-pass walk never re-queues them
+- Configurable halt after N corner-detection failures (`scanner.max-review-before-stop`)
 - Ranked-choice vote detection (filled rank boxes)
 - Overvote detection per contest
 - Write-in image extraction
@@ -204,17 +214,27 @@ viewer.username=admin
 viewer.password=ChangeMe123!
 reports.output.dir=${user.dir}
 reports.interval=500
-scanner.parallel-threads=0   # 0 = auto (half CPU cores)
+scanner.parallel-threads=0        # 0 = auto (half CPU cores)
+scanner.max-review-before-stop=20 # stop scan after N corner-detection failures; 0 = no limit
 spring.datasource.hikari.maximum-pool-size=1
 ```
+
+Set `scanner.max-review-before-stop` to a small number (e.g. 5) when debugging
+corner detection issues — the scan will halt early rather than running to completion
+with hundreds of failures. Set to 0 for production runs where some difficult ballots
+are expected.
 
 **Report files:**
 | File | Written to | When |
 |---|---|---|
 | `results_report.html` | `reports.output.dir` | Every `reports.interval` images + scan end |
+| `rcv_report.html` | `reports.output.dir` | Scan end (ranked-choice contests) |
 | `overvote_report.txt` | `reports.output.dir` | Scan end |
-| `review_required.txt` | `reports.output.dir` | Scan end (if any) |
+| `review_required.txt` | `reports.output.dir` | Scan end (if any failures) |
+| `ballot_manifest.csv` | `reports.output.dir` | Scan end (Arlo RLA export) |
+| `cvr_export.csv` | `reports.output.dir` | Scan end (Arlo RLA export) |
 | `vote_summary.yaml` | image folder | Scan end |
+| `*.png.review` | image folder | Per-image (corner detection failure — not requeued) |
 
 ### bViewer (embedded in bCounter)
 
@@ -266,7 +286,7 @@ cd test-harness
 **Other tools:**
 - `rcv_tabulate.py` — instant-runoff voting (IRV) tabulation from the database
 - `db_merge.py` — GUI for comparing and merging results from multiple scan stations
-- `reset_scan.sh` — clears the counter database and restores image filenames for rescan
+- `reset_scan.sh` — clears the counter database, restores `.counted` and `.review` image filenames for rescan, and automatically restarts bCounter
 
 ---
 
