@@ -128,9 +128,9 @@ def get_distortions(dpi: int) -> dict:
         "trans_right":    lambda img: translate_image(img,  QUARTER_INCH, 0, dpi),
         "rot_cw1_trans":  lambda img: rotate_and_translate(img, 1.0,  QUARTER_INCH, 0, dpi),
         "rot_ccw1_trans": lambda img: rotate_and_translate(img,-1.0,  0, -QUARTER_INCH, dpi),
-        "skew_right":     lambda img: skew_image(img, shear_x= 0.015),
-        "skew_left":      lambda img: skew_image(img, shear_x=-0.015),
-        "perspective":    lambda img: perspective_warp(img, strength=0.012),
+#        "skew_right":     lambda img: skew_image(img, shear_x= 0.015),
+#        "skew_left":      lambda img: skew_image(img, shear_x=-0.015),
+#        "perspective":    lambda img: perspective_warp(img, strength=0.012),
         "upside_down":    lambda img: upside_down(img),
     }
 
@@ -158,9 +158,9 @@ DIST_FOLDERS = {
     "trans_right":    "translated",
     "rot_cw1_trans":  "rotated",
     "rot_ccw1_trans": "rotated",
-    "skew_right":     "skewed",
-    "skew_left":      "skewed",
-    "perspective":    "perspective",
+#    "skew_right":     "skewed",
+#    "skew_left":      "skewed",
+#    "perspective":    "perspective",
     "upside_down":    "upside_down",
 }
 

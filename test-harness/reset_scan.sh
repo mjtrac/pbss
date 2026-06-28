@@ -82,26 +82,18 @@ if [ "$review_count" -gt 0 ]; then
     echo "  Restored $review_count file(s)"
 fi
 
-# 5. Restart bCounter
+# 5. Stop bCounter
 echo ""
-echo "Step 5 — Restarting bCounter..."
-BCOUNTER_PORT=8081
-pid=$(lsof -ti tcp:$BCOUNTER_PORT 2>/dev/null || true)
+echo "Step 5 — Stopping bCounter..."
+pid=$(lsof -ti tcp:8081 2>/dev/null || true)
 if [ -n "$pid" ]; then
     kill "$pid" 2>/dev/null || true
     echo "  Stopped bCounter (pid $pid)"
-    sleep 3
+else
+    echo "  (bCounter not running)"
 fi
-nohup bash -c "cd $BCOUNTER_DIR && ./mvnw -q spring-boot:run > $BCOUNTER_DIR/bCounter.log 2>&1" &
-echo "  bCounter starting (log: bCounter/bCounter.log)"
-printf "  Waiting for bCounter"
-for i in $(seq 1 30); do
-    sleep 2
-    if curl -s -o /dev/null http://localhost:$BCOUNTER_PORT/login 2>/dev/null; then
-        echo " ready"
-        break
-    fi
-    printf "."
-done
+
 echo ""
-echo "✓ Reset complete — ready to run ./run_all.sh"
+echo "✓ Reset complete."
+echo ""
+echo "  Restart bCounter, then run: ./run_all.sh"

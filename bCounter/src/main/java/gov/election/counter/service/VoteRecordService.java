@@ -331,4 +331,19 @@ public class VoteRecordService {
             .forEach(images::add);
         return images;
     }
+
+    /**
+     * Delete all scan data from the database for a clean new-election start.
+     * Deletes in FK-safe order: VoteOpportunity → BallotImage → BarcodeRecord
+     * → CandidateRecord → ContestRecord.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void clearAllData() {
+        voteRepo.deleteAll();
+        imageRepo.deleteAll();
+        barcodeRepo.deleteAll();
+        candidateRepo.deleteAll();
+        contestRepo.deleteAll();
+        log.info("All election data cleared for new election.");
+    }
 }

@@ -1096,5 +1096,25 @@
   }
 </style>
 
+
+  <!-- Scanning-in-progress warning banner -->
+  <div id="scanBanner" style="display:none; position:fixed; top:0; left:0; right:0;
+       background:#856404; color:#fff3cd; text-align:center; padding:.5rem;
+       font-size:.9rem; z-index:9999; border-bottom:2px solid #664d03;">
+    &#9881; Scan in progress &mdash; results shown may be incomplete
+  </div>
+  <script>
+    function checkScanStatus() {
+      fetch('http://localhost:8081/progress', {credentials:'include'})
+        .then(r => r.json())
+        .then(d => {
+          document.getElementById('scanBanner').style.display =
+            d.scanning ? 'block' : 'none';
+        })
+        .catch(() => {});
+    }
+    checkScanStatus();
+    setInterval(checkScanStatus, 5000);
+  </script>
 </body>
 </html>

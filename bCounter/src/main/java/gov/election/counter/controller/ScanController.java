@@ -677,6 +677,23 @@ public class ScanController {
         return "redirect:/";
     }
 
+    /**
+     * New Election — clears the DB and in-memory session for a clean start.
+     * Requires confirmation in the UI before posting here.
+     */
+    @PostMapping("/new-election")
+    public String newElection(HttpSession httpSession,
+                              org.springframework.web.servlet.mvc.support.RedirectAttributes ra) {
+        // Stop any running scan first
+        ScanSession session = getSession(httpSession);
+        if (session != null) session.stopRequested = true;
+        httpSession.removeAttribute(SESSION_KEY);
+        // Clear all DB data
+        voteRecord.clearAllData();
+        ra.addFlashAttribute("info", "All election data has been cleared. Ready for a new election.");
+        return "redirect:/";
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     private ScanSession getOrCreate(HttpSession s) {
