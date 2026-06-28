@@ -56,6 +56,9 @@ public class ScannerService {
     private final BarcodeReaderService   barcodeReader;
     private final CornerDetectionService cornerDetector;
     private final HomographyService      homographyService;
+
+    @org.springframework.beans.factory.annotation.Value("${scanner.patch-warp:false}")
+    private boolean patchWarp;
     private final MarkerAnalysisService  markerAnalysis;
     private final CoordinateDebugService coordinateDebug;
     private final BboxReportLoader       loader;
@@ -282,10 +285,17 @@ public class ScannerService {
         }
 
         try {
-            warped = homographyService.warpToContentArea(image, corners,
-                layout.contentAreaWidth, layout.contentAreaHeight, warpDpi);
+            if (patchWarp) {
+                // Patch-warp mode: skip full-image warp; each indicator warps its own patch.
+                // Create a 1x1 placeholder — MarkerAnalysisService will use Hinv directly.
+                warped = new java.awt.image.BufferedImage(1, 1,
+                    java.awt.image.BufferedImage.TYPE_INT_RGB);
+                log.debug("[{}] patch-warp mode: skipping full image warp", result.imageName);
+            } else {
+                warped = homographyService.warpToContentArea(image, corners,
+                    layout.contentAreaWidth, layout.contentAreaHeight, warpDpi);
+            }
             result.homographyValid = true;
-
         } catch (Exception e) {
             result.homographyValid = false;
             result.errorMessage    = "Perspective warp failed — ballot requires manual review: "
@@ -315,6 +325,7 @@ public class ScannerService {
         final Point2D  finalTL     = detectedTL;
         final int      finalWarpDpi = warpDpi;
         final BufferedImage finalWarped = warped;
+        final BufferedImage finalOriginal = image;
         // Final copy of layout for lambda capture (layout may have been reassigned after flip)
         final PageLayout finalLayout = layout;
 
@@ -325,7 +336,9 @@ public class ScannerService {
                         finalWarped, finalLayout, contest, indicator,
                         finalWarpDpi, finalImageDpi,
                         session.threshold, session.darkPctMin,
-                        finalHinv, finalTL);
+                        finalHinv, finalTL,
+                        patchWarp ? finalOriginal : null,
+                        patchWarp ? homographyService : null);
                     marking.contestId    = contest.id;
                     marking.contestTitle = contest.title;
                     marking.contestType  = contest.contestType;

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.election.counter.model.BboxReport.*;
 import gov.election.counter.service.CornerDetectionService.Point2D;
+import gov.election.counter.service.HomographyService;
 import org.springframework.stereotype.Service;
 
 import java.awt.image.BufferedImage;
@@ -70,6 +71,22 @@ public class MarkerAnalysisService {
                                   double darkPctMin,
                                   double[] Hinv,
                                   Point2D detectedTL) {
+        return analyse(warped, page, contest, indicator, warpDpi, imageDpi,
+                       threshold, darkPctMin, Hinv, detectedTL, null, null);
+    }
+
+    public MarkingResult analyse(BufferedImage warped,
+                                  PageLayout page,
+                                  ContestBox contest,
+                                  IndicatorBox indicator,
+                                  int warpDpi,
+                                  double imageDpi,
+                                  int threshold,
+                                  double darkPctMin,
+                                  double[] Hinv,
+                                  Point2D detectedTL,
+                                  BufferedImage originalImage,
+                                  HomographyService homographyService) {
         MarkingResult result = new MarkingResult();
         result.contestTitle  = contest.title;
         result.candidateId   = indicator.candidateId;
@@ -89,6 +106,17 @@ public class MarkerAnalysisService {
         result.absTop  = py;
         result.width   = pw;
         result.height  = ph;
+
+        // ── Patch-warp mode: warp only this indicator's pixels ───────────────
+        // originalImage != null signals patch-warp mode.
+        // We warp the indicator region directly from the original scan using Hinv,
+        // then sample from the resulting small patch starting at (0,0).
+        if (originalImage != null && homographyService != null && Hinv != null) {
+            warped = homographyService.warpIndicatorPatch(
+                originalImage, Hinv, px, py, pw, ph);
+            px = 0; py = 0;
+            // result.absLeft/Top already set above (canonical position)
+        }
 
         // ── Absolute image pixel position (matches GIMP) ────────────────────
         // All coordinates in the YAML are page-absolute inches from (0,0).

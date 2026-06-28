@@ -188,6 +188,59 @@ public class HomographyService {
         return new double[]{ avgW / widthIn, avgH / heightIn };
     }
 
+
+    /**
+     * Warp only the pixels corresponding to one indicator box from the source image.
+     *
+     * Instead of warping the entire content area, this method:
+     *   1. Maps the indicator's canonical destination corners back to source pixels (via Hinv)
+     *   2. Finds the bounding box of those source pixels
+     *   3. Warps only that small patch to the canonical indicator size
+     *
+     * This is much faster than full-image warping when there are many indicators.
+     *
+     * @param source    original scanned image
+     * @param Hinv      canonical→image homography (9-element row-major)
+     * @param dstX      indicator left edge in canonical pixels
+     * @param dstY      indicator top edge in canonical pixels
+     * @param dstW      indicator width in canonical pixels
+     * @param dstH      indicator height in canonical pixels
+     * @return          warped patch image of size dstW × dstH
+     */
+    public BufferedImage warpIndicatorPatch(BufferedImage source, double[] Hinv,
+                                             int dstX, int dstY, int dstW, int dstH) {
+        int srcW = source.getWidth(), srcH = source.getHeight();
+        int[] srcPixels = getRgbPixels(source);
+        int[] dstPixels = new int[dstW * dstH];
+
+        for (int y = 0; y < dstH; y++) {
+            for (int x = 0; x < dstW; x++) {
+                // Map canonical pixel (dstX+x, dstY+y) back to source
+                double[] src = applyHomography(Hinv, dstX + x, dstY + y);
+                double sx = src[0], sy = src[1];
+
+                int px = (int) sx, py = (int) sy;
+                double fx = sx - px, fy = sy - py;
+
+                if (px < 0 || px >= srcW - 1 || py < 0 || py >= srcH - 1) {
+                    dstPixels[y * dstW + x] = 0xFFFFFFFF;
+                    continue;
+                }
+
+                int c00 = srcPixels[py       * srcW + px    ];
+                int c10 = srcPixels[py       * srcW + px + 1];
+                int c01 = srcPixels[(py + 1) * srcW + px    ];
+                int c11 = srcPixels[(py + 1) * srcW + px + 1];
+
+                dstPixels[y * dstW + x] = bilinearInterp(c00, c10, c01, c11, fx, fy);
+            }
+        }
+
+        BufferedImage patch = new BufferedImage(dstW, dstH, BufferedImage.TYPE_INT_RGB);
+        patch.setRGB(0, 0, dstW, dstH, dstPixels, 0, dstW);
+        return patch;
+    }
+
     // ── DLT Homography ─────────────────────────────────────────────────────────
 
     /**
