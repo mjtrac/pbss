@@ -109,15 +109,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version> <!-- Use your current surefire version -->
-        <configuration>
-          <excludes>
-            <!-- Exclude a specific class -->
-            <exclude>**/BrokenTest.java</exclude>
-            <!-- Or exclude a specific method (JUnit 4/5 & TestNG) -->
-            <exclude>**/CornerDetectionTest.java</exclude>
-        </excludes>
-    </configuration>
-</plugin>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

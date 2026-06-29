@@ -110,6 +110,16 @@
       <version>${itext.version}</version>
     </dependency>
 
+    <!--
+      PDFBox is used by PrinterService to rasterise PDF pages for printing.
+      It does not conflict with iText — they operate independently.
+    -->
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+
     <!-- ── ZXing — barcode generation (Apache 2.0) ──────────────────── -->
     <dependency>
       <groupId>com.google.zxing</groupId>

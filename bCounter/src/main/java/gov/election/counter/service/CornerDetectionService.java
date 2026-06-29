@@ -169,6 +169,15 @@ public class CornerDetectionService {
         // The side lines run perpendicular to the bottom line.
         // For now we use the bottom endpoints directly for mark derivation.
 
+        // ── Early tilt computation from full line span ──────────────────────────
+        // Compute tilt here (before BL/BR blob search) so it is available for
+        // BL/BR synthesis if one mark is clipped by the image boundary.
+        double lineTiltAngle = Math.atan2(
+            (double)(rightEnd[1] - leftEnd[1]),
+            (double)(rightEnd[0] - leftEnd[0]));
+        double lineCosT = Math.cos(lineTiltAngle);
+        double lineSinT = Math.sin(lineTiltAngle);
+
         // Step 4: derive BL and BR mark centres
         // Mark sits below the line endpoint.
         // gap = MARK_BELOW_GAP_IN from bottom of line to top of mark.
@@ -219,29 +228,76 @@ public class CornerDetectionService {
                 "BR orientation mark: NOT FOUND (expected near x={} y={})",
                 brSearchX, brCentreY);
 
+        // ── Synthesize missing BL or BR from the found mark ─────────────────────
+        // At large tilt angles the low corner of the bottom line can push the
+        // corresponding orientation mark outside the image boundary (clipped).
+        // If exactly one bottom mark is found, derive the missing one using the
+        // YAML horizontal separation projected along the known tilt axis.
+        // This must happen before the upside-down check and before Step 4b so
+        // that haveBothBottomMarks is true and PTL/PTR projection can proceed.
+        boolean blSynthesized = false, brSynthesized = false;
+        if (bl == null && br != null && layout != null && layout.cornerMarks != null) {
+            double yamlBlX = layout.cornerMarks[3][0];
+            double yamlBrX = layout.cornerMarks[2][0];
+            double sepIn   = yamlBrX - yamlBlX;
+            double blSynX  = br[0] - lineCosT * sepIn * dpi;
+            double blSynY  = br[1] - lineSinT * sepIn * dpi;
+            bl = new double[]{ blSynX, blSynY, br[2], br[3] };
+            blSynthesized = true;
+            log.debug("BL synthesized from BR + YAML separation ({}\"): ({},{}) dim={}x{}",
+                String.format("%.3f", sepIn), (int)blSynX, (int)blSynY, br[2], br[3]);
+        } else if (br == null && bl != null && layout != null && layout.cornerMarks != null) {
+            double yamlBlX = layout.cornerMarks[3][0];
+            double yamlBrX = layout.cornerMarks[2][0];
+            double sepIn   = yamlBrX - yamlBlX;
+            double brSynX  = bl[0] + lineCosT * sepIn * dpi;
+            double brSynY  = bl[1] + lineSinT * sepIn * dpi;
+            br = new double[]{ brSynX, brSynY, bl[2], bl[3] };
+            brSynthesized = true;
+            log.debug("BR synthesized from BL + YAML separation ({}\"): ({},{}) dim={}x{}",
+                String.format("%.3f", sepIn), (int)brSynX, (int)brSynY, bl[2], bl[3]);
+        }
+
         // Orientation check: if the RIGHT bottom mark is significantly wider than
         // the LEFT bottom mark, the rectangle mark (normally TL) is now at
         // bottom-right -- ballot is upside-down.
         // Rectangle mark is ~2x the width of a square mark (aspect >= 1.6).
+        // Only use real (non-synthesized) marks for the aspect check — a synthesized
+        // mark always has aspect 1.0 and would defeat rectangle detection.
         if (!alreadyFlipped && bl != null && br != null) {
-            double blAspect = bl[2] / Math.max(1, bl[3]);
-            double brAspect = br[2] / Math.max(1, br[3]);
-            log.debug(
-                "Bottom mark aspects: BL={} BR={} (rect threshold=1.6)",
-                blAspect, brAspect);
-            // Rectangle mark (TL in upright orientation) has aspect ~2x square marks.
-            // If it appears at bottom-right → ballot is upside-down.
-            // If it appears at bottom-left → ballot is upside-down AND mirrored
-            //   (shouldn't happen with physical scanning but handle defensively).
-            boolean brIsRect = brAspect >= 1.6 && brAspect > blAspect * 1.4;
-            boolean blIsRect = blAspect >= 1.6 && blAspect > brAspect * 1.4;
-            if (brIsRect || blIsRect) {
+            if (!blSynthesized && !brSynthesized) {
+                // Both marks real: use aspect ratio comparison as normal.
+                double blAspect = bl[2] / Math.max(1, bl[3]);
+                double brAspect = br[2] / Math.max(1, br[3]);
                 log.debug(
-                    "{} mark is rectangle -- ballot is upside-down, rotating 180deg",
-                    brIsRect ? "BR" : "BL");
-                imageHolder[0] = rotateImage(image, Math.PI);
-                return findContentBoxCorners(imageHolder, dpi, expectedWidthIn,
-                    expectedHeightIn, layout, 0, 0, true);  // zero offset: was from pre-flip coords
+                    "Bottom mark aspects: BL={} BR={} (rect threshold=1.6)",
+                    blAspect, brAspect);
+                boolean brIsRect = brAspect >= 1.6 && brAspect > blAspect * 1.4;
+                boolean blIsRect = blAspect >= 1.6 && blAspect > brAspect * 1.4;
+                if (brIsRect || blIsRect) {
+                    log.debug(
+                        "{} mark is rectangle -- ballot is upside-down, rotating 180deg",
+                        brIsRect ? "BR" : "BL");
+                    imageHolder[0] = rotateImage(image, Math.PI);
+                    return findContentBoxCorners(imageHolder, dpi, expectedWidthIn,
+                        expectedHeightIn, layout, 0, 0, true);
+                }
+            } else {
+                // One mark synthesized: check only the real one for rectangle aspect.
+                // If BL is synthesized, only BR is real; if BR is synthesized, only BL.
+                double realAspect = blSynthesized
+                    ? br[2] / Math.max(1, br[3])   // BR is real
+                    : bl[2] / Math.max(1, bl[3]);   // BL is real
+                boolean realIsRect = realAspect >= 1.6;
+                log.debug(
+                    "{} mark (real, other synthesized) aspect={} rect={}",
+                    blSynthesized ? "BR" : "BL", realAspect, realIsRect);
+                if (realIsRect) {
+                    log.debug("Real bottom mark is rectangle -- ballot is upside-down, rotating 180deg");
+                    imageHolder[0] = rotateImage(image, Math.PI);
+                    return findContentBoxCorners(imageHolder, dpi, expectedWidthIn,
+                        expectedHeightIn, layout, 0, 0, true);
+                }
             }
             // If neither bottom mark is a rectangle, the ballot may still be
             // upside-down if both marks are small (the actual BL/BR square marks
@@ -255,24 +311,27 @@ public class CornerDetectionService {
                     log.debug("TL hint is in lower half of image -- ballot is upside-down, rotating 180deg");
                     imageHolder[0] = rotateImage(image, Math.PI);
                     return findContentBoxCorners(imageHolder, dpi, expectedWidthIn,
-                        expectedHeightIn, layout, 0, 0, true);  // zero offset: was from pre-flip coords
+                        expectedHeightIn, layout, 0, 0, true);
                 }
             }
         }
 
-        // ── Step 4b: Compute tilt from BL/BR, project to find PTL/PTR ──────────
+        // ── Step 4b: Compute tilt from line span, project to find PTL/PTR ──────
         //
         // Rather than relying on absolute YAML Y positions for TL/TR (which fail
         // for large-header ballots where content starts much lower than standard),
         // we use the physical page geometry:
         //
-        //  1. BL and BR give us the bottom axis — from these we compute tilt angle
-        //     and left/right X positions projected along the tilted axis.
-        //  2. We project upward along the left/right tilted verticals to the top
-        //     of the page to find PTL/PTR.
+        //  1. The tilt angle is computed from the full bottom border line span
+        //     (leftEnd→rightEnd), which is more stable than the shorter BL→BR
+        //     blob separation.
+        //  2. We project upward from BL/BR along the tilted vertical to find PTL/PTR.
         //  3. Once PTL/PTR and BL/BR are found, we interpolate to find TL/TR
         //     using the YAML fractional position (TL_frac = (TL.y-PTL.y)/(BL.y-PTL.y)).
-        //  4. A vertical-line sanity check confirms dark pixels exist between
+        //  4. If only one of PTL/PTR is found, the missing one is synthesized from
+        //     the found mark using the YAML horizontal separation, so a single
+        //     out-of-window mark does not cause total failure.
+        //  5. A vertical-line sanity check confirms dark pixels exist between
         //     PTL→BL and PTR→BR on the page border.
         //
         // PTL/PTR upside-down check: if what we find near the TOP looks like
@@ -286,18 +345,20 @@ public class CornerDetectionService {
         if (haveBothBottomMarks && layout != null
                 && layout.pageMarks != null && layout.pageMarks.length >= 2) {
 
-            // ── Compute tilt from BL→BR ──────────────────────────────────────
-            // The tilt angle of the bottom line gives us the page orientation.
+            // ── Reuse tilt computed from the full bottom border line span ────────
+            // lineTiltAngle/lineCosT/lineSinT were computed before BL/BR synthesis
+            // from leftEnd→rightEnd, giving a stable angle across the full line.
             double blX = bl[0], blY = bl[1];
             double brX = br[0], brY = br[1];
-            double tiltAngle = Math.atan2(brY - blY, brX - blX); // radians, typically tiny
-            double cosT = Math.cos(tiltAngle), sinT = Math.sin(tiltAngle);
+            double tiltAngle = lineTiltAngle;
+            double cosT = lineCosT, sinT = lineSinT;
             // Unit vectors along (horizontal) and perpendicular (vertical, upward) axes
-            double axH_x = cosT,  axH_y = sinT;   // along bottom line, left→right
             double axV_x = sinT,  axV_y = -cosT;  // perpendicular, pointing UP
 
-            log.debug("Tilt angle: {}° from BL({},{}) BR({},{})",
-                String.format("%.3f", Math.toDegrees(tiltAngle)), (int)blX, (int)blY, (int)brX, (int)brY);
+            log.debug("Tilt angle: {}° from line endpoints ({},{})→({},{})  BL({},{}) BR({},{})",
+                String.format("%.3f", Math.toDegrees(tiltAngle)),
+                leftEnd[0], leftEnd[1], rightEnd[0], rightEnd[1],
+                (int)blX, (int)blY, (int)brX, (int)brY);
 
             // ── Project to expected PTL/PTR positions ────────────────────────
             // YAML gives PTL and BL Y positions; their difference in inches
@@ -322,15 +383,28 @@ public class CornerDetectionService {
             log.debug("PTL predicted: ({},{})  PTR predicted: ({},{})",
                 ptlPredX, ptlPredY, ptrPredX, ptrPredY);
 
-            // Search for PTL/PTR in a tight window around predicted positions
-            int pageTolPx = (int)(0.30 * dpi);
+            // Search for PTL/PTR in an asymmetric window around predicted positions.
+            //
+            // Vertical: extend further upward (smaller Y) than downward, because
+            // an underestimated tilt magnitude places both predictions too low.
+            //
+            // Horizontal: symmetric ±0.50".  Although tilt direction is known from
+            // the bottom line, ADF sheet-feeding can self-correct as the page moves
+            // through — meaning the top of the page has less tilt than the bottom.
+            // This makes the prediction overshoot horizontally, putting the real mark
+            // on the opposite side from what the tilt direction implies.  Since we
+            // cannot know whether ADF correction occurred, the horizontal window must
+            // be symmetric so neither side is disadvantaged.
+            int pageTolHorizPx = (int)(0.50 * dpi);
+            int pageTolUpPx    = (int)(0.50 * dpi);
+            int pageTolDownPx  = (int)(0.20 * dpi);
             ptl = findPeakBlob(dark, w, h,
-                Math.max(0, ptlPredX - pageTolPx), Math.min(w, ptlPredX + pageTolPx),
-                Math.max(0, ptlPredY - pageTolPx), Math.min(h, ptlPredY + pageTolPx),
+                Math.max(0, ptlPredX - pageTolHorizPx), Math.min(w, ptlPredX + pageTolHorizPx),
+                Math.max(0, ptlPredY - pageTolUpPx),    Math.min(h, ptlPredY + pageTolDownPx),
                 markRtPx / 2, markHPx / 2);
             ptr = findPeakBlob(dark, w, h,
-                Math.max(0, ptrPredX - pageTolPx), Math.min(w, ptrPredX + pageTolPx),
-                Math.max(0, ptrPredY - pageTolPx), Math.min(h, ptrPredY + pageTolPx),
+                Math.max(0, ptrPredX - pageTolHorizPx), Math.min(w, ptrPredX + pageTolHorizPx),
+                Math.max(0, ptrPredY - pageTolUpPx),    Math.min(h, ptrPredY + pageTolDownPx),
                 markRtPx / 2, markHPx / 2);
 
             if (ptl != null) log.debug("PTL found: ({},{})", (int)ptl[0], (int)ptl[1]);
@@ -338,19 +412,42 @@ public class CornerDetectionService {
             if (ptr != null) log.debug("PTR found: ({},{})", (int)ptr[0], (int)ptr[1]);
             else             log.debug("PTR not found near ({},{})", ptrPredX, ptrPredY);
 
+            // ── Synthesize missing PTL or PTR from the found mark ────────────
+            // If one top mark falls outside the search window (e.g. at 2° tilt
+            // the far mark can drift ~0.38" from its nominal position), derive
+            // it from the found mark using the YAML horizontal separation
+            // projected along the tilt axis.
+            double yamlPtlX = layout.pageMarks[0][0];
+            double yamlPtrX = layout.pageMarks[1][0];
+            double sepIn    = yamlPtrX - yamlPtlX;   // inches between PTL and PTR centres
+            boolean ptlSynthesized = false, ptrSynthesized = false;
+            if (ptl != null && ptr == null) {
+                double ptrSynX = ptl[0] + cosT * sepIn * dpi;
+                double ptrSynY = ptl[1] + sinT * sepIn * dpi;
+                ptr = new double[]{ ptrSynX, ptrSynY, ptl[2], ptl[3] };
+                ptrSynthesized = true;
+                log.debug("PTR synthesized from PTL + YAML separation ({}\"): ({},{}) dim={}x{}",
+                    String.format("%.3f", sepIn), (int)ptrSynX, (int)ptrSynY, ptl[2], ptl[3]);
+            } else if (ptr != null && ptl == null) {
+                double ptlSynX = ptr[0] - cosT * sepIn * dpi;
+                double ptlSynY = ptr[1] - sinT * sepIn * dpi;
+                ptl = new double[]{ ptlSynX, ptlSynY, ptr[2], ptr[3] };
+                ptlSynthesized = true;
+                log.debug("PTL synthesized from PTR + YAML separation ({}\"): ({},{}) dim={}x{}",
+                    String.format("%.3f", sepIn), (int)ptlSynX, (int)ptlSynY, ptr[2], ptr[3]);
+            }
+
             // PTL/PTR upside-down check removed — PTL/PTR are always 18x9pt
             // rectangles (aspect ~2.0) so aspect ratio cannot distinguish them
             // from TL. Upside-down detection is handled earlier via BL/BR aspect
             // ratio and TL hint position checks.
 
             // Vertical line sanity check: confirm the content box border line
-            // exists just above the BL/BR marks.
-            // BL/BR centres are (gapPx + markHPx/2) below the border line.
-            // Start check just above the mark top edge and scan a short distance.
-            int markAbovePx = gapPx + markHPx;
+            // exists just above the BL/BR marks.  Start check at the border line Y
+            // and scan upward a short distance.  Synthesized marks are skipped.
             int vertCheckPx = (int)(0.10 * dpi);
             int vertWindowPx = (int)(0.05 * dpi);
-            if (ptl != null) {
+            if (ptl != null && !ptlSynthesized) {
                 int darkCount = 0;
                 int startY = (int)Math.round(blY) - gapPx - markHPx / 2; // border line Y
                 for (int dy = 0; dy <= vertCheckPx; dy++) {
@@ -368,8 +465,10 @@ public class CornerDetectionService {
                 } else {
                     log.debug("Left vertical sanity check passed ({}/{})", darkCount, vertCheckPx);
                 }
+            } else if (ptlSynthesized) {
+                log.debug("PTL synthesized -- skipping left vertical sanity check");
             }
-            if (ptr != null) {
+            if (ptr != null && !ptrSynthesized) {
                 int darkCount = 0;
                 int startY = (int)Math.round(brY) - gapPx - markHPx / 2; // border line Y
                 for (int dy = 0; dy <= vertCheckPx; dy++) {
@@ -387,6 +486,8 @@ public class CornerDetectionService {
                 } else {
                     log.debug("Right vertical sanity check passed ({}/{})", darkCount, vertCheckPx);
                 }
+            } else if (ptrSynthesized) {
+                log.debug("PTR synthesized -- skipping right vertical sanity check");
             }
         } // end if (haveBothBottomMarks)
 
