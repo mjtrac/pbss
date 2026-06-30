@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg — GPL v3
+  Bulk ballot generation — generates PDF+YAML for every combination in an election,
+  with optional immediate printing to a server-side printer.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Generate All Ballots — Election Ballot Builder</title>
+  <link rel="stylesheet" th:href="@{/css/main.css}"/>
+  <style>
+    .gen-body        { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; }
+    .card            { background: #fff; border: 1.5px solid var(--border, #dde3ea);
+                       border-radius: 6px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+    .card h2         { margin: 0 0 1rem; font-size: 1rem; color: #0d2b2b;
+                       border-bottom: 2px solid #1a6a6a; padding-bottom: .3rem; }
+    .field-row       { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
+                       margin-bottom: 1rem; }
+    .field-row > div { flex: 1; min-width: 200px; }
+    label            { display: block; font-size: .82rem; font-weight: 600;
+                       color: #374151; margin-bottom: .25rem; }
+    select, input[type=text] {
+                       width: 100%; padding: .4rem .6rem; border: 1px solid #cbd5e1;
+                       border-radius: 4px; font-size: .9rem; box-sizing: border-box; }
+    .printer-section { background: #f0fdf4; border: 1px solid #86efac;
+                       border-radius: 6px; padding: 1rem 1.25rem; margin-top: 1rem; }
+    .printer-section h3 { margin: 0 0 .75rem; font-size: .9rem; color: #166534; }
+    .checkbox-row    { display: flex; align-items: center; gap: .5rem;
+                       margin-bottom: .75rem; }
+    .checkbox-row input[type=checkbox] { width: auto; }
+    #printerSelector { display: none; margin-top: .5rem; }
+    .btn-primary     { background: #1a6a6a; color: #fff; border: none;
+                       border-radius: 4px; padding: .55rem 1.5rem;
+                       font-size: .95rem; cursor: pointer; }
+    .btn-primary:hover { background: #155858; }
+
+    /* Results table */
+    .results-header  { display: flex; gap: 1.5rem; align-items: baseline;
+                       margin-bottom: 1rem; flex-wrap: wrap; }
+    .badge           { display: inline-block; padding: .2rem .55rem;
+                       border-radius: 3px; font-size: .78rem; font-weight: 600; }
+    .badge-ok        { background: #dcfce7; color: #166534; }
+    .badge-err       { background: #fee2e2; color: #991b1b; }
+    .summary-ok      { color: #166534; font-weight: 700; }
+    .summary-err     { color: #991b1b; font-weight: 700; }
+    table            { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th               { background: #0d2b2b; color: #fff; padding: .45rem .75rem;
+                       text-align: left; }
+    td               { padding: .4rem .75rem; border-bottom: 1px solid #e5e5e5;
+                       vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f7fafa; }
+    .files-list      { margin: .2rem 0 0; padding: 0; list-style: none;
+                       font-family: monospace; font-size: .78rem; color: #475569; }
+    .files-list li   { word-break: break-all; }
+    .error-msg       { color: #991b1b; font-size: .82rem; }
+    .export-dir      { font-family: monospace; font-size: .82rem; color: #475569;
+                       margin-top: .25rem; }
+    .alert           { padding: .75rem 1rem; border-radius: 5px; margin-bottom: 1rem; }
+    .alert-error     { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+    .spinner         { display: none; margin-left: .75rem;
+                       width: 18px; height: 18px; vertical-align: middle;
+                       border: 3px solid #d1fae5; border-top-color: #1a6a6a;
+                       border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<header class="app-header">
+  <h1>&#128196; Ballot Builder</h1>
+  <div class="header-user" sec:authorize="isAuthenticated()">
+    <a href="/print" style="color:white;margin-right:1rem;font-size:.9rem;">
+      &#128438; Single Ballot
+    </a>
+    <span sec:authentication="name">user</span>
+    <form method="post" action="/logout" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<div class="gen-body">
+
+  <h1 style="font-size:1.3rem;color:#0d2b2b;margin-bottom:1.25rem">
+    &#128230; Generate All Ballots
+  </h1>
+
+  <!-- Error banner -->
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <!-- Generation form (always shown so user can run again) -->
+  <div class="card">
+    <h2>Election &amp; Options</h2>
+    <form method="post" th:action="@{/print/generate-all}" id="genForm">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+      <div class="field-row">
+        <!-- Election selector -->
+        <div>
+          <label for="electionId">Election *</label>
+          <select id="electionId" name="electionId" required>
+            <option value="">— select an election —</option>
+            <option th:each="el : ${elections}"
+                    th:value="${el.id}"
+                    th:text="${el.name}"
+                    th:selected="${election != null and election.id == el.id}">
+            </option>
+          </select>
+        </div>
+
+        <!-- Language selector -->
+        <div>
+          <label for="lang">Language</label>
+          <select id="lang" name="lang">
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="zh">Chinese</option>
+            <option value="vi">Vietnamese</option>
+            <option value="tl">Tagalog</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Printer section -->
+      <div class="printer-section">
+        <h3>&#128438; Print Options <span style="font-weight:400;color:#555">(optional)</span></h3>
+        <div class="checkbox-row">
+          <input type="checkbox" id="printNow" onchange="togglePrinter(this)"/>
+          <label for="printNow" style="margin:0;font-weight:400">
+            Send each ballot to a printer immediately after generating
+          </label>
+        </div>
+        <div id="printerSelector">
+          <label for="printerName">Printer (on server)</label>
+          <select id="printerName" name="printerName">
+            <option value="">— loading printers… —</option>
+          </select>
+          <p style="font-size:.78rem;color:#555;margin:.4rem 0 0">
+            &#9432; These are printers available on the <strong>server machine</strong>,
+            not your browser's printers.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top:1.25rem;display:flex;align-items:center;gap:.75rem">
+        <button type="submit" class="btn-primary" onclick="showSpinner()">
+          &#9654; Generate All Ballots
+        </button>
+        <div class="spinner" id="spinner"></div>
+        <span id="spinnerLabel" style="display:none;font-size:.85rem;color:#555">
+          Generating — this may take a moment…
+        </span>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results (shown after POST) -->
+  <div th:if="${results != null}">
+    <div class="card">
+      <div class="results-header">
+        <h2 style="margin:0;border:none;padding:0">
+          Results for
+          <em th:text="${election != null ? election.name : ''}"></em>
+        </h2>
+        <span class="summary-ok" th:text="${successCount + ' succeeded'}"></span>
+        <span th:if="${failCount > 0}" class="summary-err"
+              th:text="${failCount + ' failed'}"></span>
+        <span th:if="${printerUsed != null}"
+              style="font-size:.82rem;color:#166534">
+          &#128438; Printed to: <strong th:text="${printerUsed}"></strong>
+        </span>
+      </div>
+
+      <p th:if="${!exportDir.isEmpty()}" class="export-dir">
+        Files saved to: <strong th:text="${exportDir}"></strong>
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Region (Precinct)</th>
+            <th>Party</th>
+            <th>Ballot Type</th>
+            <th>Files Written</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="r : ${results}">
+            <td>
+              <span th:if="${r.success}"  class="badge badge-ok">&#10003; OK</span>
+              <span th:unless="${r.success}" class="badge badge-err">&#10007; Error</span>
+            </td>
+            <td th:text="${r.regionName}"></td>
+            <td th:text="${r.partyName}"></td>
+            <td th:text="${r.ballotTypeName}"></td>
+            <td>
+              <ul th:if="${r.success}" class="files-list">
+                <li th:each="f : ${r.filesWritten}"
+                    th:text="${#strings.substringAfterLast(f, '/')}"></li>
+              </ul>
+              <span th:unless="${r.success}" class="error-msg"
+                    th:text="${r.errorMessage}"></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /gen-body -->
+
+<script>
+  // ── Printer discovery ──────────────────────────────────────────────────
+  let printersLoaded = false;
+
+  function togglePrinter(cb) {
+    const sel = document.getElementById('printerSelector');
+    sel.style.display = cb.checked ? 'block' : 'none';
+    if (cb.checked && !printersLoaded) loadPrinters();
+  }
+
+  function loadPrinters() {
+    fetch('/print/printers', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        const select = document.getElementById('printerName');
+        select.innerHTML = '';
+        if (!data.printers || data.printers.length === 0) {
+          select.innerHTML =
+            '<option value="">— no printers found on server —</option>';
+          return;
+        }
+        data.printers.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          if (p === data.defaultPrinter) opt.selected = true;
+          select.appendChild(opt);
+        });
+        printersLoaded = true;
+      })
+      .catch(() => {
+        document.getElementById('printerName').innerHTML =
+          '<option value="">— could not load printers —</option>';
+      });
+  }
+
+  // ── Spinner on submit ─────────────────────────────────────────────────
+  function showSpinner() {
+    document.getElementById('spinner').style.display = 'inline-block';
+    document.getElementById('spinnerLabel').style.display = 'inline';
+  }
+
+  // ── Clear printer selection when printing unchecked ────────────────────
+  document.getElementById('genForm').addEventListener('submit', function() {
+    const cb = document.getElementById('printNow');
+    if (!cb.checked) {
+      // Remove the printerName field so the server receives blank
+      const sel = document.getElementById('printerName');
+      sel.disabled = true;
+    }
+  });
+
+  // ── Pre-select election if result is shown ─────────────────────────────
+  // (election is already pre-selected via th:selected above)
+</script>
+</body>
+</html>
