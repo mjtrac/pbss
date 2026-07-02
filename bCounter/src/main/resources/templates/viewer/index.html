@@ -136,22 +136,52 @@
       </form>
       <details style="margin-top:.5rem">
         <summary style="font-size:.72rem;color:#475569;cursor:pointer">
-          Available columns
+          &#9432; Available columns &amp; examples
         </summary>
         <div style="font-size:.72rem;color:#64748b;font-family:monospace;
-                    margin-top:.35rem;line-height:1.8">
-          <strong style="color:#94a3b8">Ballot:</strong>
-          bi.image_name &nbsp; bi.image_path &nbsp; bi.page_number &nbsp;
-          bi.corners_found &nbsp; bi.was_rotated<br/>
-          <strong style="color:#94a3b8">Barcode:</strong>
-          b.raw_data &nbsp; b.region_id &nbsp; b.party_id &nbsp;
-          b.election_id &nbsp; b.jurisdiction_id<br/>
-          <strong style="color:#94a3b8">Contest:</strong>
-          cr.contest_title &nbsp; cr.contest_type &nbsp; cr.max_votes<br/>
-          <strong style="color:#94a3b8">Candidate:</strong>
-          cdr.candidate_name<br/>
-          <strong style="color:#94a3b8">Vote:</strong>
-          vo.vote_status &nbsp; vo.dark_pct
+                    margin-top:.5rem;line-height:2">
+
+          <div style="color:#94a3b8;font-size:.7rem;font-family:sans-serif;
+                      margin-bottom:.35rem;font-style:italic">
+            When filtering on contest or candidate columns, only the ballot
+            <em>pages</em> that contain that contest are returned — other pages
+            of the same ballot are excluded.
+          </div>
+
+          <strong style="color:#94a3b8;font-family:sans-serif">Ballot image &nbsp;</strong>
+          <span style="color:#64748b">(table alias: <strong>bi</strong>)</span><br/>
+          &nbsp;&nbsp;bi.image_name &nbsp; bi.image_path &nbsp; bi.page_number<br/>
+          &nbsp;&nbsp;bi.corners_found &nbsp; bi.was_rotated<br/>
+
+          <strong style="color:#94a3b8;font-family:sans-serif">Barcode &nbsp;</strong>
+          <span style="color:#64748b">(alias: <strong>b</strong>)</span><br/>
+          &nbsp;&nbsp;b.raw_data &nbsp; b.region_id &nbsp; b.party_id<br/>
+          &nbsp;&nbsp;b.election_id &nbsp; b.jurisdiction_id &nbsp; b.ballot_type_id<br/>
+
+          <strong style="color:#94a3b8;font-family:sans-serif">Contest &nbsp;</strong>
+          <span style="color:#64748b">(alias: <strong>cr</strong>)</span><br/>
+          &nbsp;&nbsp;cr.contest_title &nbsp; cr.contest_type &nbsp; cr.max_votes<br/>
+
+          <strong style="color:#94a3b8;font-family:sans-serif">Candidate &nbsp;</strong>
+          <span style="color:#64748b">(alias: <strong>cdr</strong>)</span><br/>
+          &nbsp;&nbsp;cdr.candidate_name<br/>
+
+          <strong style="color:#94a3b8;font-family:sans-serif">Vote opportunity &nbsp;</strong>
+          <span style="color:#64748b">(alias: <strong>vo</strong>)</span><br/>
+          &nbsp;&nbsp;vo.vote_status &nbsp; vo.dark_pct<br/>
+
+          <div style="margin-top:.5rem;color:#475569;font-family:sans-serif;
+                      font-size:.7rem">Examples:</div>
+          <div style="color:#7dd3fc;margin-top:.2rem">
+            cr.contest_title = 'Mayor'<br/>
+            cr.contest_title LIKE '%Council%'<br/>
+            vo.vote_status = 'VOTED' AND cr.contest_title = 'Mayor'<br/>
+            cdr.candidate_name = 'Jane Smith'<br/>
+            b.region_id = '3'<br/>
+            bi.page_number = 2<br/>
+            bi.corners_found = 0<br/>
+            b.raw_data LIKE '1|2|%'
+          </div>
         </div>
       </details>
     </div>

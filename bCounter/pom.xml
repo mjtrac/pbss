@@ -19,7 +19,7 @@
 
   <groupId>gov.election</groupId>
   <artifactId>bCounter</artifactId>
-  <version>0.9.4-beta</version>
+  <version>0.9.5-beta</version>
   <name>bCounter</name>
   <description>Ballot image scanner and vote counter</description>
 

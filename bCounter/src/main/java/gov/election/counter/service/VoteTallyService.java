@@ -54,8 +54,12 @@ public class VoteTallyService {
 
     /** Directory where results_report.html, overvote_report.txt, and review_required.txt
      *  are written. Configured via reports.output.dir in application.properties. */
-    @org.springframework.beans.factory.annotation.Value("${reports.output.dir:${user.dir}}")
+    @org.springframework.beans.factory.annotation.Value("${reports.output.dir:${user.home}/bSuite_data/reports}")
     private String reportOutputDir;
+
+    /** Separate directory for write-in image crops. */
+    @org.springframework.beans.factory.annotation.Value("${data.writeins.dir:${user.home}/bSuite_data/writeins}")
+    private String writeInsDir;
 
     /** How often (images scanned) to write results_report.html during a scan. */
     @org.springframework.beans.factory.annotation.Value("${reports.interval:500}")
@@ -90,11 +94,16 @@ public class VoteTallyService {
         this.currentImageFolder = (imageFolder != null && !imageFolder.isBlank())
             ? imageFolder : ".";
 
-        // Ensure report output directory exists
+        // Ensure report output directories exist
         try {
             Files.createDirectories(Paths.get(reportOutputDir));
         } catch (Exception ex) {
             log.warn("Could not create reports dir {}: {}", reportOutputDir, ex.getMessage());
+        }
+        try {
+            Files.createDirectories(Paths.get(writeInsDir));
+        } catch (Exception ex) {
+            log.warn("Could not create writeins dir {}: {}", writeInsDir, ex.getMessage());
         }
 
         List<ImageContestResult> icResults = buildImageContestResults(results);
@@ -735,41 +744,32 @@ public class VoteTallyService {
 
     // ── Scribble report ───────────────────────────────────────────────────────
 
-    /**
-     * Writes scribble_report.html to the report output directory.
-     * Lists every ballot flagged by ScribbleDetectionService, ordered by
-     * suspicious pixel count descending (worst first), with a link to
-     * view each ballot in bViewer.
-     *
-     * File is only written if at least one ballot was flagged.
-     * Called from processFinalTally() at the end of a complete scan.
-     */
     private void writeScribbleReport() {
         List<ResultsQueryService.ScribbleRow> rows;
         try {
             rows = resultsQuery.scribbledBallots();
         } catch (Exception ex) {
-            log.debug("Scribble report skipped (scribble detection not active?): {}",
+            log.debug("Scribble report skipped (columns not in schema yet?): {}",
                 ex.getMessage());
             return;
         }
         if (rows.isEmpty()) {
-            log.info("No scribbled ballots detected — scribble_report.html not written");
+            log.info("No scribbled ballots — scribble_report.html not written");
             return;
         }
 
-        Path out = Paths.get(reportOutputDir, "scribble_report.html");
-        String ts = java.time.LocalDateTime.now()
-            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        Path   out = Paths.get(reportOutputDir, "scribble_report.html");
+        String ts  = java.time.LocalDateTime.now().format(
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(out))) {
             pw.println("<!DOCTYPE html><html lang=\"en\"><head>");
             pw.println("<meta charset=\"UTF-8\"/>");
             pw.printf("<title>Scribble Report — %s</title>%n", h(ts));
             pw.println("<style>");
-            pw.println("  body  { font-family: Arial, sans-serif; font-size: 11pt;");
-            pw.println("          max-width: 960px; margin: 2rem auto; color: #111; }");
-            pw.println("  h1    { font-size: 16pt; border-bottom: 2px solid #92400e;");
+            pw.println("  body  { font-family:Arial,sans-serif; font-size:11pt;");
+            pw.println("          max-width:960px; margin:2rem auto; color:#111; }");
+            pw.println("  h1    { font-size:16pt; border-bottom:2px solid #92400e;");
             pw.println("          padding-bottom:.4rem; color:#92400e; }");
             pw.println("  .meta { color:#555; font-size:10pt; margin-bottom:1.5rem; }");
             pw.println("  .warn { background:#fef3c7; border:1px solid #d97706;");
@@ -783,57 +783,42 @@ public class VoteTallyService {
             pw.println("  tr:last-child td { border-bottom:2px solid #92400e; }");
             pw.println("  .num  { text-align:right; font-variant-numeric:tabular-nums; }");
             pw.println("  .name { font-family:monospace; font-size:9.5pt; }");
-            pw.println("  .view { font-size:9pt; white-space:nowrap; }");
             pw.println("  .thumb img { max-width:140px; max-height:100px;");
             pw.println("               border:1px solid #d97706; border-radius:3px; }");
             pw.println("  .no-thumb { color:#aaa; font-size:9pt; font-style:italic; }");
             pw.println("  @media print { a { color:#92400e; } }");
             pw.println("</style></head><body>");
-
             pw.printf("<h1>&#9998; Scribble Report</h1>%n");
             pw.printf("<p class=\"meta\">Generated: %s</p>%n", h(ts));
-            pw.printf("<div class=\"warn\">%n");
-            pw.printf("  <strong>%d ballot(s) flagged</strong> with unexpected marks " +
-                      "outside vote indicator regions.%n", rows.size());
-            pw.printf("  Red boxes (where shown) outline the suspicious mark(s) " +
-                      "on the corrected ballot image.%n");
-            pw.printf("</div>%n");
-
-            pw.println("<table>");
-            pw.println("  <tr>");
-            pw.println("    <th>#</th>");
-            pw.println("    <th>Outline</th>");
-            pw.println("    <th>Image Name</th>");
-            pw.println("    <th>Barcode</th>");
-            pw.println("    <th class=\"num\">Suspicious Pixels</th>");
-            pw.println("    <th>View</th>");
-            pw.println("  </tr>");
-
+            pw.printf("<div class=\"warn\"><strong>%d ballot(s) flagged</strong> "
+                + "with unexpected marks outside vote indicator regions. "
+                + "Red boxes (where shown) outline the suspicious mark(s) "
+                + "on the corrected ballot image.</div>%n", rows.size());
+            pw.println("<table><tr><th>#</th><th>Outline</th>"
+                + "<th>Image Name</th><th>Barcode</th>"
+                + "<th class=\"num\">Suspicious Pixels</th><th>View</th></tr>");
             int rank = 1;
             for (ResultsQueryService.ScribbleRow row : rows) {
-                pw.printf("  <tr>%n");
-                pw.printf("    <td class=\"num\">%d</td>%n", rank++);
+                pw.printf("  <tr><td class=\"num\">%d</td>%n", rank++);
                 if (row.isHasOutline()) {
-                    pw.printf("    <td class=\"thumb\">" +
-                              "<a href=\"/scribble-image?id=%d\" target=\"_blank\">" +
-                              "<img src=\"/scribble-image?id=%d\" alt=\"scribble outline\"/>" +
-                              "</a></td>%n", row.getImageId(), row.getImageId());
+                    pw.printf("  <td class=\"thumb\">"
+                        + "<a href=\"/scribble-image?id=%d\" target=\"_blank\">"
+                        + "<img src=\"/scribble-image?id=%d\" "
+                        + "alt=\"scribble outline\"/></a></td>%n",
+                        row.getImageId(), row.getImageId());
                 } else {
-                    pw.printf("    <td class=\"no-thumb\">(no outline saved)</td>%n");
+                    pw.printf("  <td class=\"no-thumb\">(no outline)</td>%n");
                 }
-                pw.printf("    <td class=\"name\">%s</td>%n", h(row.getImageName()));
-                pw.printf("    <td class=\"name\">%s</td>%n", h(row.getBarcodeData()));
-                pw.printf("    <td class=\"num\">%,d</td>%n", row.getScribblePixels());
-                pw.printf("    <td class=\"view\"><a href=\"http://localhost:8081/viewer/view" +
-                          "?id=%d\" target=\"_blank\">&#128269; View in viewer</a></td>%n",
-                          row.getImageId());
-                pw.println("  </tr>");
+                pw.printf("  <td class=\"name\">%s</td>%n", h(row.getImageName()));
+                pw.printf("  <td class=\"name\">%s</td>%n", h(row.getBarcodeData()));
+                pw.printf("  <td class=\"num\">%,d</td>%n", row.getScribblePixels());
+                pw.printf("  <td><a href=\"http://localhost:8081/viewer/view"
+                    + "?id=%d\" target=\"_blank\">&#128269; View</a></td></tr>%n",
+                    row.getImageId());
             }
-            pw.println("</table>");
-            pw.println("</body></html>");
-
-            log.info("Scribble report written ({} flagged): {}", rows.size(),
-                out.toAbsolutePath());
+            pw.println("</table></body></html>");
+            log.info("Scribble report written ({} flagged): {}",
+                rows.size(), out.toAbsolutePath());
         } catch (IOException ex) {
             log.warn("Could not write scribble_report.html: {}", ex.getMessage());
         }
@@ -910,7 +895,7 @@ public class VoteTallyService {
                 List<MarkingResult> wis = e.getValue();
                 for (int wi = 0; wi < wis.size(); wi++) {
                     String suffix = wis.size() > 1 ? "_" + (wi + 1) : "";
-                    String outName = Paths.get(reportOutputDir,
+                    String outName = Paths.get(writeInsDir,
                         "writein_" + stem + "_" + cid + suffix + "." + ext).toString();
                     saveWriteInRegion(img, wis.get(wi), dpi, outName, ext);
                 }

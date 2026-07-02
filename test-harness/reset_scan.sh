@@ -21,18 +21,53 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ── Read data.database.dir from bCounter's application.properties ─────────────
+BCOUNTER_PROPS="$BCOUNTER_DIR/src/main/resources/application.properties"
+
+# Read and resolve a single property from a Spring properties file.
+# Handles ${user.home}, ${user.dir}, and chained ${other.key} references.
+read_prop() {
+  local file="$1" key="$2"
+  [[ -f "$file" ]] || { echo ""; return; }
+  local escaped_key raw ref ref_key ref_val pass
+  escaped_key=$(echo "$key" | sed 's/\./\\./g')
+  raw=$(grep -E "^[[:space:]]*${escaped_key}[[:space:]]*=" "$file" \
+        | tail -1 \
+        | sed "s|^[[:space:]]*${escaped_key}[[:space:]]*=||")
+  [[ -z "$raw" ]] && { echo ""; return; }
+  raw="${raw//\$\{user.home\}/$HOME}"
+  raw="${raw//\$\{user.dir\}/$(pwd)}"
+  pass=0
+  while [[ $pass -lt 5 ]] && echo "$raw" | grep -qF '${'  ; do
+    ref=$(echo "$raw" | grep -oE '\$\{[^}]+\}' | head -1)
+    ref_key="${ref:2:${#ref}-3}"
+    ref_val=$(read_prop "$file" "$ref_key")
+    [[ -n "$ref_val" ]] && raw="${raw//$ref/$ref_val}" || break
+    pass=$((pass + 1))
+  done
+  echo "$raw"
+}
+
+DB_DIR="$(read_prop "$BCOUNTER_PROPS" "data.database.dir")"
+
+if [[ -z "$DB_DIR" ]]; then
+  echo "  ⚠  Could not read data.database.dir from $BCOUNTER_PROPS"
+  echo "     Falling back to \$HOME/bSuite_data/db"
+  DB_DIR="${HOME}/bSuite_data/db"
+fi
+
 echo "── Reset bCounter scan state ─────────────────────────────────"
 echo "   bSuite:  $BSUITE_DIR"
-echo "   DB dir:  $BCOUNTER_DIR"
+echo "   DB dir:  $DB_DIR"
 echo "   Images:  $IMAGES_DIR"
 echo ""
 
 # 1. Remove SQLite database files
 echo "Step 1 — Removing counter database..."
 removed=0
-for f in "$BCOUNTER_DIR/counter_results.db" \
-          "$BCOUNTER_DIR/counter_results.db-shm" \
-          "$BCOUNTER_DIR/counter_results.db-wal"; do
+for f in "$DB_DIR/counter_results.db" \
+          "$DB_DIR/counter_results.db-shm" \
+          "$DB_DIR/counter_results.db-wal"; do
     if [ -f "$f" ]; then
         rm -f "$f"
         echo "  Removed: $(basename $f)"

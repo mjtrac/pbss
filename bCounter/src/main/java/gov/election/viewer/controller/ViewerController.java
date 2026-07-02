@@ -49,9 +49,18 @@ public class ViewerController {
 
     @GetMapping({"/viewer/", "/viewer"})
     public String index(HttpSession session, Model model) {
-        List<BallotImageSummary> images = viewService.listAll();
+        ViewerFilterSession filter = getFilter(session);
+        List<BallotImageSummary> images;
+
+        if (filter.isActive()) {
+            // Show only the filtered images in the list
+            images = viewService.listByIds(filter.filteredIds);
+        } else {
+            images = viewService.listAll();
+        }
+
         model.addAttribute("images",  images);
-        model.addAttribute("count",   images.size());
+        model.addAttribute("count",   viewService.listAll().size());   // always total count
         addFilterModel(session, model);
         return "viewer/index";
     }

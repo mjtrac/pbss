@@ -71,18 +71,15 @@ public class ScanController {
     }
 
     private final VoteRecordService  voteRecord;
-    private final ScribbleDetectionService scribbleDetection;
 
     public ScanController(BboxReportLoader loader, ScannerService scanner,
                           VoteTallyService voteTally, AuditLogService auditLog,
-                          VoteRecordService voteRecord,
-                          ScribbleDetectionService scribbleDetection) {
+                          VoteRecordService voteRecord) {
         this.loader       = loader;
         this.scanner      = scanner;
         this.voteTally    = voteTally;
         this.auditLog     = auditLog;
         this.voteRecord   = voteRecord;
-        this.scribbleDetection = scribbleDetection;
         // Use Spring's SimpleAsyncTaskExecutor so beans called from the
         // background scan thread (e.g. VoteRecordService) have a proper
         // Spring application context and @Transactional support.
@@ -94,6 +91,9 @@ public class ScanController {
 
     // ── Configuration form ─────────────────────────────────────────────────────
 
+    @org.springframework.beans.factory.annotation.Value("${data.database.dir:${user.home}/bSuite_data/db}")
+    private String databaseDir;
+
     @GetMapping("/")
     public String index(HttpSession httpSession, Model model) {
         ScanSession session = getOrCreate(httpSession);
@@ -101,7 +101,7 @@ public class ScanController {
         model.addAttribute("hasSession", session.isStarted());
         // Show viewer link if a previous scan DB exists
         java.nio.file.Path dbPath = java.nio.file.Paths.get(
-            System.getProperty("user.dir"), "counter_results.db");
+            databaseDir, "counter_results.db");
         model.addAttribute("dbExists", java.nio.file.Files.exists(dbPath));
         model.addAttribute("viewerUrl", "http://localhost:${viewer.server.port:8082}/viewer/");
         return "index";
@@ -774,7 +774,6 @@ public class ScanController {
         httpSession.removeAttribute(SESSION_KEY);
         // Clear all DB data
         voteRecord.clearAllData();
-        scribbleDetection.clearAll();
         ra.addFlashAttribute("info", "All election data has been cleared. Ready for a new election.");
         return "redirect:/";
     }

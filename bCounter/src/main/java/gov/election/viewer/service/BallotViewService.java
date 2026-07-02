@@ -184,6 +184,19 @@ public class BallotViewService {
     // ── Queries ───────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
+    public List<BallotImageSummary> listByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return Collections.emptyList();
+        Map<Long, BallotImage> byId = imageRepo.findAllById(ids).stream()
+            .collect(Collectors.toMap(BallotImage::getId, b -> b));
+        // Preserve the order from the filter (already sorted by image_name from query)
+        return ids.stream()
+            .map(byId::get)
+            .filter(Objects::nonNull)
+            .map(BallotImageSummary::new)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<BallotImageSummary> listAll() {
         return imageRepo.findAll().stream()
             .sorted(Comparator.comparing(BallotImage::getImageName))

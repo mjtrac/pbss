@@ -88,6 +88,15 @@ public class ScribbleDetectionService {
     @Value("${scanner.scribble-cluster-min-px:8}")
     private int clusterMinPx;
 
+    /**
+     * Extra padding added to each indicator bounding box before masking,
+     * in inches.  Default 1/8" (0.125") to cover the gap between the YAML
+     * bounding box and the actual printed indicator region, and to absorb
+     * sloppy marks that overflow the box slightly.
+     */
+    @Value("${scanner.scribble-indicator-pad-in:0.125}")
+    private double indicatorPadIn;
+
     /** luminance threshold below which a pixel is "dark" — mirrors ScannerService */
     private static final int DARK_THRESHOLD = 128;
 
@@ -252,8 +261,12 @@ public class ScribbleDetectionService {
         boolean[] normative = dilate(entry.mask, w, h,
             (int) Math.round(dilationIn * warpDpi));
 
-        // Pre-darken all indicator bounding boxes from the YAML
+        // Pre-darken all indicator bounding boxes from the YAML, expanded
+        // by indicatorPadIn on each side to cover the gap between the YAML
+        // bounding box and the actual printed indicator, and to absorb
+        // sloppy marks that overflow the box slightly.
         if (layout != null) {
+            int padPx = (int) Math.round(indicatorPadIn * warpDpi);
             for (ContestBox contest : layout.contests) {
                 for (IndicatorBox ind : contest.indicators) {
                     // Indicator positions in the warped image are content-area-relative
@@ -264,9 +277,14 @@ public class ScribbleDetectionService {
                     int iw = Math.max(1, (int) Math.round(ind.width  * warpDpi));
                     int ih = Math.max(1, (int) Math.round(ind.height * warpDpi));
 
-                    // Fill the indicator region in the normative mask
-                    for (int y = Math.max(0, iy); y < Math.min(h, iy + ih); y++) {
-                        for (int x = Math.max(0, ix); x < Math.min(w, ix + iw); x++) {
+                    // Expand by padding on all four sides
+                    int x0 = Math.max(0, ix - padPx);
+                    int y0 = Math.max(0, iy - padPx);
+                    int x1 = Math.min(w, ix + iw + padPx);
+                    int y1 = Math.min(h, iy + ih + padPx);
+
+                    for (int y = y0; y < y1; y++) {
+                        for (int x = x0; x < x1; x++) {
                             normative[y * w + x] = true;
                         }
                     }

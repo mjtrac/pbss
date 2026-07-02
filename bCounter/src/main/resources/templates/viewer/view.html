@@ -181,6 +181,25 @@
   <a th:href="@{/}" class="btn" style="margin-top:1rem;display:inline-block">&#8592; Back</a>
 </div>
 
+<!-- Active filter banner -->
+<div th:if="${filterActive}"
+     style="background:#1e3a5f;border-bottom:1px solid #3b82f6;
+            padding:.4rem 1rem;font-size:.78rem;color:#93c5fd;
+            display:flex;align-items:center;gap:1rem">
+  <span>&#128269; Filter active:
+    <strong th:text="${filterDesc}"></strong>
+    &mdash; <span th:text="${total}"></span> image(s) match
+  </span>
+  <form method="post" th:action="@{/viewer/clear-filter}" style="margin-left:auto">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <button type="submit"
+            style="background:#334155;border:1px solid #475569;color:#94a3b8;
+                   border-radius:4px;padding:.15rem .5rem;font-size:.72rem;cursor:pointer">
+      &#10005; Clear filter
+    </button>
+  </form>
+</div>
+
 <!-- Nav bar -->
 <div th:if="${ballot != null}" class="nav-bar" id="navBar">
 

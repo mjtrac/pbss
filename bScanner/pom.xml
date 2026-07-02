@@ -14,7 +14,7 @@
 
   <groupId>gov.election</groupId>
   <artifactId>bScanner</artifactId>
-  <version>0.9.4-beta</version>
+  <version>0.9.5-beta</version>
   <name>bScanner</name>
   <description>Election Ballot Scanner Driver</description>
 

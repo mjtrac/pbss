@@ -22,7 +22,7 @@ COPIES=1
 QUICK=0
 BUILDER_HOST="http://localhost:8080"
 COUNTER_HOST="http://localhost:8081"
-BUILDER_EXPORT_DIR="${HOME}/bBuilder_ballots"  # default bBuilder output dir (~/bBuilder_ballots)
+BUILDER_EXPORT_DIR=""   # derived from bBuilder application.properties below
 
 # Parse args
 while [[ $# -gt 0 ]]; do
@@ -39,6 +39,75 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
+BSUITE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# ── Read and resolve application.properties ───────────────────────────────────
+# Handles ${user.home}, ${user.dir}, and chained ${other.key} references.
+# Works with bash 3 (macOS default) — no associative arrays required.
+# Usage: read_prop <file> <key>
+read_prop() {
+  local file="$1" key="$2"
+  [[ -f "$file" ]] || { echo ""; return; }
+  local escaped_key raw ref ref_key ref_val pass
+  escaped_key=$(echo "$key" | sed 's/\./\\./g')
+  raw=$(grep -E "^[[:space:]]*${escaped_key}[[:space:]]*=" "$file" \
+        | tail -1 \
+        | sed "s|^[[:space:]]*${escaped_key}[[:space:]]*=||")
+  [[ -z "$raw" ]] && { echo ""; return; }
+  raw="${raw//\$\{user.home\}/$HOME}"
+  raw="${raw//\$\{user.dir\}/$(pwd)}"
+  pass=0
+  while [[ $pass -lt 5 ]] && echo "$raw" | grep -qF '${' ; do
+    ref=$(echo "$raw" | grep -oE '\$\{[^}]+\}' | head -1)
+    ref_key="${ref:2:${#ref}-3}"
+    ref_val=$(read_prop "$file" "$ref_key")
+    [[ -n "$ref_val" ]] && raw="${raw//$ref/$ref_val}" || break
+    pass=$((pass + 1))
+  done
+  echo "$raw"
+}
+
+BCOUNTER_PROPS="$BSUITE_DIR/bCounter/src/main/resources/application.properties"
+BBUILDER_PROPS="$BSUITE_DIR/bBuilder/src/main/resources/application.properties"
+
+# ── Derive key paths from properties ─────────────────────────────────────────
+PROP_BALLOT_DIR="$(read_prop "$BBUILDER_PROPS" "ballot.export.dir")"
+PROP_DB_DIR="$(read_prop     "$BCOUNTER_PROPS" "data.database.dir")"
+PROP_DB_PATH="${PROP_DB_DIR}/counter_results.db"
+
+# If --builder-dir was not passed on command line, use the property value
+if [[ -z "$BUILDER_EXPORT_DIR" ]]; then
+  BUILDER_EXPORT_DIR="$PROP_BALLOT_DIR"
+fi
+
+# ── Sync check ────────────────────────────────────────────────────────────────
+echo "── Checking property sync ────────────────────────────────────"
+SYNC_OK=1
+
+if [[ -z "$PROP_BALLOT_DIR" ]]; then
+  echo "  ⚠  Could not read ballot.export.dir from $BBUILDER_PROPS"
+  SYNC_OK=0
+else
+  echo "  bBuilder ballot.export.dir : $PROP_BALLOT_DIR"
+fi
+
+if [[ -z "$PROP_DB_DIR" ]]; then
+  echo "  ⚠  Could not read data.database.dir from $BCOUNTER_PROPS"
+  SYNC_OK=0
+else
+  echo "  bCounter data.database.dir : $PROP_DB_DIR"
+fi
+
+if [[ -n "$BUILDER_EXPORT_DIR" && "$BUILDER_EXPORT_DIR" != "$PROP_BALLOT_DIR" ]]; then
+  echo "  ⚠  --builder-dir overrides property: using $BUILDER_EXPORT_DIR"
+fi
+
+if [[ "$SYNC_OK" == "0" ]]; then
+  echo "  ✗ Could not verify property sync — continuing with fallbacks"
+else
+  echo "  ✓ Properties readable"
+fi
+echo ""
 
 # Find python3 that has the required packages.
 # Works on macOS, Linux, and Windows (Git Bash).
@@ -173,14 +242,19 @@ if yamls:
   YAML_DIR=$(cat /tmp/yaml_dir.txt)
 fi
 if [ -z "$YAML_DIR" ] || [ ! -d "$YAML_DIR" ]; then
-  # Try the default bBuilder output directory first
-  if [ -d "${HOME}/bBuilder_ballots" ] && ls "${HOME}/bBuilder_ballots"/*.yaml >/dev/null 2>&1; then
+  # Use the value from bBuilder's application.properties
+  if [ -n "$PROP_BALLOT_DIR" ] && [ -d "$PROP_BALLOT_DIR" ] && \
+     ls "$PROP_BALLOT_DIR"/*.yaml >/dev/null 2>&1; then
+    YAML_DIR="$PROP_BALLOT_DIR"
+    echo "  YAML dir: $YAML_DIR (from ballot.export.dir)"
+  # Legacy fallback: old ~/bBuilder_ballots location
+  elif [ -d "${HOME}/bBuilder_ballots" ] && ls "${HOME}/bBuilder_ballots"/*.yaml >/dev/null 2>&1; then
     YAML_DIR="${HOME}/bBuilder_ballots"
-    echo "  YAML dir: $YAML_DIR (default bBuilder output)"
+    echo "  ⚠  YAML dir: $YAML_DIR (legacy location — update ballot.export.dir?)"
   # Then try the sibling bBuilder source directory (legacy/dev layout)
   elif [ -d "$(dirname "$0")/../bBuilder" ]; then
     YAML_DIR="$(cd "$(dirname "$0")/../bBuilder" && pwd)"
-    echo "  ⚠  No YAMLs in ~/bBuilder_ballots — falling back to $YAML_DIR"
+    echo "  ⚠  No YAMLs found — falling back to $YAML_DIR"
   else
     echo "  ✗ Could not locate YAML files. Run bBuilder Print first."
     exit 1
@@ -199,15 +273,19 @@ echo ""
 # ── Step 7: Verify results ────────────────────────────────────────────────────
 echo "Step 7 — Verifying results against ground truth"
 
-# Find counter_results.db
+# Find counter_results.db — path derived from bCounter's data.database.dir property
 DB_PATH=""
-if [[ -f "../bSuite/bCounter/counter_results.db" ]]; then
+if [[ -n "$PROP_DB_PATH" && -f "$PROP_DB_PATH" ]]; then
+  DB_PATH="$PROP_DB_PATH"
+elif [[ -f "../bSuite/bCounter/counter_results.db" ]]; then
   DB_PATH="../bSuite/bCounter/counter_results.db"
+  echo "  ⚠  Using legacy DB location: $DB_PATH"
 elif [[ -f "../bCounter/counter_results.db" ]]; then
   DB_PATH="../bCounter/counter_results.db"
+  echo "  ⚠  Using legacy DB location: $DB_PATH"
 else
-  echo "  ⚠  Could not find counter_results.db — specify with --db flag to verify_results.py"
-  DB_PATH="counter_results.db"
+  echo "  ⚠  Could not find counter_results.db — will attempt: $PROP_DB_PATH"
+  DB_PATH="$PROP_DB_PATH"
 fi
 
 "$PYTHON3" verify_results.py \
