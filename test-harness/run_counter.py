@@ -10,6 +10,7 @@ Usage: python run_counter.py [--host http://localhost:8081]
                               [--yaml-dir <path to bBuilder export dir>]
 """
 import argparse, json, time, sys, re
+from pathlib import Path
 import requests
 
 DEFAULT_HOST   = "http://localhost:8081"
@@ -170,7 +171,6 @@ def main():
             for combo in data.get("combinations", []):
                 all_yamls.extend(combo.get("yamlFiles", []))
             if all_yamls:
-                from pathlib import Path
                 yaml_dir = str(Path(all_yamls[0]).parent)
                 print(f"  YAML folder from election_data.json: {yaml_dir}")
                 # Verify it actually exists and has YAML files
@@ -188,7 +188,6 @@ def main():
                 #   1. ~/bBuilder_ballots (default bBuilder output dir)
                 #   2. sibling bBuilder source directory (dev layout)
                 import os as _os
-                from pathlib import Path as _Path
                 _candidates = [
                     _Path(_os.path.expanduser("~/bBuilder_ballots")),
                     _Path(args.election_data).resolve().parent.parent / "bBuilder",
@@ -208,7 +207,6 @@ def main():
             yaml_dir = "."
             print(f"  Could not read election_data.json: {e}")
 
-    from pathlib import Path
     images_abs = str(Path(args.images).resolve())
     yaml_abs   = str(Path(yaml_dir).resolve())
 

@@ -11,7 +11,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BSUITE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BCOUNTER_DIR="$BSUITE_DIR/bCounter"
-IMAGES_DIR="$BSUITE_DIR/test-harness/images"  # default
+IMAGES_DIR="${HOME}/bSuite_data/cast_ballot_scans"  # default
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -48,10 +48,10 @@ read_prop() {
   echo "$raw"
 }
 
-DB_DIR="$(read_prop "$BCOUNTER_PROPS" "data.database.dir")"
+DB_DIR="$(read_prop "$BCOUNTER_PROPS" "data.db.dir")"
 
 if [[ -z "$DB_DIR" ]]; then
-  echo "  ⚠  Could not read data.database.dir from $BCOUNTER_PROPS"
+  echo "  ⚠  Could not read data.db.dir from $BCOUNTER_PROPS"
   echo "     Falling back to \$HOME/bSuite_data/db"
   DB_DIR="${HOME}/bSuite_data/db"
 fi
@@ -62,8 +62,8 @@ echo "   DB dir:  $DB_DIR"
 echo "   Images:  $IMAGES_DIR"
 echo ""
 
-# 1. Remove SQLite database files
-echo "Step 1 — Removing counter database..."
+# 1. Remove SQLite database files and bCounter output folders
+echo "Step 1 — Removing counter database and output files..."
 removed=0
 for f in "$DB_DIR/counter_results.db" \
           "$DB_DIR/counter_results.db-shm" \
@@ -75,6 +75,14 @@ for f in "$DB_DIR/counter_results.db" \
     fi
 done
 [ $removed -eq 0 ] && echo "  (no database files found)"
+
+# Clear bCounter output directories
+for dir in "${HOME}/bSuite_data/writeins" "${HOME}/bSuite_data/scribbles" "${HOME}/bSuite_data/reports"; do
+    if [ -d "$dir" ]; then
+        rm -f "$dir"/*.png "$dir"/*.html "$dir"/*.txt "$dir"/*.csv "$dir"/*.yaml 2>/dev/null || true
+        echo "  Cleared: $dir"
+    fi
+done
 
 # 2. Remove adjusted YAML files from image tree
 echo ""

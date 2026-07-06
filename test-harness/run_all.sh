@@ -8,12 +8,16 @@
 #
 # Usage:
 #   ./run_all.sh [--seed N] [--copies N] [--builder http://...] [--counter http://...] [--builder-dir /path]
+#   ./run_all.sh --use-existing --ballot-pdf /path/ballot.pdf --ballot-yaml /path/ballot.yaml
+#                [--quick] [--copies N] [--counter http://...]
 #
 # Output:
-#   election_data.json    — IDs of created entities + generated file paths
-#   marked_ballots/       — PNGs with voter marks, ground_truth.json
-#   images/               — Distorted copies in folder tree, ground_truth_all.json
-#   verify_report.json    — Diff of DB results vs ground truth
+#   election_data.json       — IDs of created entities + generated file paths
+#   marked_ballots/          — PNGs with voter marks, ground_truth.json
+#   images/                  — Distorted copies in folder tree, ground_truth_all.json
+#   verify_report.json       — Diff of DB results vs ground truth
+#   ~/bSuite_data/reports/   — bCounter results report
+#   ~/bSuite_data/writeins/  — Write-in image crops
 
 set -euo pipefail
 
@@ -23,6 +27,9 @@ QUICK=0
 BUILDER_HOST="http://localhost:8080"
 COUNTER_HOST="http://localhost:8081"
 BUILDER_EXPORT_DIR=""   # derived from bBuilder application.properties below
+USE_EXISTING=0
+BALLOT_PDF=""
+BALLOT_YAML=""
 
 # Parse args
 while [[ $# -gt 0 ]]; do
@@ -33,6 +40,9 @@ while [[ $# -gt 0 ]]; do
     --counter)      COUNTER_HOST="$2";       shift 2 ;;
     --builder-dir)  BUILDER_EXPORT_DIR="$2"; shift 2 ;;
     --quick)        QUICK=1;                 shift   ;;
+    --use-existing) USE_EXISTING=1;          shift   ;;
+    --ballot-pdf)   BALLOT_PDF="$2";         shift 2 ;;
+    --ballot-yaml)  BALLOT_YAML="$2";        shift 2 ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
   esac
 done
@@ -72,7 +82,7 @@ BBUILDER_PROPS="$BSUITE_DIR/bBuilder/src/main/resources/application.properties"
 
 # ── Derive key paths from properties ─────────────────────────────────────────
 PROP_BALLOT_DIR="$(read_prop "$BBUILDER_PROPS" "ballot.export.dir")"
-PROP_DB_DIR="$(read_prop     "$BCOUNTER_PROPS" "data.database.dir")"
+PROP_DB_DIR="$(read_prop     "$BCOUNTER_PROPS" "data.db.dir")"
 PROP_DB_PATH="${PROP_DB_DIR}/counter_results.db"
 
 # If --builder-dir was not passed on command line, use the property value
@@ -92,10 +102,10 @@ else
 fi
 
 if [[ -z "$PROP_DB_DIR" ]]; then
-  echo "  ⚠  Could not read data.database.dir from $BCOUNTER_PROPS"
+  echo "  ⚠  Could not read data.db.dir from $BCOUNTER_PROPS"
   SYNC_OK=0
 else
-  echo "  bCounter data.database.dir : $PROP_DB_DIR"
+  echo "  bCounter data.db.dir : $PROP_DB_DIR"
 fi
 
 if [[ -n "$BUILDER_EXPORT_DIR" && "$BUILDER_EXPORT_DIR" != "$PROP_BALLOT_DIR" ]]; then
@@ -173,10 +183,14 @@ for i in $(seq 1 60); do
   sleep 3
 done
 
-# ── Step 2: Build election via API ────────────────────────────────────────────
+# ── Step 2: Build election via API (skipped in --use-existing mode) ───────────
 echo ""
-echo "Step 2 — Building test election in bBuilder"
-"$PYTHON3" build_election.py --host "$BUILDER_HOST" --out election_data.json
+if [[ "$USE_EXISTING" == "0" ]]; then
+  echo "Step 2 — Building test election in bBuilder"
+  "$PYTHON3" build_election.py --host "$BUILDER_HOST" --out election_data.json
+else
+  echo "Step 2 — Skipped (--use-existing mode)"
+fi
 echo ""
 
 # ── Step 3: Mark ballots ──────────────────────────────────────────────────────
@@ -188,13 +202,31 @@ if [[ "$QUICK" == "1" ]]; then
   MARK_EXTRA="--scenarios valid_all_filled"
   DISTORT_EXTRA="--distortions clean"
   COPIES=1
-  echo "  ⚡ Quick mode: single scenario (valid_all_filled), clean distortion, 1 copy"
+  echo "  ⚡ Quick mode: single scenario, clean distortion, 1 copy"
 fi
-"$PYTHON3" mark_ballots.py \
-  --election-data election_data.json \
-  --out-dir marked_ballots \
-  --seed "$SEED" \
-  $MARK_EXTRA
+if [[ "$USE_EXISTING" == "1" ]]; then
+  # Existing ballot mode: use provided PDF+YAML, auto-generate scenarios
+  if [[ -z "$BALLOT_PDF" || -z "$BALLOT_YAML" ]]; then
+    echo "  ✗ --use-existing requires --ballot-pdf and --ballot-yaml"
+    exit 1
+  fi
+  echo "  Using existing ballot:"
+  echo "    PDF:  $BALLOT_PDF"
+  echo "    YAML: $BALLOT_YAML"
+  "$PYTHON3" mark_ballots.py \
+    --ballot-pdf  "$BALLOT_PDF" \
+    --ballot-yaml "$BALLOT_YAML" \
+    --auto-scenario \
+    --out-dir marked_ballots \
+    --seed "$SEED" \
+    $MARK_EXTRA
+else
+  "$PYTHON3" mark_ballots.py \
+    --election-data election_data.json \
+    --out-dir marked_ballots \
+    --seed "$SEED" \
+    $MARK_EXTRA
+fi
 echo ""
 
 # ── Step 4: Apply distortions ─────────────────────────────────────────────────
@@ -247,10 +279,6 @@ if [ -z "$YAML_DIR" ] || [ ! -d "$YAML_DIR" ]; then
      ls "$PROP_BALLOT_DIR"/*.yaml >/dev/null 2>&1; then
     YAML_DIR="$PROP_BALLOT_DIR"
     echo "  YAML dir: $YAML_DIR (from ballot.export.dir)"
-  # Legacy fallback: old ~/bBuilder_ballots location
-  elif [ -d "${HOME}/bBuilder_ballots" ] && ls "${HOME}/bBuilder_ballots"/*.yaml >/dev/null 2>&1; then
-    YAML_DIR="${HOME}/bBuilder_ballots"
-    echo "  ⚠  YAML dir: $YAML_DIR (legacy location — update ballot.export.dir?)"
   # Then try the sibling bBuilder source directory (legacy/dev layout)
   elif [ -d "$(dirname "$0")/../bBuilder" ]; then
     YAML_DIR="$(cd "$(dirname "$0")/../bBuilder" && pwd)"
@@ -277,12 +305,6 @@ echo "Step 7 — Verifying results against ground truth"
 DB_PATH=""
 if [[ -n "$PROP_DB_PATH" && -f "$PROP_DB_PATH" ]]; then
   DB_PATH="$PROP_DB_PATH"
-elif [[ -f "../bSuite/bCounter/counter_results.db" ]]; then
-  DB_PATH="../bSuite/bCounter/counter_results.db"
-  echo "  ⚠  Using legacy DB location: $DB_PATH"
-elif [[ -f "../bCounter/counter_results.db" ]]; then
-  DB_PATH="../bCounter/counter_results.db"
-  echo "  ⚠  Using legacy DB location: $DB_PATH"
 else
   echo "  ⚠  Could not find counter_results.db — will attempt: $PROP_DB_PATH"
   DB_PATH="$PROP_DB_PATH"

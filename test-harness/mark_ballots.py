@@ -37,6 +37,10 @@ def parse_args():
                    help="Comma-separated list of scenario names to run (default: all)")
     p.add_argument("--style-config",  default="indicator_style.yaml",
                    help="YAML file specifying indicator_style: oval|arrow")
+    p.add_argument("--auto-scenario", action="store_true",
+                   help="Generate voting scenarios automatically from the YAML "
+                        "rather than using the hardcoded SCENARIOS table. "
+                        "Works with any ballot, not just the test election.")
     p.add_argument("--ballot-pdf",    default=None,
                    help="Path to an existing bBuilder ballot PDF to use directly "
                         "(skips election_data.json; pair with --ballot-yaml)")
@@ -206,6 +210,108 @@ def draw_write_in_text(draw: ImageDraw.ImageDraw, x, y, w, h, name: str,
     text_y  = y + row_gap      # on the write-in line
     text_x  = x - w * 2       # start a bit left of the indicator to appear centered
     draw.text((text_x, text_y), name, fill=color, font=font)
+
+
+# ── Auto-scenario generation ──────────────────────────────────────────────────
+
+def auto_scenarios_from_boxes(boxes: list[dict]) -> dict[str, dict]:
+    """
+    Generate a set of voting scenarios automatically from indicator boxes
+    read from a YAML file.  Works with any bSuite ballot regardless of
+    contest titles or candidate names.
+
+    Scenarios generated:
+      auto_valid       — one valid vote per contest (first eligible candidate)
+      auto_overvote    — two votes in every plurality/approval contest
+      auto_abstain     — no votes anywhere
+      auto_write_in    — fill every write-in oval (if present)
+      auto_rcv_top2    — vote rank-1 and rank-2 in RCV contests, first candidate elsewhere
+
+    Returns a dict of {scenario_name: {contest_title: {candidate_name: action}}}
+    suitable for passing to apply_scenario().
+    """
+    # Group boxes by contest
+    from collections import defaultdict
+    contests: dict[str, dict] = {}
+    for box in boxes:
+        ct = box["contest"]
+        if ct not in contests:
+            contests[ct] = {
+                "type":      box["contestType"],
+                "maxVotes":  box["maxVotes"],
+                "candidates": [],
+            }
+        contests[ct]["candidates"].append(box)
+
+    valid:    dict = {}
+    overvote: dict = {}
+    abstain:  dict = {}
+    write_in: dict = {}
+    rcv_top2: dict = {}
+
+    for title, info in contests.items():
+        cands    = info["candidates"]
+        ctype    = info["type"].upper()
+        maxvotes = info["maxVotes"]
+        is_rcv   = (ctype == "RANKED_CHOICE")
+
+        # Separate write-in and regular candidates
+        regulars  = [c for c in cands if not c["writeIn"]
+                     and "(Rank" not in c["candidate"]]
+        write_ins = [c for c in cands if c["writeIn"]]
+        # For RCV, get rank-1 candidates (closest to candidate name)
+        rank1s    = [c for c in cands if "(Rank 1)" in c["candidate"]]
+        rank2s    = [c for c in cands if "(Rank 2)" in c["candidate"]]
+
+        # ── auto_valid ───────────────────────────────────────────────
+        if is_rcv:
+            # Vote rank-1 for the first candidate
+            if rank1s:
+                valid.setdefault(title, {})[rank1s[0]["candidate"]] = "rank:1"
+        else:
+            # Vote for first regular candidate (or "Yes" if present)
+            yes_cands = [c for c in regulars if c["candidate"].lower() == "yes"]
+            first = yes_cands[0] if yes_cands else (regulars[0] if regulars else None)
+            if first:
+                valid.setdefault(title, {})[first["candidate"]] = "vote"
+
+        # ── auto_overvote ────────────────────────────────────────────
+        if not is_rcv and len(regulars) >= 2:
+            # Vote for first two candidates (overvote in vote-for-one contests)
+            if maxvotes == 1:
+                overvote.setdefault(title, {})[regulars[0]["candidate"]] = "vote"
+                overvote.setdefault(title, {})[regulars[1]["candidate"]] = "vote"
+            else:
+                # Already allows multiple — just vote for first
+                overvote.setdefault(title, {})[regulars[0]["candidate"]] = "vote"
+
+        # ── auto_write_in ────────────────────────────────────────────
+        if write_ins:
+            write_in.setdefault(title, {})[write_ins[0]["candidate"]] =                 "write_in:Test Candidate"
+
+        # ── auto_rcv_top2 ────────────────────────────────────────────
+        if is_rcv:
+            if rank1s:
+                rcv_top2.setdefault(title, {})[rank1s[0]["candidate"]] = "rank:1"
+            if rank2s:
+                rcv_top2.setdefault(title, {})[rank2s[0]["candidate"]] = "rank:2"
+        else:
+            # Non-RCV: vote for first candidate
+            if regulars:
+                rcv_top2.setdefault(title, {})[regulars[0]["candidate"]] = "vote"
+
+        # ── auto_abstain ─────────────────────────────────────────────
+        # No actions — all boxes left unmarked (empty dict per contest)
+        abstain.setdefault(title, {})
+
+    return {
+        "auto_valid":    valid,
+        "auto_overvote": overvote,
+        "auto_abstain":  abstain,
+        "auto_write_in": write_in    if write_in else {},
+        "auto_rcv_top2": rcv_top2,
+    }
+
 
 # ── Scenario engine ───────────────────────────────────────────────────────────
 
@@ -467,8 +573,15 @@ def main():
         print(f"  ✓ {len(boxes)} indicators found in YAML")
 
         stem    = Path(pdf_path).stem
+        # Choose scenario table
+        if args.auto_scenario:
+            scenario_table = auto_scenarios_from_boxes(boxes)
+            print(f"  ✓ Auto-generated {len(scenario_table)} scenarios from YAML")
+        else:
+            scenario_table = SCENARIOS
+
         allowed = set(args.scenarios.split(",")) if args.scenarios else None
-        for scenario_name, scenario in SCENARIOS.items():
+        for scenario_name, scenario in scenario_table.items():
             if allowed and scenario_name not in allowed:
                 continue
             img  = src_image.copy().convert("RGB")
@@ -535,10 +648,17 @@ def main():
                 continue
             print(f"  ✓ {Path(yaml_path).name}: {len(boxes)} indicators")
 
+            # Choose scenario table: auto-generated or hardcoded
+            if args.auto_scenario:
+                scenario_table = auto_scenarios_from_boxes(boxes)
+                print(f"  ✓ Auto-generated {len(scenario_table)} scenarios from YAML")
+            else:
+                scenario_table = SCENARIOS
+
             # Apply each scenario
             stem = Path(pdf_path).stem
             allowed = set(args.scenarios.split(",")) if args.scenarios else None
-            for scenario_name, scenario in SCENARIOS.items():
+            for scenario_name, scenario in scenario_table.items():
                 if allowed and scenario_name not in allowed:
                     continue
                 img  = src_image.copy().convert("RGB")
