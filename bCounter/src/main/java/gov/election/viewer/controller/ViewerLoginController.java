@@ -10,11 +10,6 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class ViewerLoginController {
 
-    @GetMapping("/")
-    public String root() {
-        return "redirect:/viewer";
-    }
-
     @GetMapping("/viewer/login")
     public String login(@RequestParam(required = false) String error,
                         @RequestParam(required = false) String logout,

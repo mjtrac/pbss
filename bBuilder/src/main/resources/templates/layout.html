@@ -31,14 +31,12 @@
 
     <span class="nav-group">
       <span class="nav-label" sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">Ballots</span>
-      <a th:href="@{/data/ballot-combinations}"
-         sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">Combinations</a>
       <a th:href="@{/data/ballot-templates}"
          sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">Design Templates</a>
+      <a th:href="@{/data/ballot-combinations}"
+         sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">Combinations</a>
       <a th:href="@{/print}"
          sec:authorize="hasAnyRole('ADMIN','PRINTER')">Print Ballot</a>
-      <a th:href="@{/print/generate-all}"
-         sec:authorize="hasAnyRole('ADMIN','PRINTER')">Generate All</a>
     </span>
 
     <span class="nav-group" sec:authorize="hasRole('ADMIN')">
