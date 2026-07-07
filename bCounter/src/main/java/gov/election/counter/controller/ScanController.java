@@ -65,14 +65,6 @@ public class ScanController {
     @Value("${scanner.parallel-threads:0}")
     private int parallelThreads;
 
-    /** Default ballot image source folder — pre-populated in the scan start form. */
-    @Value("${scanner.default.image.dir:${user.home}/bSuite_data/cast_ballot_scans}")
-    private String defaultImageDir;
-
-    /** Default ballot YAML layout folder — same bSuite_data tree as bBuilder output. */
-    @Value("${scanner.default.report.dir:${user.home}/bSuite_data/ballot_templates}")
-    private String defaultReportDir;
-
     private int resolvedThreads() {
         if (parallelThreads > 0) return parallelThreads;
         return Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
@@ -104,8 +96,6 @@ public class ScanController {
         ScanSession session = getOrCreate(httpSession);
         model.addAttribute("ss", session);
         model.addAttribute("hasSession", session.isStarted());
-        model.addAttribute("defaultImageDir", defaultImageDir);
-        model.addAttribute("defaultReportDir", defaultReportDir);
         // Show viewer link if a previous scan DB exists
         java.nio.file.Path dbPath = java.nio.file.Paths.get(
             System.getProperty("user.dir"), "counter_results.db");
@@ -130,11 +120,8 @@ public class ScanController {
             RedirectAttributes ra) {
 
         ScanSession session = new ScanSession();
-        // Fall back to configured default when no folder is provided
-        session.imageFolder = (imageFolder != null && !imageFolder.isBlank())
-            ? imageFolder.trim() : defaultImageDir;
-        session.reportFolder = (reportFolder != null && !reportFolder.isBlank())
-            ? reportFolder.trim() : defaultReportDir;
+        session.imageFolder       = imageFolder       != null ? imageFolder.trim()       : "";
+        session.reportFolder      = reportFolder      != null ? reportFolder.trim()      : "";
         session.threshold         = threshold;
         session.darkPctMin        = darkPct;
         session.dpi               = dpi;
@@ -382,11 +369,18 @@ public class ScanController {
                         completedQueue.add(new Object[]{imagePath, result, idx});
                     } catch (java.util.ConcurrentModificationException cme) {
                         // Transient race from concurrent access to shared layout data.
-                        // Queue for a same-pass re-scan once worker contention clears,
-                        // rather than immediately flagging for manual review.
+                        // Queue for a same-pass re-scan once worker contention clears.
+                        // IMPORTANT: still add a placeholder to completedQueue so the
+                        // writer loop can advance its count — otherwise the writer spins
+                        // forever waiting for an item that will never arrive.
                         log.warn("CME scanning " + imagePath.getFileName()
                             + " — queuing for re-scan after main pass", cme);
                         scanRetryList.add(new Object[]{imagePath, idx});
+                        ScanResult placeholder = new ScanResult();
+                        placeholder.imagePath  = imagePath.toString();
+                        placeholder.imageName  = imagePath.getFileName().toString();
+                        placeholder.errorMessage = "CME_RETRY";   // writer skips persist
+                        completedQueue.add(new Object[]{imagePath, placeholder, idx});
                     } catch (Exception e) {
                         String msg = e.getMessage() != null ? e.getMessage()
                                    : e.getClass().getSimpleName();
@@ -433,6 +427,10 @@ public class ScanController {
                         };
                     }
                     if (result.errorMessage != null) {
+                        if ("CME_RETRY".equals(result.errorMessage)) {
+                            // Placeholder for CME — actual re-scan handled in scanRetryList below
+                            log.debug("Writer: skipping CME placeholder for {}", imageName);
+                        } else {
                         session.reviewRequired.add(imagePath.toAbsolutePath().toString()
                             + " — " + result.errorMessage);
                         log.warn("Flagged for review: " + imageName
@@ -462,6 +460,7 @@ public class ScanController {
                                 + "). Fix the issue and rescan uncounted images.";
                             session.stopRequested = true;
                         }
+                        }   // end else (not CME_RETRY)
                     } else {
                         var pStatus = voteRecord.persist(result, imagePath, session.threshold,
                             corners, result.contentAreaWidth, result.contentAreaHeight,
@@ -539,10 +538,18 @@ public class ScanController {
                 }
             }
             // Pass complete — wait for all workers to finish, then drain.
-            // session.submittedCount was incremented as each future was submitted,
-            // so the UI counter already shows the correct value during this join.
-            for (Future<?> f : futures) {
-                try { f.get(); } catch (Exception ignored) {}
+            // Each future gets a 60-second timeout — a hung worker must not
+            // block the tally permanently. If a worker times out it is
+            // cancelled and its image (if any) will appear uncounted.
+            for (int fi = 0; fi < futures.size(); fi++) {
+                Future<?> f = futures.get(fi);
+                try {
+                    f.get(60, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (java.util.concurrent.TimeoutException te) {
+                    log.error("Worker thread {} timed out after 60s — cancelling. "
+                        + "One image may be uncounted.", fi);
+                    f.cancel(true);
+                } catch (Exception ignored) {}
             }
             // All worker threads are now idle (joined above), so whatever shared
             // state caused the race is no longer being mutated concurrently.
