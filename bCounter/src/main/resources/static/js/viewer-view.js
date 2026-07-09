@@ -654,8 +654,18 @@
   });
 
 
-  window.zoomOut    = function () { if (typeof zoom === 'function') zoom(-0.05); };
-  window.zoomIn     = function () { if (typeof zoom === 'function') zoom(+0.05); };
-  window.resetZoom  = function () { if (typeof setZoom === 'function') setZoom(1); };
+  window.zoomOut       = function () { if (typeof zoom === 'function') zoom(-0.05); };
+  window.zoomIn        = function () { if (typeof zoom === 'function') zoom(+0.05); };
+  window.resetZoom     = function () { if (typeof setZoom === 'function') setZoom(1); };
+  window.goPrev        = goPrev;
+  window.goNext        = goNext;
+  window.jumpTo        = jumpTo;
+  window.toggleBoxes   = toggleBoxes;
+  window.toggleNames   = toggleNames;
+  window.onAutoChange  = onAutoChange;
+  window.resetAutoTimer = resetAutoTimer;
+  window.onImageLoad   = onImageLoad;
+  window.onZoomInput   = onZoomInput;
+  window.sidebarClick  = sidebarClick;
 
 }());

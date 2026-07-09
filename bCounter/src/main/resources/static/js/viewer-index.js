@@ -107,12 +107,16 @@
     panelSql.style.display  = showGlob ? 'none' : '';
 
     if (tabGlob) {
-      tabGlob.style.background = showGlob ? '#1e293b' : '#0f172a';
-      tabGlob.style.color      = showGlob ? '#94a3b8' : '#64748b';
+      tabGlob.style.background  = showGlob ? '#334155' : '#0a0f1a';
+      tabGlob.style.color       = showGlob ? '#e2e8f0' : '#475569';
+      tabGlob.style.fontWeight  = showGlob ? '600' : 'normal';
+      tabGlob.style.borderColor = showGlob ? '#475569' : '#334155';
     }
     if (tabSql) {
-      tabSql.style.background = showGlob ? '#0f172a' : '#1e293b';
-      tabSql.style.color      = showGlob ? '#64748b' : '#94a3b8';
+      tabSql.style.background  = showGlob ? '#0a0f1a' : '#334155';
+      tabSql.style.color       = showGlob ? '#475569' : '#e2e8f0';
+      tabSql.style.fontWeight  = showGlob ? 'normal' : '600';
+      tabSql.style.borderColor = showGlob ? '#334155' : '#475569';
     }
   }
 
