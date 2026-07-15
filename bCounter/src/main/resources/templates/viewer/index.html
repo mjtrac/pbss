@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head><meta charset="UTF-8"/><title>Ballot Viewer</title>
+<link rel="stylesheet" th:href="@{/css/viewer.css}"/>
+<style>
+  .count-tag { color:#64748b; font-size:.8rem; }
+  .empty { color:#475569; text-align:center; padding:3rem; }
+</style></head>
+<body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
+<header class="app-header">
+  <h1>&#128196; Ballot Viewer</h1>
+  <span class="subtitle">Election Ballot Image Review</span>
+  <div class="header-user" sec:authorize="isAuthenticated()">
+    <a th:href="@{/results}"
+       style="color:white; margin-right:1rem; font-size:.9rem;">&#128202; Results</a>
+    <a th:href="@{/viewer/account/password}"
+       style="color:white; margin-right:1rem; font-size:.9rem;">Change Password</a>
+    <span sec:authentication="name"></span>
+    <form method="post" action="/viewer/logout" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<div class="page-body">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem">
+    <h2 style="color:#94a3b8;font-size:1rem">Scanned Ballots</h2>
+    <span class="count-tag"
+          th:text="${filterActive ? filteredCount + ' of ' + count + ' image(s)' : count + ' image(s) in database'}"></span>
+  </div>
+
+  <!-- Active filter banner -->
+  <div th:if="${filterActive}"
+       style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;
+              background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;
+              padding:.5rem 1rem;font-size:.82rem;color:#93c5fd">
+    <span>&#128269; <strong th:text="${filterDesc}"></strong></span>
+    <span style="color:#64748b">&#8212;</span>
+    <span th:text="${filteredCount + ' ballot(s) match'}"></span>
+    <form method="post" th:action="@{/viewer/clear-filter}" style="margin-left:auto">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit"
+              style="background:#334155;border:1px solid #475569;color:#94a3b8;
+                     border-radius:4px;padding:.2rem .6rem;font-size:.78rem;cursor:pointer">
+        &#10005; Clear filter
+      </button>
+    </form>
+  </div>
+
+  <!-- Filter error -->
+  <div th:if="${filterError}"
+       style="background:#450a0a;border:1px solid #ef4444;border-radius:6px;
+              padding:.5rem 1rem;margin-bottom:.75rem;font-size:.82rem;color:#fca5a5">
+    &#9888; <span th:text="${filterError}"></span>
+  </div>
+
+  <!-- Dual-mode filter form -->
+  <div style="margin-bottom:1rem">
+    <!-- Tab row -->
+    <div style="display:flex;gap:0;margin-bottom:0">
+      <button id="tabGlob" data-tab="glob"
+              style="padding:.3rem .85rem;font-size:.78rem;border-radius:4px 0 0 0;
+                     border:1px solid #475569;border-bottom:none;cursor:pointer;
+                     background:#334155;color:#e2e8f0;font-weight:600"
+              class="filter-tab">Name filter</button>
+      <button id="tabSql" data-tab="sql"
+              style="padding:.3rem .85rem;font-size:.78rem;border-radius:0 4px 0 0;
+                     border:1px solid #334155;border-left:none;border-bottom:none;
+                     cursor:pointer;background:#0a0f1a;color:#475569"
+              class="filter-tab">SQL filter</button>
+    </div>
+
+    <!-- Glob filter panel -->
+    <div id="panelGlob"
+         style="border:1px solid #334155;border-radius:0 4px 4px 4px;
+                background:#1e293b;padding:.6rem .75rem">
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+        <div style="position:relative;flex:1;min-width:200px">
+          <input type="text" id="searchInput"
+                 th:value="${filterType == 'glob' ? filterValue : ''}"
+                 placeholder="Filter by name, or use * as wildcard (e.g. Precinct_1"
+                 autocomplete="off"
+                 style="width:100%;box-sizing:border-box;padding-right:2rem"/>
+          <button id="historyToggle" data-action="toggleDropdown"
+                  title="Show filter history"
+                  style="position:absolute;right:.25rem;top:50%;transform:translateY(-50%);
+                         background:none;border:none;color:#94a3b8;cursor:pointer;
+                         font-size:.8rem;padding:.2rem .4rem;line-height:1">&#9662;</button>
+          <ul id="historyDropdown"
+              style="display:none;position:absolute;top:100%;left:0;right:0;
+                     background:#1e293b;border:1px solid #334155;border-radius:4px;
+                     margin:2px 0 0;padding:0;list-style:none;z-index:100;
+                     max-height:260px;overflow-y:auto"></ul>
+        </div>
+        <button data-action="applyGlob"
+                style="padding:.4rem .8rem;background:#1a6a6a;border:none;
+                       border-radius:4px;color:#fff;cursor:pointer;white-space:nowrap">
+          Apply &#8594;
+        </button>
+        <button data-action="clearFilter"
+                style="padding:.4rem .8rem;background:#334155;border:1px solid #475569;
+                       border-radius:4px;color:#e2e8f0;cursor:pointer;white-space:nowrap">
+          &#10005; Clear
+        </button>
+      </div>
+      <p style="font-size:.72rem;color:#475569;margin:.35rem 0 0">
+        Filters the list below in real time. Click <em>Apply</em> to persist for Prev/Next navigation in the viewer.
+      </p>
+    </div>
+
+    <!-- SQL filter panel -->
+    <div id="panelSql"
+         style="display:none;border:1px solid #334155;border-radius:0 4px 4px 4px;
+                background:#1e293b;padding:.6rem .75rem">
+      <form method="post" th:action="@{/viewer/filter}" id="sqlForm">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="filterType" value="sql"/>
+        <div style="display:flex;gap:.5rem;align-items:flex-start;flex-wrap:wrap">
+          <textarea name="filterValue" id="sqlInput" rows="2"
+                    th:text="${filterType == 'sql' ? filterValue : ''}"
+                    placeholder="e.g.  c.contest_title = 'Mayor'  or  vo.vote_status = 'VOTED' AND c.contest_title = 'City Council'"
+                    style="flex:1;min-width:300px;padding:.4rem .6rem;
+                           background:#0f172a;border:1px solid #334155;
+                           border-radius:4px;color:#e2e8f0;font-size:.82rem;
+                           font-family:monospace;resize:vertical;box-sizing:border-box"></textarea>
+          <button type="submit"
+                  style="padding:.4rem .8rem;background:#1a6a6a;border:none;
+                         border-radius:4px;color:#fff;cursor:pointer;
+                         align-self:flex-end;white-space:nowrap">
+            Apply &#8594;
+          </button>
+        </div>
+      </form>
+      <details style="margin-top:.5rem">
+        <summary style="font-size:.72rem;color:#475569;cursor:pointer">
+          Available columns
+        </summary>
+        <div style="font-size:.72rem;color:#64748b;font-family:monospace;
+                    margin-top:.35rem;line-height:1.8">
+          <strong style="color:#94a3b8">ballot_image (bi):</strong>
+          bi.image_name &nbsp; bi.image_path &nbsp; bi.page_number &nbsp;
+          bi.was_rotated &nbsp; bi.scribble_flagged<br/>
+          <strong style="color:#94a3b8">barcode (b):</strong>
+          b.raw_data &nbsp; b.region_id &nbsp; b.party_id &nbsp;
+          b.election_id &nbsp; b.ballot_type_id<br/>
+          <strong style="color:#94a3b8">contest (c):</strong>
+          c.contest_title &nbsp; c.contest_type &nbsp; c.max_votes<br/>
+          <strong style="color:#94a3b8">candidate (cdr):</strong>
+          cdr.candidate_name &nbsp; cdr.write_in<br/>
+          <strong style="color:#94a3b8">vote_opportunity (vo):</strong>
+          vo.vote_status &nbsp; vo.dark_pct &nbsp; vo.dark_pixels
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Hidden form for glob apply (POST) -->
+  <form method="post" th:action="@{/viewer/filter}" id="globForm" style="display:none">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="filterType" value="glob"/>
+    <input type="hidden" name="filterValue" id="globFormValue"/>
+  </form>
+
+  <div th:if="${images.isEmpty()}" class="empty">
+    No ballot images in the database yet.<br/>
+    Run the Election Counter first to scan ballot images.
+  </div>
+
+  <table class="image-table" th:unless="${images.isEmpty()}">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Image Name</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="imageTable">
+      <tr th:each="img : ${images}" th:data-path="${img.imagePath}">
+        <td th:text="${img.id}" style="color:#475569"></td>
+        <td>
+          <a th:href="@{/viewer/view(id=${img.id})}" th:text="${img.imageName}"></a>
+        </td>
+        <td>
+          <a th:href="@{/viewer/view(id=${img.id})}" class="btn"
+             style="font-size:.75rem;padding:.3rem .65rem">View</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Scanning-in-progress warning banner -->
+<div id="scanBanner" style="display:none;position:fixed;top:0;left:0;right:0;
+     background:#856404;color:#fff3cd;text-align:center;padding:.5rem;
+     font-size:.9rem;z-index:9999;border-bottom:2px solid #664d03;">
+  &#9881; Scan in progress &mdash; results shown may be incomplete
+</div>
+<script th:src="@{/js/viewer-index.js}"></script>
+</body>
+</html>

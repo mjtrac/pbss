@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head><meta charset="UTF-8"/><title>Results — Ballot Viewer</title>
+<link rel="stylesheet" th:href="@{/css/viewer.css}"/>
+</head>
+<body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
+<header class="app-header">
+  <h1>&#128196; Ballot Viewer</h1>
+  <span class="subtitle">Election Results</span>
+  <div class="header-user" sec:authorize="isAuthenticated()">
+    <a th:href="@{/viewer/}"
+       style="color:white; margin-right:1rem; font-size:.9rem;">&#128443; Ballot List</a>
+    <span sec:authentication="name"></span>
+    <form method="post" action="/viewer/logout" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<div class="page-body">
+
+  <!-- Error state -->
+  <div th:if="${reportError != null}"
+       style="background:#450a0a;border:1px solid #ef4444;border-radius:6px;
+              padding:1rem 1.5rem;color:#fca5a5;margin-top:1rem">
+    <strong>&#9888; Report not available</strong><br/>
+    <span th:text="${reportError}"></span>
+    <p style="margin-top:.75rem;font-size:.85rem;color:#94a3b8">
+      Run a scan in Election Counter first, then return here to view results.
+    </p>
+  </div>
+
+  <!-- Report content embedded directly -->
+  <div th:if="${reportContent != null}"
+       th:utext="${reportContent}"
+       style="margin-top:.5rem">
+  </div>
+
+</div>
+</body>
+</html>

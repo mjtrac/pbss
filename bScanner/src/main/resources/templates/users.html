@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Users — bScanner</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; margin: 0; background: #f4f4f4; color: #1a1a2e; }
+    nav  { background: #1a1a2e; color: white; padding: .75rem 1.5rem;
+           display: flex; justify-content: space-between; align-items: center; }
+    nav a { color: #aad4f5; text-decoration: none; margin-left: 1rem; font-size: .9rem; }
+    .container { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: white; border-radius: 8px; padding: 1.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
+    h2,h3 { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th,td { padding: .5rem .75rem; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f0f0f0; }
+    input[type=text], input[type=password], select {
+      padding: .4rem; border: 1px solid #ccc; border-radius: 4px; font-size: .9rem; }
+    button { padding: .35rem .9rem; border: none; border-radius: 4px; cursor: pointer; }
+    .btn-add { background: #1a1a2e; color: white; }
+    .btn-del { background: #dc3545; color: white; }
+    .btn-pwd { background: #6c757d; color: white; }
+    .msg { padding: .5rem; border-radius: 4px; margin-bottom: 1rem; }
+    .ok  { background: #d4edda; color: #155724; }
+    .err { background: #f8d7da; color: #721c24; }
+    .badge { padding: .2rem .5rem; border-radius: 3px; font-size: .8rem; font-weight: bold; }
+    .admin { background: #1a1a2e; color: white; }
+    .operator { background: #6c757d; color: white; }
+  </style>
+</head>
+<body>
+<nav>
+  <span style="font-weight:bold;" th:text="${loginTitle}">bScanner</span>
+  <span>
+    <a href="/">Scan</a>
+    <a href="/config">Configuration</a>
+    <a href="/logout">Sign out</a>
+  </span>
+</nav>
+
+<div class="container">
+  <div class="card">
+    <h2>Users</h2>
+    <div th:if="${success}" class="msg ok"  th:text="${success}"></div>
+    <div th:if="${error}"   class="msg err" th:text="${error}"></div>
+
+    <table>
+      <thead>
+        <tr><th>Username</th><th>Role</th><th>Change Password</th><th>Delete</th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="u : ${users}">
+          <td th:text="${u.username}"></td>
+          <td>
+            <span th:class="${u.role == 'ADMINISTRATOR' ? 'badge admin' : 'badge operator'}"
+                  th:text="${u.role}"></span>
+          </td>
+          <td>
+            <form method="post" action="/users/password" style="display:inline-flex; gap:.4rem;">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <input type="hidden" name="id" th:value="${u.id}"/>
+              <input type="password" name="password" placeholder="New password" required style="width:160px;"/>
+              <button type="submit" class="btn-pwd">Set</button>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="/users/delete"
+                  onsubmit="return confirm('Delete user ' + this.dataset.user + '?')"
+                  th:data-user="${u.username}">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <input type="hidden" name="id" th:value="${u.id}"/>
+              <button type="submit" class="btn-del">Delete</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Add User</h3>
+    <form method="post" action="/users/add"
+          style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:flex-end;">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div>
+        <label style="display:block; font-size:.85rem; margin-bottom:.2rem;">Username</label>
+        <input type="text" name="username" required/>
+      </div>
+      <div>
+        <label style="display:block; font-size:.85rem; margin-bottom:.2rem;">Password</label>
+        <input type="password" name="password" required/>
+      </div>
+      <div>
+        <label style="display:block; font-size:.85rem; margin-bottom:.2rem;">Role</label>
+        <select name="role">
+          <option value="OPERATOR">OPERATOR</option>
+          <option value="ADMINISTRATOR">ADMINISTRATOR</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-add">Add User</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

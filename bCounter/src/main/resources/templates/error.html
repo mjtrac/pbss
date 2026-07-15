@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  Election Counter — licensed under the GNU General Public License v3.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Page Not Found — Election Counter</title>
+  <link rel="stylesheet" th:href="@{/css/counter.css}"/>
+</head>
+<body>
+<header class="app-header">
+  <div class="tally-mark" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span class="slash"></span>
+  </div>
+  <h1>Election Counter</h1>
+</header>
+
+<div class="app-body">
+  <main class="main" style="max-width:480px">
+    <h2 th:text="(${status} ?: '') + ' — ' + (${error} ?: 'Error')">Error</h2>
+    <p>The page you're looking for doesn't exist — double-check the URL.</p>
+    <p style="color:var(--muted);font-size:.85rem">
+      Requested: <code th:text="${path}"></code>
+    </p>
+    <div class="btn-row">
+      <a th:href="@{/}" class="btn btn-primary" sec:authorize="isAuthenticated()">Counter Home</a>
+      <a th:href="@{/viewer/}" class="btn btn-outline">Ballot Viewer</a>
+      <a th:href="@{/login}" class="btn btn-outline" sec:authorize="!isAuthenticated()">Sign In</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

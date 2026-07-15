@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <h2 th:text="${formTitle}">Contest</h2>
+    <a th:if="${contest.id != null}"
+       th:href="@{'/data/contests/' + ${contest.id} + '/preview'}"
+       class="btn btn-secondary">Preview Precinct Coverage</a>
+  </div>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CONTEST DETAILS
+       ═══════════════════════════════════════════════════════════════ -->
+  <form method="post" th:action="@{/data/contests/save}" class="data-form" id="contestForm">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="id"
+           th:if="${contest.id != null}" th:value="${contest.id}"/>
+
+    <label>Election *
+      <select name="electionId" required>
+        <option value="">-- select election --</option>
+        <option th:each="e : ${elections}"
+                th:value="${e.id}"
+                th:text="${(e.jurisdiction != null ? e.jurisdiction.name + ' / ' : '') + e.name}"
+                th:selected="${contest.election != null and contest.election.id == e.id}">
+        </option>
+      </select>
+    </label>
+
+    <!-- ── Contest Title ──────────────────────────────────────────── -->
+    <label>Contest Title *
+      <input type="text" name="printableTitle" id="printableTitle"
+             th:value="${contest.printableTitle != null ? contest.printableTitle : contest.title}"
+             required maxlength="200" autofocus
+             placeholder="e.g. U.S. Representative District 2, Water Board Director Seat 1, Measure A"
+             onblur="syncRecordTitle()"/>
+    </label>
+
+    <label>
+      Record Title <small>(for reports/records; auto-filled from Printable Title, edit to override)</small>
+      <input type="text" name="recordTitle" id="recordTitle"
+             th:value="${contest.recordTitle}"
+             maxlength="200"
+             placeholder="Leave blank to use printable title"/>
+    </label>
+
+    <!-- ── Grouping Label — immediately after contest titles ─────── -->
+    <label>Grouping Label
+      <small>Section header printed <strong>above</strong> this contest's box on the ballot,
+        e.g. "FEDERAL OFFICES", "STATE MEASURES". Leave blank for no section header.</small>
+      <input type="text" name="groupingLabel"
+             th:value="${contest.groupingLabel}" maxlength="200"
+             placeholder="e.g. FEDERAL OFFICES, STATE, MEASURES"/>
+    </label>
+    <div class="print-toggle">
+      <label>
+        <input type="checkbox" name="printGroupingLabel" value="true"
+               th:checked="${contest.printGroupingLabel}"/>
+        Print grouping label on ballot
+      </label>
+    </div>
+
+    <!-- ── Voting Method ──────────────────────────────────────────── -->
+    <fieldset class="voting-method-fieldset">
+      <legend>Voting Method *</legend>
+      <label class="radio-label">
+        <input type="radio" name="votingMethod" value="PLURALITY"
+               th:checked="${contest.votingMethod == null or contest.votingMethod.name() == 'PLURALITY'}"/>
+        <span class="radio-title">Plurality</span>
+        <span class="radio-desc">Voter selects one candidate (or up to N if Max Choices &gt; 1). Standard for most races.</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="votingMethod" value="RANKED_CHOICE"
+               th:checked="${contest.votingMethod != null and contest.votingMethod.name() == 'RANKED_CHOICE'}"/>
+        <span class="radio-title">Ranked Choice</span>
+        <span class="radio-desc">Voter ranks candidates in order of preference. A number box appears next to each candidate on the ballot.</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="votingMethod" value="APPROVAL"
+               th:checked="${contest.votingMethod != null and contest.votingMethod.name() == 'APPROVAL'}"/>
+        <span class="radio-title">Approval</span>
+        <span class="radio-desc">Voter marks every candidate they find acceptable. No limit on marks.</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="votingMethod" value="MEASURE"
+               th:checked="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}"/>
+        <span class="radio-title">Measure / Yes-No</span>
+        <span class="radio-desc">A ballot measure — options are typically YES/NO, FOR/AGAINST, or a short list of choices.</span>
+      </label>
+    </fieldset>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.5rem">
+      <div id="maxChoicesField" style="flex:1;min-width:140px">
+        <label>Max Choices
+          <small style="font-weight:normal;color:#666">(how many candidates voter may select)</small>
+          <input type="number" name="maxChoices"
+                 th:value="${contest.maxChoices != 0 ? contest.maxChoices : 1}"
+                 min="1" max="99"/>
+        </label>
+      </div>
+      <div id="maxRankField" style="flex:1;min-width:160px;display:none">
+        <label>Max Rank Allowed
+          <small style="font-weight:normal;color:#666">(0 = unlimited)</small>
+          <input type="number" name="maxRankChoices"
+                 th:value="${contest.maxRankChoices}" min="0"/>
+        </label>
+      </div>
+      <div style="flex:1;min-width:140px">
+        <label>Display Order
+          <small style="font-weight:normal;color:#666">(lower = earlier on ballot)</small>
+          <input type="number" name="displayOrder"
+                 th:value="${contest.displayOrder}" min="0"/>
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Instructions ──────────────────────────────────────────── -->
+    <label>Instructions
+      <small>(blank = use default for voting method)</small>
+      <input type="text" name="instructions"
+             th:value="${contest.instructions}" maxlength="300"/>
+    </label>
+
+    <!-- ── Preamble ───────────────────────────────────────────────── -->
+    <label>Preamble
+      <small>Optional block printed <strong>between the instruction and the first candidate</strong>.
+        Use for statutory text, bond summaries, or other context voters need before seeing choices.</small>
+      <textarea name="preamble" rows="3"
+                th:text="${contest.preamble}"
+                placeholder="e.g. This measure would authorize the issuance of general obligation bonds…"></textarea>
+    </label>
+    <div class="print-toggle">
+      <label>
+        <input type="checkbox" name="printPreamble" value="true"
+               th:checked="${contest.printPreamble}"/>
+        Print preamble on ballot
+      </label>
+    </div>
+
+    <!-- ── Postamble ──────────────────────────────────────────────── -->
+    <label>Postamble
+      <small>Optional block printed <strong>after the last candidate/option</strong>.
+        Use for write-in reminders, disclaimers, or continuation notes.</small>
+      <textarea name="postamble" rows="2"
+                th:text="${contest.postamble}"
+                placeholder="e.g. (If voting by write-in, you must also fill in the oval.)"></textarea>
+    </label>
+    <div class="print-toggle">
+      <label>
+        <input type="checkbox" name="printPostamble" value="true"
+               th:checked="${contest.printPostamble}"/>
+        Print postamble on ballot
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Contest</button>
+      <a th:href="@{/data/contests}" class="btn btn-secondary">Back to List</a>
+    </div>
+  </form>
+
+  <p th:if="${contest.id == null}" class="help-text" style="margin-top:1.25rem">
+    After saving, you will be able to assign regions and add candidates/options.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       REGION ASSIGNMENT  (only shown after contest is saved)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div th:if="${contest.id != null}"
+       style="margin-top:2rem;border-top:2px solid #1a4a7a;padding-top:1.5rem">
+
+    <h3>Region Assignment</h3>
+    <p class="help-text">
+      Assign this contest to <strong>SinglePrecincts</strong> (it appears only on those precincts' ballots)
+      or to <strong>PrecinctGroups</strong> (it automatically fans out to every member SinglePrecinct).
+      Check all that apply, then click <strong>Update Region Assignment</strong>.
+    </p>
+
+    <div style="margin-bottom:1rem">
+      <strong>Currently assigned to:</strong>
+      <span th:if="${#lists.isEmpty(contest.assignedRegions)}"
+            style="color:#888;font-style:italic"> (none — select below and save)</span>
+      <ul th:unless="${#lists.isEmpty(contest.assignedRegions)}"
+          style="margin:.35rem 0 0 1.25rem">
+        <li th:each="r : ${contest.assignedRegions}"
+            th:text="${r.name + (r.regionType != null and r.regionType.name() == 'PRECINCT_GROUP'
+                       ? ' [PrecinctGroup, ' + r.members.size() + ' member(s)]'
+                       : ' [SinglePrecinct]')}">
+        </li>
+      </ul>
+    </div>
+
+    <div th:if="${#lists.isEmpty(allRegions)}" class="alert alert-info">
+      No regions exist yet for this election's jurisdiction.
+      <a th:href="@{/data/regions/new}">Create regions</a> first.
+    </div>
+
+    <form th:if="${not #lists.isEmpty(allRegions)}"
+          method="post"
+          th:action="@{'/data/contests/' + ${contest.id} + '/assign-regions'}">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+      <div class="subjur-grid">
+        <div class="subjur-group">
+          <h4>SinglePrecincts</h4>
+          <p style="font-size:.8rem;color:#666;margin:.2rem 0 .5rem">
+            Check to assign directly to specific precincts.</p>
+          <div class="checklist">
+            <th:block th:each="s : ${allRegions}"
+                      th:if="${s.regionType != null and s.regionType.name() == 'SINGLE_PRECINCT'}">
+              <div class="checklist-item">
+                <input type="checkbox"
+                       th:id="${'sj' + s.id}"
+                       name="regionIds"
+                       th:value="${s.id}"
+                       th:checked="${contest.assignedRegions.contains(s)}"/>
+                <label th:for="${'sj' + s.id}"
+                       th:text="${s.name}"></label>
+              </div>
+            </th:block>
+            <div style="padding:.5rem;color:#888;font-style:italic;font-size:.85rem"
+                 th:if="${#lists.isEmpty(allRegions.?[regionType != null and regionType.name() == 'SINGLE_PRECINCT'])}">
+              No SinglePrecincts defined yet. <a th:href="@{/data/regions/new}">Create one</a>.
+            </div>
+          </div>
+        </div>
+
+        <div class="subjur-group">
+          <h4>PrecinctGroups</h4>
+          <p style="font-size:.8rem;color:#666;margin:.2rem 0 .5rem">
+            Check to fan out to all member SinglePrecincts automatically.</p>
+          <div class="checklist">
+            <th:block th:each="s : ${allRegions}"
+                      th:if="${s.regionType != null and s.regionType.name() == 'PRECINCT_GROUP'}">
+              <div class="checklist-item">
+                <input type="checkbox"
+                       th:id="${'sj' + s.id}"
+                       name="regionIds"
+                       th:value="${s.id}"
+                       th:checked="${contest.assignedRegions.contains(s)}"/>
+                <label th:for="${'sj' + s.id}"
+                       th:text="${s.name + ' (' + s.members.size() + ' member(s))'}"></label>
+              </div>
+            </th:block>
+            <div style="padding:.5rem;color:#888;font-style:italic;font-size:.85rem"
+                 th:if="${#lists.isEmpty(allRegions.?[regionType != null and regionType.name() == 'PRECINCT_GROUP'])}">
+              No PrecinctGroups defined yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions" style="margin-top:1rem">
+        <button type="submit" class="btn">Update Region Assignment</button>
+        <a th:href="@{'/data/contests/' + ${contest.id} + '/preview'}"
+           class="btn btn-secondary">Preview Coverage</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CANDIDATES / OPTIONS SUMMARY
+       ═══════════════════════════════════════════════════════════════ -->
+  <div th:if="${contest.id != null}"
+       style="margin-top:2rem;border-top:2px solid #1a4a7a;padding-top:1.5rem">
+
+    <div class="page-header" style="margin-bottom:.75rem">
+      <h3 style="margin:0">
+        Candidates / Options
+        <span th:if="${not #lists.isEmpty(contest.candidates)}"
+              style="font-weight:normal;font-size:.85rem;color:#666">
+          (<span th:text="${contest.candidates.size()}"></span> entered)
+        </span>
+      </h3>
+      <a th:href="@{'/data/contests/' + ${contest.id} + '/candidates'}"
+         class="btn">Manage Candidates</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(contest.candidates)}" class="help-text">
+      No candidates or options yet.
+      <a th:href="@{'/data/contests/' + ${contest.id} + '/candidates'}">Add candidates</a>
+      on the dedicated Candidates page.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(contest.candidates)}">
+      <thead>
+        <tr><th>Order</th><th>Name</th><th>Party / Affiliation</th><th>Write-In</th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="c : ${contest.candidates}">
+          <td th:text="${c.displayOrder}"></td>
+          <td th:text="${c.name}"></td>
+          <td th:text="${c.partyAffiliation != null ? c.partyAffiliation : '—'}"></td>
+          <td th:text="${c.writeIn ? 'Yes' : ''}"></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:.5rem;font-size:.85rem;color:#666">
+      <a th:href="@{'/data/contests/' + ${contest.id} + '/candidates'}">
+        Edit, reorder, or remove candidates →
+      </a>
+    </p>
+  </div>
+
+</main>
+<script th:src="@{/js/contest-form.js}"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2 th:text="${formTitle}">Ballot Combination</h2>
+
+  <p class="help-text">
+    A ballot combination ties together <strong>Election + SinglePrecinct + Party + Ballot Type</strong>.
+    It represents the exact ballot a voter in that precinct receives.
+    After saving, this page shows which contests will appear on the ballot.
+  </p>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <form method="post" th:action="@{/data/ballot-combinations/save}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="id"
+           th:if="${combination.id != null}" th:value="${combination.id}"/>
+
+    <!-- Election — changing this reloads the dependent dropdowns -->
+    <label>Election *
+      <select name="electionId" id="electionSelect">
+        <option value="">-- select election --</option>
+        <option th:each="e : ${elections}"
+                th:value="${e.id}" th:text="${e.name}"
+                th:selected="${combination.election != null
+                              and combination.election.id == e.id}">
+        </option>
+      </select>
+      <small style="color:#666">
+        Changing the election reloads the SinglePrecinct, Party, and Ballot Type lists
+        to match that election's jurisdiction.
+      </small>
+    </label>
+
+    <!-- SinglePrecinct -->
+    <label>SinglePrecinct *
+      <select name="regionId" required>
+        <option value="">-- select SinglePrecinct --</option>
+        <option th:each="p : ${precincts}"
+                th:value="${p.id}" th:text="${p.name}"
+                th:selected="${combination.region != null
+                              and combination.region.id == p.id}">
+        </option>
+      </select>
+      <small style="color:#666">
+        The voter's registered SinglePrecinct.
+        Only SinglePrecinct regions are shown here (not PrecinctGroups).
+      </small>
+      <div th:if="${#lists.isEmpty(precincts)}"
+           style="color:#c0392b;font-size:.85rem;margin-top:.25rem">
+        No SinglePrecincts found. Go to
+        <a th:href="@{/data/regions}">Regions</a>
+        and create at least one SinglePrecinct for this election's jurisdiction.
+      </div>
+    </label>
+
+    <!-- Party -->
+    <label>Party *
+      <select name="partyId" required>
+        <option value="">-- select party --</option>
+        <option th:each="p : ${parties}"
+                th:value="${p.id}" th:text="${p.name}"
+                th:selected="${combination.party != null
+                              and combination.party.id == p.id}">
+        </option>
+      </select>
+      <small style="color:#666">
+        For general / nonpartisan elections, select <strong>Everyone</strong>
+        (pre-seeded). For primaries, select the specific party.
+        Manage parties at <a th:href="@{/data/parties}">Setup &gt; Parties</a>.
+      </small>
+      <div th:if="${#lists.isEmpty(parties)}"
+           style="color:#c0392b;font-size:.85rem;margin-top:.25rem">
+        No parties found for this election's jurisdiction.
+        Go to <a th:href="@{/data/parties}">Setup &gt; Parties</a>
+        and create at least one (e.g. "Everyone" for general elections).
+      </div>
+    </label>
+
+    <!-- Ballot Type -->
+    <label>Ballot Type *
+      <select name="ballotTypeId" required>
+        <option value="">-- select ballot type --</option>
+        <option th:each="bt : ${ballotTypes}"
+                th:value="${bt.id}" th:text="${bt.name}"
+                th:selected="${combination.ballotType != null
+                              and combination.ballotType.id == bt.id}">
+        </option>
+      </select>
+      <small style="color:#666">
+        Precinct (in person), Mail-In, Absentee, or Provisional.
+        Manage types at <a th:href="@{/data/ballot-types}">Ballot Types</a>.
+      </small>
+      <div th:if="${#lists.isEmpty(ballotTypes)}"
+           style="color:#c0392b;font-size:.85rem;margin-top:.25rem">
+        No ballot types found. Go to
+        <a th:href="@{/data/ballot-types}">Ballot Types</a>
+        and create types for this election's jurisdiction.
+      </div>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Combination</button>
+      <a th:href="@{/data/ballot-combinations}" class="btn btn-secondary">Back to List</a>
+    </div>
+  </form>
+
+  <!-- Resolved contests — shown after save -->
+  <div th:if="${resolvedContests != null}"
+       style="margin-top:2rem;border-top:1px solid #ccc;padding-top:1.5rem">
+    <h3>Contests on This Ballot</h3>
+    <p class="help-text">
+      These contests will be printed on this ballot, based on current
+      contest-to-region assignments (direct SinglePrecinct assignments
+      plus inherited PrecinctGroup assignments).
+    </p>
+    <div th:if="${#lists.isEmpty(resolvedContests)}" class="alert alert-info">
+      No contests are assigned to this SinglePrecinct or its PrecinctGroups yet.
+      Go to <a th:href="@{/data/contests}">Contests</a>, edit each contest,
+      and assign it to the relevant regions.
+    </div>
+    <table th:if="${not #lists.isEmpty(resolvedContests)}">
+      <thead>
+        <tr><th>Order</th><th>Title</th><th>Method</th><th>Candidates</th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="c : ${resolvedContests}">
+          <td th:text="${c.displayOrder}"></td>
+          <td th:text="${c.title}"></td>
+          <td th:text="${c.votingMethod}"></td>
+          <td th:text="${c.candidates.size()}"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+<script th:src="@{/js/ballot-combination-form.js}"></script>
+</body>
+</html>

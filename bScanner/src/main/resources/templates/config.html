@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Configuration — bScanner</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; margin: 0; background: #f4f4f4; color: #1a1a2e; }
+    nav  { background: #1a1a2e; color: white; padding: .75rem 1.5rem;
+           display: flex; justify-content: space-between; align-items: center; }
+    nav a { color: #aad4f5; text-decoration: none; margin-left: 1rem; font-size: .9rem; }
+    .container { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: white; border-radius: 8px; padding: 1.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
+    h2 { margin-top: 0; }
+    label { display: block; margin: .8rem 0 .2rem; font-weight: bold; font-size: .9rem; }
+    input[type=text], input[type=number], select {
+      width: 100%; padding: .45rem; border: 1px solid #ccc;
+      border-radius: 4px; font-size: .95rem; }
+    .hint { font-size: .8rem; color: #666; margin-top: .2rem; }
+    .row { display: flex; gap: 1rem; }
+    .row > div { flex: 1; }
+    button { margin-top: 1.2rem; padding: .6rem 1.5rem; background: #1a1a2e;
+             color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .msg { padding: .5rem; border-radius: 4px; margin-bottom: 1rem; }
+    .ok  { background: #d4edda; color: #155724; }
+  </style>
+</head>
+<body>
+<nav>
+  <span style="font-weight:bold;" th:text="${loginTitle}">bScanner</span>
+  <span>
+    <a href="/">Scan</a>
+    <a href="/users">Users</a>
+    <a href="/logout">Sign out</a>
+  </span>
+</nav>
+
+<div class="container">
+  <div class="card">
+    <h2>Scanner Configuration</h2>
+    <div th:if="${success}" class="msg ok" th:text="${success}"></div>
+
+    <form method="post" action="/config">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+      <label>Scanner Backend</label>
+      <select name="backend">
+        <option value="naps2"     th:selected="${config.backend == 'naps2'}">NAPS2 (recommended for macOS/Windows)</option>
+        <option value="scanimage" th:selected="${config.backend == 'scanimage'}">scanimage (Linux/SANE)</option>
+        <option value="command"   th:selected="${config.backend == 'command'}">Custom command</option>
+      </select>
+
+      <label>NAPS2 Profile Name <span style="font-weight:normal;">(recommended)</span></label>
+      <input type="text" name="naps2Profile" th:value="${config.naps2Profile}"
+             placeholder="e.g. Ballot Scanner"/>
+      <div class="hint">Name of a profile saved in the NAPS2 GUI with your scanner configured.
+        Open NAPS2, set up your scanner, and save the profile. Leave blank to use --device instead.</div>
+
+      <label>NAPS2 Device Name <span style="font-weight:normal;">(alternative to profile)</span></label>
+      <input type="text" name="naps2Device" th:value="${config.naps2Device}"
+             placeholder="e.g. escl:http://192.168.1.10"/>
+      <div class="hint">Run NAPS2 with --listdevices to find your device name. Only used if Profile is blank.</div>
+
+      <label>NAPS2 Executable Path</label>
+      <input type="text" name="naps2Path" th:value="${config.naps2Path}"/>
+      <div class="hint">macOS: /Applications/NAPS2.app/Contents/MacOS/naps2 &nbsp;|&nbsp; Windows: C:\Program Files\NAPS2\naps2.exe</div>
+
+      <label>scanimage Path</label>
+      <input type="text" name="scanimagePath" th:value="${config.scanimagePath}"/>
+      <div class="hint">Linux/macOS with SANE: /usr/bin/scanimage</div>
+
+      <label>Custom Command</label>
+      <input type="text" name="customCommand" th:value="${config.customCommand}"
+             placeholder="e.g. myscan --output {output}_%04d.png"/>
+      <div class="hint">Use <code>{output}</code> as placeholder for the output path prefix.</div>
+
+      <label>Output Folder</label>
+      <input type="text" name="outputDir" th:value="${config.outputDir}"/>
+      <div class="hint">Scanned images are written here. Should match bCounter's image watch folder.</div>
+
+      <div class="row">
+        <div>
+          <label>Source</label>
+          <select name="source">
+            <option value="feeder" th:selected="${config.source == 'feeder'}">ADF (document feeder, single-sided)</option>
+            <option value="duplex" th:selected="${config.source == 'duplex'}">ADF Duplex (both sides automatically)</option>
+            <option value="glass"  th:selected="${config.source == 'glass'}">Flatbed (glass)</option>
+          </select>
+        </div>
+        <div>
+          <label>DPI</label>
+          <input type="number" name="dpi" th:value="${config.dpi}" min="150" max="600" step="50"/>
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:.5rem;">
+        For NAPS2: select "ADF Duplex" as source to scan both sides automatically.
+        The Duplex checkbox below is used for scanimage/custom backends only.
+      </div>
+      <div style="margin-top:.8rem;">
+        <label style="display:inline-flex; align-items:center; gap:.4rem; font-weight:normal;">
+          <input type="checkbox" name="duplex" th:checked="${config.duplex}"/>
+          Duplex flag (scanimage / custom backends only)
+        </label>
+      </div>
+
+      <label>Filename Prefix</label>
+      <input type="text" name="filenamePrefix" th:value="${config.filenamePrefix}"/>
+      <div class="hint">A timestamp is appended automatically: <em>prefix</em>YYYYMMDD_HHmmss_0001.png</div>
+
+      <button type="submit">Save Configuration</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

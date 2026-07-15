@@ -1,0 +1,311 @@
+
+  <div th:if="${dbMessage != null}"
+       style="background:#fef3c7;border:1px solid #d97706;border-radius:6px;
+              padding:1rem 1.5rem;margin:1rem 0;color:#92400e">
+    <strong>No results yet</strong> — <span th:text="${dbMessage}"></span>
+  </div>
+  <div th:if="${scanning and !reportExists}"
+       style="background:#e0f2fe;border:1px solid #0284c7;border-radius:6px;
+              padding:1rem 1.5rem;margin:1rem 0;color:#0c4a6e">
+    <strong>Scan in progress.</strong>
+    Results report (<code>results_report.html</code>) is written every
+    <span th:text="${reportInterval}">500</span> images and at scan completion.
+    It will appear in: <code th:text="${reportOutputDir}"></code>
+  </div>
+  <div th:if="${!scanning and reportExists}"
+       style="background:#f0fdf4;border:1px solid #16a34a;border-radius:6px;
+              padding:.75rem 1.5rem;margin:1rem 0;color:#166534;font-size:.9rem">
+    ✓ Results report saved to:
+    <code th:text="${reportOutputDir + '/results_report.html'}"></code>
+  </div><!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg — GPL v3
+  Results page — shows full vote totals from the database.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Results — Election Counter</title>
+  <link rel="stylesheet" th:href="@{/css/counter.css}"/>
+  <style>
+    .results-body { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
+    .summary-row  { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .summary-box  { flex: 1; min-width: 140px; background: #f0f7f7;
+                    border-radius: 6px; padding: 1rem; text-align: center; }
+    .summary-box .big { font-size: 2rem; font-weight: 700; color: #1a6a6a; }
+    .summary-box .lbl { font-size: .8rem; color: #555; }
+
+    .resume-bar   { background: #fff8e6; border: 1px solid #f0c040;
+                    border-radius: 6px; padding: .75rem 1rem;
+                    margin-bottom: 1.5rem; display: flex;
+                    align-items: center; gap: 1rem; }
+
+    h2 { color: #0d2b2b; border-bottom: 2px solid #1a6a6a;
+         padding-bottom: .3rem; margin-top: 2rem; }
+    h3 { color: #1a6a6a; margin: 1.5rem 0 .5rem; }
+
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: .9rem; }
+    th    { background: #0d2b2b; color: #fff; padding: .5rem .75rem; text-align: left; }
+    td    { padding: .45rem .75rem; border-bottom: 1px solid #e5e5e5; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f7fafa; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .contest-section { margin-bottom: 2rem; }
+    .overvote { color: #b45309; font-weight: 600; }
+    .dim-header { font-size: .75rem; font-weight: 600; color: #888;
+                  text-transform: uppercase; letter-spacing: .05em;
+                  padding: .3rem .75rem; background: #f0f0f0; }
+  </style>
+</head>
+<body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
+<header class="app-header">
+  <div class="tally-mark" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span class="slash"></span>
+  </div>
+  <h1>Election Counter</h1>
+  <div class="header-user" sec:authorize="isAuthenticated()">
+    <a th:href="@{/viewer/}"
+       style="color:white; margin-right:1rem; font-size:.9rem;">&#8592; Ballot Viewer</a>
+    <span sec:authentication="name">user</span>
+    <form method="post" action="/logout" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<div class="results-body">
+
+  <!-- Resume bar if more images remain -->
+  <div class="resume-bar" th:if="${hasMore}">
+    <span>&#9650; Showing results after
+      <strong th:text="${processed}">0</strong> of
+      <strong th:text="${total}">?</strong> images scanned.
+    </span>
+    <a href="/scan" class="btn" style="background:#1a6a6a"
+       sec:authorize="hasAnyRole('ADMIN','COUNTER_OPERATOR')">&#9654; Continue Scanning</a>
+  </div>
+
+  <!-- ── RCV quick-link bar ──────────────────────────────────────────────── -->
+  <div th:if="${rcvExists}"
+       style="background:#f0f9ff;border:1px solid #0284c7;border-radius:6px;
+              padding:.6rem 1.25rem;margin-bottom:.75rem;display:flex;
+              align-items:center;gap:1.25rem;font-size:.9rem;color:#0c4a6e">
+    <span>&#127760; Ranked-Choice results available:</span>
+    <a href="#rcv-results"
+       style="color:#0284c7;font-weight:600;text-decoration:none">
+      &#8595; Jump to RCV Runoffs
+    </a>
+    <a href="/rcv-report" target="_blank"
+       style="color:#0284c7;font-weight:600;text-decoration:none">
+      &#8599; Open full RCV report
+    </a>
+  </div>
+
+  <!-- ── Scribble quick-link bar ───────────────────────────────────────────── -->
+  <div th:if="${scribbleReportExists and scribbledCount > 0}"
+       style="background:#fef3c7;border:1px solid #d97706;border-radius:6px;
+              padding:.6rem 1.25rem;margin-bottom:1.5rem;display:flex;
+              align-items:center;gap:1.25rem;font-size:.9rem;color:#92400e">
+    <span>&#9998; <strong th:text="${scribbledCount}">0</strong>
+      ballot(s) flagged with unexpected marks:</span>
+    <a href="#scribble-results"
+       style="color:#92400e;font-weight:600;text-decoration:none">
+      &#8595; Jump to Scribble Report
+    </a>
+    <a href="/scribble-report" target="_blank"
+       style="color:#92400e;font-weight:600;text-decoration:none">
+      &#8599; Open full report
+    </a>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-row">
+    <div class="summary-box">
+      <div class="big" th:text="${totalBallots}">0</div>
+      <div class="lbl">Ballots Scanned</div>
+    </div>
+    <div class="summary-box">
+      <div class="big" th:text="${totalVotes}">0</div>
+      <div class="lbl">Valid Votes Cast</div>
+    </div>
+    <div class="summary-box">
+      <div class="big overvote" th:text="${overvotedCount}">0</div>
+      <div class="lbl">Overvoted Ballots</div>
+    </div>
+    <div class="summary-box" th:if="${scribbledCount > 0}"
+         style="background:#fef3c7;border:1px solid #d97706">
+      <div class="big" th:text="${scribbledCount}"
+           style="color:#92400e">0</div>
+      <div class="lbl" style="color:#92400e">Scribbled Ballots</div>
+    </div>
+  </div>
+
+  <!-- ── TOTALS BY CONTEST ────────────────────────────────────────────────── -->
+  <h2>Results by Contest — All Precincts</h2>
+
+  <th:block th:each="entry : ${byContest}">
+      <div class="contest-section">
+        <h3 th:text="${entry.key}">Contest</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Candidate / Option</th>
+              <th class="num" style="text-align:right">Marked</th>
+              <th class="num" style="text-align:right">Overvoted</th>
+              <th class="num" style="text-align:right">Counted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="row : ${entry.value}">
+              <td>
+                <span th:if="${row.rankedChoice}"
+                      th:text="${row.baseName}"
+                      style="color:#94a3b8"></span>
+                <span th:if="${row.rankedChoice}"
+                      th:text="|— ${row.rankLabel}|"
+                      style="color:#64748b;font-size:.85em"></span>
+                <span th:unless="${row.rankedChoice}"
+                      th:text="${row.candidate}">Name</span>
+              </td>
+              <td class="num" th:text="${row.voted + row.overvoted}">0</td>
+              <td class="num"
+                  th:classappend="${row.overvoted > 0} ? 'overvote' : ''"
+                  th:text="${row.overvoted > 0 ? row.overvoted : '—'}">—</td>
+              <td class="num" th:text="${row.voted}">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+  </th:block>
+
+  <!-- ── BY PRECINCT ─────────────────────────────────────────────────────── -->
+  <h2>Results by Precinct</h2>
+  <th:block th:each="entry : ${byPrecinct}">
+    <div class="contest-section">
+      <h3 th:text="${entry.key}">Contest</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Precinct (Region ID)</th>
+            <th>Candidate / Option</th>
+            <th class="num" style="text-align:right">Marked</th>
+            <th class="num" style="text-align:right">Overvoted</th>
+            <th class="num" style="text-align:right">Counted</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="row : ${entry.value}">
+            <td th:text="${row.dimension}">precinct</td>
+            <td>
+              <span th:if="${row.rankedChoice}" th:text="${row.baseName}" style="color:#94a3b8"></span>
+              <span th:if="${row.rankedChoice}" th:text="|— ${row.rankLabel}|" style="color:#64748b;font-size:.85em"></span>
+              <span th:unless="${row.rankedChoice}" th:text="${row.candidate}">name</span>
+            </td>
+            <td class="num" th:text="${row.voted + row.overvoted}">0</td>
+            <td class="num"
+                th:classappend="${row.overvoted > 0} ? 'overvote' : ''"
+                th:text="${row.overvoted > 0 ? row.overvoted : '—'}">—</td>
+            <td class="num" th:text="${row.voted}">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+
+  <!-- ── BY PARTY ────────────────────────────────────────────────────────── -->
+  <h2>Results by Party</h2>
+  <th:block th:each="entry : ${byParty}">
+    <div class="contest-section">
+      <h3 th:text="${entry.key}">Contest</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Party ID</th>
+            <th>Candidate / Option</th>
+            <th class="num" style="text-align:right">Marked</th>
+            <th class="num" style="text-align:right">Overvoted</th>
+            <th class="num" style="text-align:right">Counted</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="row : ${entry.value}">
+            <td th:text="${row.dimension}">party</td>
+            <td>
+              <span th:if="${row.rankedChoice}" th:text="${row.baseName}" style="color:#94a3b8"></span>
+              <span th:if="${row.rankedChoice}" th:text="|— ${row.rankLabel}|" style="color:#64748b;font-size:.85em"></span>
+              <span th:unless="${row.rankedChoice}" th:text="${row.candidate}">name</span>
+            </td>
+            <td class="num" th:text="${row.voted + row.overvoted}">0</td>
+            <td class="num"
+                th:classappend="${row.overvoted > 0} ? 'overvote' : ''"
+                th:text="${row.overvoted > 0 ? row.overvoted : '—'}">—</td>
+            <td class="num" th:text="${row.voted}">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+
+  <!-- ── Scribble Report (embedded) ───────────────────────────────────────── -->
+  <div th:if="${scribbleReportExists and scribbledCount > 0}"
+       id="scribble-results" style="margin-top:2.5rem">
+    <h2 style="display:flex;align-items:center;gap:1rem;color:#92400e;
+               border-bottom-color:#d97706">
+      &#9998; Scribbled Ballots
+      <a href="/scribble-report" target="_blank"
+         style="font-size:.8rem;font-weight:400;color:#92400e;text-decoration:none">
+        &#8599; Open full report
+      </a>
+    </h2>
+    <div id="scribble-embed"
+         style="border:1px solid #fde68a;border-radius:6px;padding:.5rem;
+                min-height:80px;color:#92400e;font-size:.85rem">
+      Loading…
+    </div>
+  </div>
+
+  <!-- ── RCV Runoff Results ──────────────────────────────────────────────── -->
+  <div th:if="${rcvExists}" id="rcv-results" style="margin-top:2.5rem">
+    <h2 style="display:flex;align-items:center;gap:1rem">
+      Ranked-Choice Runoffs
+      <a href="/rcv-report" target="_blank"
+         style="font-size:.8rem;font-weight:400;color:#0284c7;text-decoration:none">
+        &#8599; Open full report
+      </a>
+    </h2>
+    <div id="rcv-embed"
+         style="border:1px solid #e5e5e5;border-radius:6px;padding:.5rem;
+                min-height:80px;color:#555;font-size:.85rem">
+      Loading…
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+    <a href="/scan" th:if="${hasMore}" class="btn" style="background:#1a6a6a">
+      &#9654; Continue Scanning
+    </a>
+
+    <form method="post" action="/reset" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="btn btn-outline">&#10005; New Session</button>
+    </form>
+  </div>
+  <div th:if="${success}" class="alert alert-success" style="margin-top:1rem" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   style="margin-top:1rem" th:text="${error}"></div>
+</div>
+
+  <!-- Scanning-in-progress warning banner -->
+  <div id="scanBanner" style="display:none; position:fixed; top:0; left:0; right:0;
+       background:#856404; color:#fff3cd; text-align:center; padding:.5rem;
+       font-size:.9rem; z-index:9999; border-bottom:2px solid #664d03;">
+    &#9881; Scan in progress &mdash; results shown may be incomplete
+  </div>
+  <script src="/js/results.js"></script>
+</body>
+</html>

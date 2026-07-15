@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  Election Counter — licensed under the GNU General Public License v3.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Administration — Election Counter</title>
+  <link rel="stylesheet" th:href="@{/css/counter.css}"/>
+  <style>
+    .role-form fieldset { border: 1px solid var(--border); border-radius: var(--radius);
+      padding: .5rem .75rem; margin: .5rem 0; }
+    .role-form label { display: inline-flex; align-items: center; gap: .3rem;
+      font-weight: normal; margin-right: 1rem; }
+    details > summary { cursor: pointer; color: var(--navy-mid); font-size: .85rem; }
+    .row-actions { display: flex; flex-direction: column; gap: .4rem; min-width: 220px; }
+  </style>
+</head>
+<body>
+<header class="app-header">
+  <div class="tally-mark" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span class="slash"></span>
+  </div>
+  <h1>Election Counter</h1>
+  <div class="header-user" sec:authorize="isAuthenticated()">
+    <span sec:authentication="name">user</span>
+    <form method="post" action="/logout" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<div class="app-body">
+  <main class="main">
+    <h2>Administration</h2>
+    <p><a th:href="@{/}">&#8592; Back</a></p>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <section>
+      <h3>Users <a th:href="@{/admin/users/new}" class="btn btn-sm btn-outline">+ New User</a></h3>
+      <table>
+        <thead>
+          <tr><th>Username</th><th>Roles</th><th>Enabled</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="u : ${users}">
+            <td th:text="${u.username}"></td>
+            <td th:text="${u.roles}"></td>
+            <td th:text="${u.enabled ? 'Yes' : 'No'}"></td>
+            <td>
+              <div class="row-actions">
+                <form method="post"
+                      th:action="@{'/admin/users/' + ${u.id} + '/toggle'}">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button type="submit" class="btn btn-sm btn-outline"
+                          th:text="${u.enabled ? 'Disable' : 'Enable'}">Toggle</button>
+                </form>
+
+                <details>
+                  <summary>Edit roles</summary>
+                  <form method="post" class="role-form"
+                        th:action="@{'/admin/users/' + ${u.id} + '/roles'}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <fieldset>
+                      <div th:each="r : ${T(com.mjtrac.counter.entity.CounterUser.Role).values()}">
+                        <label>
+                          <input type="checkbox" name="roles" th:value="${r}"
+                                 th:checked="${u.roles.contains(r)}"/>
+                          <span th:text="${r}"></span>
+                        </label>
+                      </div>
+                    </fieldset>
+                    <button type="submit" class="btn btn-sm">Save Roles</button>
+                  </form>
+                </details>
+
+                <details>
+                  <summary>Reset password</summary>
+                  <form method="post"
+                        th:action="@{'/admin/users/' + ${u.id} + '/reset-password'}"
+                        style="margin-top:.5rem">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="password" name="newPassword" minlength="8" required
+                           placeholder="New password" style="margin-bottom:.4rem"/>
+                    <button type="submit" class="btn btn-sm btn-outline">Set Password</button>
+                  </form>
+                </details>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>
+</body>
+</html>

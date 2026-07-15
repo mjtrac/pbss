@@ -1,0 +1,97 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ----------------------------------------------------------------------------
+
+# Maven Wrapper script compatible with macOS and Linux.
+# Downloads Apache Maven if not already cached in ~/.m2/wrapper/dists/.
+
+set -euf
+
+# Determine OS
+os_type="$(uname -s)"
+
+# Find java
+if [ -n "${JAVA_HOME:-}" ]; then
+    JAVA_CMD="$JAVA_HOME/bin/java"
+else
+    JAVA_CMD="$(command -v java 2>/dev/null || true)"
+fi
+
+if [ -z "$JAVA_CMD" ] || [ ! -x "$JAVA_CMD" ]; then
+    echo "Error: JAVA_HOME is not set and 'java' was not found in PATH." >&2
+    exit 1
+fi
+
+# Read wrapper properties
+WRAPPER_PROPS="${0%/*}/.mvn/wrapper/maven-wrapper.properties"
+if [ ! -f "$WRAPPER_PROPS" ]; then
+    echo "Error: Cannot find .mvn/wrapper/maven-wrapper.properties" >&2
+    exit 1
+fi
+
+# Parse distributionUrl
+DISTRIBUTION_URL=""
+while IFS='=' read -r key value; do
+    key="$(printf '%s' "$key" | tr -d '[:space:]')"
+    value="$(printf '%s' "$value" | tr -d '[:space:]')"
+    case "$key" in
+        distributionUrl) DISTRIBUTION_URL="$value" ;;
+    esac
+done < "$WRAPPER_PROPS"
+
+if [ -z "$DISTRIBUTION_URL" ]; then
+    echo "Error: distributionUrl not found in $WRAPPER_PROPS" >&2
+    exit 1
+fi
+
+# Derive Maven home from URL
+DIST_NAME="${DISTRIBUTION_URL##*/}"           # apache-maven-3.9.6-bin.zip
+DIST_STEM="${DIST_NAME%-bin.zip}"             # apache-maven-3.9.6
+HASH="$(printf '%s' "$DISTRIBUTION_URL" | cksum | cut -d' ' -f1)"
+MAVEN_HOME="${HOME}/.m2/wrapper/dists/${DIST_STEM}/${HASH}/${DIST_STEM}"
+
+if [ ! -d "$MAVEN_HOME" ]; then
+    echo "Downloading Apache Maven from ${DISTRIBUTION_URL} ..." >&2
+    TMP_DIR="$(mktemp -d)"
+    trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
+
+    DEST="${TMP_DIR}/${DIST_NAME}"
+
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL -o "$DEST" "$DISTRIBUTION_URL"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -O "$DEST" "$DISTRIBUTION_URL"
+    else
+        echo "Error: neither curl nor wget is available." >&2
+        exit 1
+    fi
+
+    PARENT="${HOME}/.m2/wrapper/dists/${DIST_STEM}/${HASH}"
+    mkdir -p "$PARENT"
+    unzip -q "$DEST" -d "$PARENT"
+    echo "Maven installed to $MAVEN_HOME" >&2
+fi
+
+MVN="$MAVEN_HOME/bin/mvn"
+if [ ! -x "$MVN" ]; then
+    echo "Error: Maven executable not found at $MVN" >&2
+    exit 1
+fi
+
+exec "$MVN" "$@"

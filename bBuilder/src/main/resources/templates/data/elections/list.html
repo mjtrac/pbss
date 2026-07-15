@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Elections')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <h2>Elections</h2>
+    <a th:href="@{/data/elections/new}" class="btn">+ New Election</a>
+  </div>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Jurisdiction</th>
+        <th>Type</th>
+        <th>Date</th>
+        <th>Uniform Ballot</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="e : ${elections}">
+        <td th:text="${e.name}"></td>
+        <td th:text="${e.jurisdiction.name}"></td>
+        <td th:text="${e.electionType}"></td>
+        <td th:text="${e.electionDate != null ? e.electionDate : '—'}"></td>
+        <td th:text="${e.uniformBallot ? 'Yes' : 'No'}"></td>
+        <td class="actions">
+          <a th:href="@{'/data/elections/' + ${e.id} + '/edit'}" class="btn btn-sm">Edit</a>
+          <form method="post"
+                th:action="@{'/data/elections/' + ${e.id} + '/delete'}"
+                style="display:inline"
+                onsubmit="return confirm('Delete election &quot;' + [[${e.name}]] + '&quot;?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(elections)}">
+        <td colspan="6" class="empty">No elections yet.</td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

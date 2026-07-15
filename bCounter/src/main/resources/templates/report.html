@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  Election Counter — licensed under the GNU General Public License v3.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Results Report — Election Counter</title>
+  <link rel="stylesheet" th:href="@{/css/counter.css}"/>
+</head>
+<body style="background:#fff;color:#222">
+<!-- Switch to white background: body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''"> -->
+
+<header class="app-header">
+  <div class="tally-mark" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span class="slash"></span>
+  </div>
+  <h1>Election Counter — Results</h1>
+</header>
+
+<div class="app-body" style="background:#fff;color:#222">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h3>Summary</h3>
+    <div class="stat">
+      <span class="stat-num" th:text="${ss.processed()}">0</span>
+      <span class="stat-label">ballots scanned</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" th:text="${ss.tallies.size()}">0</span>
+      <span class="stat-label">indicator entries</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num"
+            th:text="${errorCount}">0</span>
+      <span class="stat-label">scan errors</span>
+    </div>
+    <h3 style="margin-top:1rem">Report folder</h3>
+    <p class="path" th:text="${ss.reportFolder.isBlank() ? '(working directory)' : ss.reportFolder}"></p>
+    <h3 style="margin-top:.75rem">Loaded from</h3>
+    <p class="path" th:text="${ss.xmlReportPath}"></p>
+    <nav style="margin-top:1rem">
+      <a th:href="@{/}">⚙ New Scan</a>
+      <a th:href="@{/scan}" th:if="${!ss.isComplete()}">▶ Resume</a>
+    </nav>
+    <form method="post" th:action="@{/finish}" style="margin-top:.5rem">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="btn btn-sm"
+              style="background:#1a6a6a;color:#fff">&#10003; Save Results to Disk</button>
+    </form>
+    <form method="post" th:action="@{/reset}" style="margin-top:.5rem">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="btn btn-danger btn-sm">&#10005; Reset Session</button>
+    </form>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <h2>Vote Tallies</h2>
+
+    <div th:if="${duplicatePaths != null and !duplicatePaths.isEmpty()}"
+         style="background:#fff7ed;border:1px solid #f97316;border-radius:5px;
+                 padding:.75rem 1rem;margin-bottom:1rem;font-size:.85rem">
+      <strong style="color:#c2410c">&#9888; Duplicate ballots skipped</strong>
+      — these images were already in the database and were not re-counted:
+      <ul style="margin:.5rem 0 0 1.25rem;font-family:monospace;font-size:.8rem;
+                  color:#92400e;word-break:break-all">
+        <li th:each="p : \${duplicatePaths}" th:text="\${p}"></li>
+      </ul>
+    </div>
+
+    <div th:if="${byContest.isEmpty()}" class="alert alert-info">
+      No results yet. <a th:href="@{/scan}">Start scanning →</a>
+    </div>
+
+    <!-- Per-contest tally tables -->
+    <div th:each="entry : ${byContest}" class="contest-section">
+      <h3 th:text="${entry.key}">Contest Name</h3>
+      <table class="tally-table">
+        <thead>
+          <tr>
+            <th>Candidate / Option</th>
+            <th>Votes</th>
+            <th>Ballots Checked</th>
+            <th>Vote %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="t : ${entry.value}">
+            <td th:text="${t.candidateName}">Name</td>
+            <td><span class="vote-count" th:text="${t.voteCount}">0</span></td>
+            <td th:text="${t.ballotsChecked}">0</td>
+            <td>
+              <th:block th:if="${t.ballotsChecked > 0}">
+                <span th:text="${#numbers.formatDecimal(100.0 * t.voteCount / t.ballotsChecked, 1, 1)} + '%'">0%</span>
+              </th:block>
+              <th:block th:unless="${t.ballotsChecked > 0}">—</th:block>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Overvoted choices (not counted) -->
+    <div th:if="${not byContestOvervote.isEmpty()}" style="margin-top:2rem">
+      <h2 style="color:#b45309">&#9888; Overvoted Choices (Not Counted)</h2>
+      <p style="font-size:.875rem;color:#666;margin-bottom:1rem">
+        The following choices were marked on overvoted ballots and are
+        excluded from the totals above.
+      </p>
+      <div th:each="entry : ${byContestOvervote}" class="contest-section"
+           style="border-left:4px solid #b45309">
+        <h3 th:text="${entry.key}" style="color:#b45309"></h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Overvoted Choices</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="t : ${entry.value}">
+              <td th:text="${t.candidateName}"></td>
+              <td><span class="vote-count" th:text="${t.voteCount}">0</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Per-image breakdown -->
+    <h2 style="margin-top:2rem">Per-Image Detail</h2>
+    <div th:each="r : ${ss.results}" style="margin-bottom:1.25rem">
+      <div class="result-header" style="padding:.75rem 1rem">
+        <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
+          <strong th:text="${r.imageName}">image.png</strong>
+          <span th:if="${r.errorMessage != null}" class="badge badge-err">Error</span>
+          <span th:if="${!r.cornersFound and r.errorMessage == null}" class="badge badge-warn">Approx corners</span>
+          <span th:if="${r.cornersFound}" class="badge badge-ok">Corners OK</span>
+          <span th:if="${r.scribbleFlagged}"
+                class="badge"
+                style="background:#fef3c7;color:#92400e;border:1px solid #d97706"
+                th:title="${r.scribblePixels + ' suspicious pixels'}">
+            &#9998; Scribble
+          </span>
+        </div>
+        <div th:if="${r.errorMessage != null}" style="color:var(--red);font-size:.82rem"
+             th:text="${r.errorMessage}"></div>
+        <div style="font-size:.78rem;color:var(--muted)">
+          Barcode: <span th:text="${r.barcodeData}">—</span>
+          &nbsp;|&nbsp;
+          Page: <span th:text="${r.pageNumber}">1</span>
+          &nbsp;|&nbsp;
+          Marked: <span th:text="${r.markedCount()} + '/' + ${r.markings.size()}">—</span>
+          <span th:if="${r.scribbleFlagged}">
+            &nbsp;|&nbsp;
+            Scribble: <span th:text="${r.scribblePixels + ' px'}"
+                            style="color:#92400e;font-weight:600"></span>
+          </span>
+        </div>
+        <div th:if="${!r.markings.isEmpty()}"
+             style="margin-top:.5rem;font-size:.82rem">
+          <span th:each="m : ${r.markings}" th:if="${m.marked}"
+                style="display:inline-block;background:var(--amber-lt);
+                       color:var(--navy);padding:.1rem .4rem;border-radius:3px;
+                       margin:.1rem;font-weight:600"
+                th:text="${m.candidateName}">name</span>
+          <span th:if="${r.noneMarked()}"
+                style="color:var(--muted)">No marks detected</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a th:href="@{/}" class="btn btn-primary">⚙ New Configuration</a>
+      <form method="post" th:action="@{/reset}">
+        <button type="submit" class="btn btn-danger">✕ Reset Session</button>
+      </form>
+    </div>
+  </main>
+</div>
+</body>
+</html>

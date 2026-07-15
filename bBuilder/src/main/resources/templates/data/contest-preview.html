@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Coverage Preview')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <h2>Coverage Preview</h2>
+    <a th:href="@{'/data/contests/' + ${contest.id} + '/edit'}" class="btn btn-secondary">
+      Back to Contest
+    </a>
+  </div>
+
+  <p>
+    Contest: <strong th:text="${contest.title}"></strong>
+    &nbsp;|&nbsp;
+    Election: <strong th:text="${contest.election.name}"></strong>
+  </p>
+
+  <!-- Assigned regions -->
+  <div style="margin-top:1.25rem">
+    <h3>Assigned Regions</h3>
+    <div th:if="${#lists.isEmpty(contest.assignedRegions)}" class="alert alert-info">
+      No regions assigned yet. Go back and check regions in the
+      <strong>Region Assignment</strong> section, then click
+      <strong>Update Region Assignment</strong>.
+    </div>
+    <ul th:unless="${#lists.isEmpty(contest.assignedRegions)}" style="margin:.35rem 0 0 1.25rem">
+      <li th:each="r : ${contest.assignedRegions}"
+          th:text="${r.name
+                    + (r.regionType != null and r.regionType.name() == 'PRECINCT_GROUP'
+                       ? ' [PrecinctGroup — covers ' + r.members.size() + ' SinglePrecinct(s)]'
+                       : ' [SinglePrecinct]')}">
+      </li>
+    </ul>
+  </div>
+
+  <!-- Resolved precinct coverage -->
+  <div style="display:flex;gap:2rem;margin-top:1.5rem">
+    <div style="flex:1">
+      <h3 style="color:#1e8449">
+        Will appear on
+        (<span th:text="${coveredPrecincts.size()}"></span> SinglePrecinct(s))
+      </h3>
+      <ul class="precinct-list">
+        <li th:each="p : ${coveredPrecincts}" th:text="${p.name}"></li>
+        <li th:if="${#lists.isEmpty(coveredPrecincts)}" class="empty">
+          No SinglePrecincts covered yet. Assign regions to this contest and save.
+        </li>
+      </ul>
+    </div>
+    <div style="flex:1">
+      <h3 style="color:#888">
+        Will NOT appear on
+        (<span th:text="${excludedPrecincts.size()}"></span> SinglePrecinct(s))
+      </h3>
+      <ul class="precinct-list muted">
+        <li th:each="p : ${excludedPrecincts}" th:text="${p.name}"></li>
+        <li th:if="${#lists.isEmpty(excludedPrecincts)}" class="empty">
+          All SinglePrecincts in this jurisdiction are covered.
+        </li>
+      </ul>
+    </div>
+  </div>
+</main>
+</body>
+</html>

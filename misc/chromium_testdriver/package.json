@@ -1,0 +1,14 @@
+{
+  "name": "pbss-chromium-testdriver",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright-driven UI smoke checks for pbss (bCounter/bViewer)",
+  "main": "viewer_check.js",
+  "scripts": {
+    "viewer-check": "node viewer_check.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.61.1"
+  }
+}

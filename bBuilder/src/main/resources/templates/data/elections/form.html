@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2 th:text="${formTitle}">Election</h2>
+
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <form method="post" th:action="@{/data/elections/save}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="id" th:if="${election.id != null}" th:value="${election.id}"/>
+
+    <label>Election Name *
+      <input type="text" name="name" th:value="${election.name}"
+             required maxlength="200" autofocus
+             placeholder="e.g. June 2026 Primary, November 2026 General"/>
+    </label>
+
+    <label>Jurisdiction *
+      <select name="jurisdictionId" required>
+        <option value="">-- select jurisdiction --</option>
+        <option th:each="j : ${jurisdictions}"
+                th:value="${j.id}" th:text="${j.name}"
+                th:selected="${election.jurisdiction != null
+                              and election.jurisdiction.id == j.id}">
+        </option>
+      </select>
+      <small style="color:#666">All contests and ballot combinations for this election
+        will be scoped to the selected jurisdiction.</small>
+    </label>
+
+    <fieldset class="voting-method-fieldset">
+      <legend>Election Type *</legend>
+
+      <label class="radio-label" th:each="t : ${electionTypes}">
+        <input type="radio" name="electionType" th:value="${t}"
+               th:checked="${election.electionType == t}"/>
+        <span class="radio-title" th:text="${t}"></span>
+        <span class="radio-desc" th:switch="${t.name()}">
+          <span th:case="'PRIMARY'">Party primary — voters receive a ballot for their registered party.</span>
+          <span th:case="'GENERAL'">General election — all voters receive the same ballot (or same contest pool).</span>
+          <span th:case="'SPECIAL'">Special election called outside the regular calendar.</span>
+          <span th:case="'RUNOFF'">Runoff between top candidates from a prior election.</span>
+          <span th:case="*" th:text="${t}"></span>
+        </span>
+      </label>
+    </fieldset>
+
+    <label>Election Date
+      <input type="date" name="electionDate" th:value="${election.electionDate}"/>
+    </label>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="uniformBallot" name="uniformBallot" value="true"
+             th:checked="${election.uniformBallot}"/>
+      <label for="uniformBallot" style="font-weight:normal">
+        Uniform ballot — every voter receives exactly the same ballot regardless of
+        region or party (simplest case; skips region filtering)
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Election</button>
+      <a th:href="@{/data/elections}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</main>
+</body>
+</html>

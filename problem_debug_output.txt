@@ -1,0 +1,13 @@
+2026-06-18T11:03:32.335-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.c.service.CoordinateDebugService     : [DEBUG] Adjusted YAML written: /Users/mjtrac/pbss/test-harness/images/Precinct_1/rotated/ballot_1_1_1_1_1_2__write_ins__rot_cw_1__c03_adjusted.yaml
+2026-06-18T11:03:32.335-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.counter.service.ScannerService       : Scanned ballot_1_1_1_1_1_2__write_ins__rot_cw_1__c03.png — barcode=1|1|1|1|1|2 page=2 dpi=300 corners=found marks=1/6
+2026-06-18T11:03:32.339-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.counter.service.VoteRecordService    : Renamed to: ballot_1_1_1_1_1_2__write_ins__rot_cw_1__c03.png.counted
+2026-06-18T11:03:32.455-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.counter.service.ScannerService       : [ballot_1_1_2_1_1_1__messy_marks__rot_ccw1_trans__c01.png] DPI from heuristic: 324.7 → snapped to 300 (image width=2760, assumed=8.50 in)
+2026-06-18T11:03:32.455-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.counter.service.ScannerService       : [ballot_1_1_2_1_1_1__messy_marks__rot_ccw1_trans__c01.png] imageDpi=300  size=2760x4410
+2026-06-18T11:03:32.532-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.counter.service.ScannerService       : [ballot_1_1_2_1_1_1__messy_marks__rot_ccw1_trans__c01.png] Barcode: 1|1|2|1|1|1  —  YAML source: /Users/mjtrac/pbss/bBuilder/ballot_1_1_1_1_1_1.yaml
+2026-06-18T11:03:32.532-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.counter.service.ScannerService       : Barcode offset: dx=62px dy=8px (0.206in, 0.026in)
+2026-06-18T11:03:32.885-07:00  INFO 8997 --- [bCounter] [         scan-1] g.e.c.service.CornerDetectionService     : [DEBUG] Bottom border line NOT found -- ballot appears upside-down, rotating 180deg
+2026-06-18T11:03:33.292-07:00 ERROR 8997 --- [bCounter] [         scan-1] g.e.c.service.CornerDetectionService     : [DEBUG] No bottom border line found even after flipping
+2026-06-18T11:03:33.293-07:00  WARN 8997 --- [bCounter] [         scan-1] g.e.counter.service.ScannerService       : [CORNER] no bottom border line found
+2026-06-18T11:03:33.293-07:00 ERROR 8997 --- [bCounter] [         scan-1] g.e.counter.service.ScannerService       : [ballot_1_1_2_1_1_1__messy_marks__rot_ccw1_trans__c01.png] Corner detection failed: no bottom border line found — ballot requires manual review
+2026-06-18T11:03:33.293-07:00  WARN 8997 --- [bCounter] [         scan-1] g.e.counter.controller.ScanController    : Flagged for review: ballot_1_1_2_1_1_1__messy_marks__rot_ccw1_trans__c01.png — Corner detection failed: no bottom border line found — ballot requires manual review
+20

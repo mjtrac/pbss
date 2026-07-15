@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"/>
+  <title th:text="${loginTitle}">bScanner</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; margin: 0; background: #f4f4f4; color: #1a1a2e; }
+    nav  { background: #1a1a2e; color: white; padding: .75rem 1.5rem;
+           display: flex; justify-content: space-between; align-items: center; }
+    nav a { color: #aad4f5; text-decoration: none; margin-left: 1rem; font-size: .9rem; }
+    nav a:hover { color: white; }
+    .container { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: white; border-radius: 8px; padding: 1.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
+    h2 { margin-top: 0; }
+    .status-box { font-size: 1.4rem; font-weight: bold; padding: 1rem;
+                  border-radius: 6px; text-align: center; margin: 1rem 0; }
+    .idle     { background: #e8e8e8; color: #555; }
+    .running  { background: #fff3cd; color: #856404; }
+    .done     { background: #d4edda; color: #155724; }
+    .errored  { background: #f8d7da; color: #721c24; }
+    button { padding: .6rem 1.5rem; border: none; border-radius: 4px;
+             cursor: pointer; font-size: 1rem; margin-right: .5rem; }
+    .btn-scan { background: #1a1a2e; color: white; }
+    .btn-scan:disabled { background: #888; cursor: default; }
+    .btn-stop { background: #dc3545; color: white; }
+    .btn-stop:disabled { background: #888; cursor: default; }
+    .config-summary { font-size: .85rem; color: #555; }
+    .config-summary td { padding: .2rem .8rem .2rem 0; }
+  </style>
+</head>
+<body>
+<nav>
+  <span th:text="${loginTitle}" style="font-weight:bold;">bScanner</span>
+  <span>
+    <span sec:authorize="hasRole('ADMINISTRATOR')">
+      <a href="/config">Configuration</a>
+      <a href="/users">Users</a>
+    </span>
+    <a href="/logout">Sign out</a>
+  </span>
+</nav>
+
+<div class="container">
+  <div class="card">
+    <h2>Scan Ballots</h2>
+
+    <!-- Status display -->
+    <div id="statusBox" class="status-box idle">
+      Ready to scan
+    </div>
+    <div id="countDisplay" style="text-align:center; font-size:1.1rem; margin-bottom:1rem;">
+      Images scanned: <strong id="count">0</strong>
+    </div>
+    <div id="lastFile" style="font-size:.8rem; color:#777; text-align:center; min-height:1.2em;"></div>
+
+    <!-- Batch comment -->
+    <div style="margin-bottom:1rem;">
+      <label for="batchComment"
+             style="display:block;font-size:.85rem;font-weight:bold;margin-bottom:.3rem;">
+        Batch Comment <span style="font-weight:normal;color:#777;">(optional — cleared after each scan)</span>
+      </label>
+      <textarea id="batchComment" rows="2"
+                placeholder="e.g. Precinct 4 morning batch, box 3 of 5"
+                style="width:100%;padding:.45rem;border:1px solid #ccc;border-radius:4px;
+                       font-size:.9rem;resize:vertical;font-family:sans-serif;"></textarea>
+    </div>
+
+    <!-- Controls -->
+    <div style="text-align:center; margin-top:1.2rem;">
+      <button id="btnScan" class="btn-scan" onclick="startScan()">Start Scan</button>
+      <button id="btnStop" class="btn-stop" onclick="stopScan()" disabled>Stop</button>
+    </div>
+  </div>
+
+  <!-- Config summary (read-only for all users) -->
+  <div class="card">
+    <h3 style="margin-top:0;">Current Configuration</h3>
+    <table class="config-summary">
+      <tr><td><b>Backend</b></td><td th:text="${config.backend}"></td></tr>
+      <tr th:if="${config.naps2Profile != null and !config.naps2Profile.isBlank()}">
+        <td><b>NAPS2 Profile</b></td><td th:text="${config.naps2Profile}"></td></tr>
+      <tr th:if="${(config.naps2Profile == null or config.naps2Profile.isBlank()) and config.naps2Device != null and !config.naps2Device.isBlank()}">
+        <td><b>NAPS2 Device</b></td><td th:text="${config.naps2Device}"></td></tr>
+      <tr><td><b>Source</b></td><td th:text="${config.source}"></td></tr>
+      <tr><td><b>DPI</b></td><td th:text="${config.dpi}"></td></tr>
+      <tr><td><b>Output folder</b></td><td th:text="${config.outputDir}"></td></tr>
+    </table>
+    <div sec:authorize="hasRole('ADMINISTRATOR')" style="margin-top:.8rem;">
+      <a href="/config">Edit configuration →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+let polling = null;
+
+function startScan() {
+  const comment = document.getElementById('batchComment').value.trim();
+  const params  = new URLSearchParams();
+  if (comment) params.append('comment', comment);
+
+  fetch('/scan/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'started') {
+        // Clear comment immediately — it has been accepted for this batch
+        document.getElementById('batchComment').value = '';
+        setRunning(true);
+        polling = setInterval(pollStatus, 1000);
+      } else {
+        alert('Error: ' + (d.message || d.status));
+      }
+    });
+}
+
+function stopScan() {
+  fetch('/scan/stop', { method: 'POST' });
+}
+
+function pollStatus() {
+  fetch('/status')
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('count').textContent = d.imagesScanned;
+      if (d.lastFile) document.getElementById('lastFile').textContent = d.lastFile;
+
+      if (d.error && d.error.length > 0) {
+        clearInterval(polling); polling = null;
+        setRunning(false);
+        setStatus('errored', 'Error: ' + d.error);
+      } else if (d.complete && !d.scanning) {
+        clearInterval(polling); polling = null;
+        setRunning(false);
+        let elapsed = Math.round(d.elapsedMs / 1000);
+        setStatus('done', 'Complete — ' + d.imagesScanned + ' image(s) in ' + elapsed + 's');
+      } else if (d.scanning) {
+        let elapsed = Math.round(d.elapsedMs / 1000);
+        setStatus('running', 'Scanning… ' + d.imagesScanned + ' image(s) — ' + elapsed + 's');
+      }
+    });
+}
+
+function setRunning(running) {
+  document.getElementById('btnScan').disabled = running;
+  document.getElementById('btnStop').disabled = !running;
+}
+
+function setStatus(cls, text) {
+  let box = document.getElementById('statusBox');
+  box.className = 'status-box ' + cls;
+  box.textContent = text;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Regions')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <h2>Regions</h2>
+    <a th:href="@{/data/regions/new}" class="btn">+ New Region</a>
+  </div>
+
+  <p class="help-text">
+    <strong>SinglePrecinct</strong> regions are individual voting precincts — voters are
+    registered to exactly one and receive a ballot based on it.
+    <strong>PrecinctGroup</strong> regions (Water Districts, Cities, School Districts, etc.)
+    group multiple SinglePrecincts together; a contest assigned to a PrecinctGroup
+    automatically appears on every member SinglePrecinct's ballot.
+  </p>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>Type</th><th>Group Type</th><th>Jurisdiction</th>
+        <th>Members</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="r : ${regions}">
+        <td th:text="${r.name}"></td>
+        <td>
+          <span th:if="${r.regionType != null and r.regionType.name() == 'SINGLE_PRECINCT'}"
+                class="badge badge-precinct">SinglePrecinct</span>
+          <span th:if="${r.regionType != null and r.regionType.name() == 'PRECINCT_GROUP'}"
+                class="badge badge-composite">PrecinctGroup</span>
+        </td>
+        <td th:text="${r.groupType}"></td>
+        <td th:text="${r.jurisdiction != null ? r.jurisdiction.name : '—'}"></td>
+        <td>
+          <span th:if="${r.regionType != null and r.regionType.name() == 'SINGLE_PRECINCT'}">—</span>
+          <span th:if="${r.regionType != null and r.regionType.name() == 'PRECINCT_GROUP'}"
+                th:text="${r.members.size()} + ' member(s)'"></span>
+        </td>
+        <td class="actions">
+          <a th:href="@{'/data/regions/' + ${r.id} + '/edit'}" class="btn btn-sm">Edit</a>
+          <form method="post"
+                th:action="@{'/data/regions/' + ${r.id} + '/delete'}"
+                style="display:inline"
+                onsubmit="return confirm('Delete \u0022' + [[${r.name}]] + '\u0022?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(regions)}">
+        <td colspan="6" class="empty">
+          No regions yet. Start by
+          <a th:href="@{/data/regions/new}">creating SinglePrecincts</a>,
+          then create PrecinctGroups and add members.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

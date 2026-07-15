@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2 th:text="${formTitle}">Region</h2>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <form method="post" th:action="@{/data/regions/save}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="id"
+           th:if="${region.id != null}" th:value="${region.id}"/>
+
+    <label>Name *
+      <input type="text" name="name" th:value="${region.name}"
+             required maxlength="200" autofocus
+             placeholder="e.g. Precinct 4, Sample Water District, City of Sampleville"/>
+    </label>
+
+    <label>Master Jurisdiction *
+      <select name="jurisdictionId" required>
+        <option value="">-- select jurisdiction --</option>
+        <option th:each="j : ${jurisdictions}"
+                th:value="${j.id}" th:text="${j.name}"
+                th:selected="${region.jurisdiction != null
+                              and region.jurisdiction.id == j.id}">
+        </option>
+      </select>
+      <small style="color:#666">
+        The master jurisdiction (e.g. Sample County) this region belongs to.
+      </small>
+    </label>
+
+    <!-- Region type radio buttons -->
+    <fieldset class="voting-method-fieldset">
+      <legend>Region Type *</legend>
+
+      <label class="radio-label">
+        <input type="radio" name="regionType" value="SINGLE_PRECINCT"
+               id="typeSinglePrecinctRadio"
+               th:checked="${region.regionType == null
+                             or region.regionType.name() == 'SINGLE_PRECINCT'}"/>
+        <span class="radio-title">SinglePrecinct</span>
+        <span class="radio-desc">
+          An individual voting precinct. Voters are registered to exactly one SinglePrecinct.
+          Ballot combinations are keyed to SinglePrecincts.
+          Example: Precinct 4, Polling Place 12.
+        </span>
+      </label>
+
+      <label class="radio-label" style="margin-top:.35rem">
+        <input type="radio" name="regionType" value="PRECINCT_GROUP"
+               id="typePrecinctGroupRadio"
+               th:checked="${region.regionType != null
+                             and region.regionType.name() == 'PRECINCT_GROUP'}"/>
+        <span class="radio-title">PrecinctGroup</span>
+        <span class="radio-desc">
+          A named grouping spanning multiple SinglePrecincts (Water District, City, Township, etc.).
+          Assigning a contest to a PrecinctGroup automatically places it on every member
+          SinglePrecinct's ballot — no per-precinct entry needed.
+        </span>
+      </label>
+    </fieldset>
+
+    <!-- Group type — only shown for PrecinctGroup -->
+    <div id="groupTypeField">
+      <label>Group Type
+        <select name="groupType">
+          <option value="">-- select --</option>
+          <option th:each="t : ${ {'CITY','TOWN','DISTRICT','WARD','TOWNSHIP',
+                                    'SCHOOL_DISTRICT','WATER_DISTRICT','FIRE_DISTRICT','OTHER'} }"
+                  th:value="${t}" th:text="${t}"
+                  th:selected="${region.groupType == t}">
+          </option>
+        </select>
+        <small style="color:#666">Optional label for the kind of PrecinctGroup.</small>
+      </label>
+    </div>
+
+    <label>Description
+      <input type="text" name="description"
+             th:value="${region.description}" maxlength="500"
+             placeholder="Optional — e.g. Serves the north end of the county"/>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Region</button>
+      <a th:href="@{/data/regions}" class="btn btn-secondary">Back to List</a>
+    </div>
+  </form>
+
+  <!-- Member SinglePrecincts (PrecinctGroup only, shown after save) -->
+  <div th:if="${region.id != null and region.regionType != null
+               and region.regionType.name() == 'PRECINCT_GROUP'}"
+       style="margin-top:2rem;border-top:1px solid #ccc;padding-top:1.5rem">
+
+    <h3>Member SinglePrecincts</h3>
+    <p class="help-text">
+      Select which SinglePrecincts belong to this PrecinctGroup.
+      Contests assigned to this group will automatically appear on the ballot
+      for every selected SinglePrecinct.
+    </p>
+
+    <div th:if="${#lists.isEmpty(allSinglePrecincts)}" class="alert alert-info">
+      No SinglePrecincts exist yet in this jurisdiction.
+      <a th:href="@{/data/regions/new}">Create SinglePrecincts first</a>,
+      then return here to add them to this group.
+    </div>
+
+    <form th:if="${not #lists.isEmpty(allSinglePrecincts)}"
+          method="post"
+          th:action="@{'/data/regions/' + ${region.id} + '/assign-members'}">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div class="checklist" style="max-width:480px">
+        <div th:each="p : ${allSinglePrecincts}" class="checklist-item">
+          <input type="checkbox" th:id="'m' + ${p.id}"
+                 name="memberIds" th:value="${p.id}"
+                 th:checked="${region.members.contains(p)}"/>
+          <label th:for="'m' + ${p.id}" th:text="${p.name}"></label>
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top:1rem">
+        <button type="submit" class="btn">Update Member List</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Info panel for SinglePrecincts -->
+  <div th:if="${region.id != null and region.regionType != null
+               and region.regionType.name() == 'SINGLE_PRECINCT'}"
+       style="margin-top:2rem;border-top:1px solid #ccc;padding-top:1.5rem">
+    <h3>PrecinctGroup Memberships</h3>
+    <p class="help-text">
+      This SinglePrecinct inherits contests from any PrecinctGroup
+      (Water District, City, etc.) that lists it as a member.
+      To add or remove this SinglePrecinct from a group, edit that group's page.
+    </p>
+  </div>
+
+</main>
+<script th:src="@{/js/region-form.js}"></script>
+</body>
+</html>

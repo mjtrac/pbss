@@ -1,0 +1,48 @@
+Starting pbss on macOS
+=========================
+
+The pbss folder should contain:
+  pbss.app              (the launcher — keep this)
+  bBuilder/             (Ballot Builder, port 8080)
+  bCounter/             (Ballot Counter, port 8081)
+  bViewer/              (Ballot Viewer,  port 8082)
+  README.md
+
+STEP 1 — Remove the quarantine flag from pbss.app:
+
+  xattr -cr /Users/yourname/pbss/pbss.app
+
+Replace "yourname" with your actual username.
+
+STEP 2 — Double-click pbss.app in Finder.
+
+  A menu appears with:
+    • Start bBuilder         (Ballot Builder  → http://localhost:8080)
+    • Start bCounter         (Ballot Counter  → http://localhost:8081)
+    • Start bViewer          (Ballot Viewer   → http://localhost:8082)
+    • Open bBuilder in Browser
+    • Open bCounter in Browser
+    • Open bViewer in Browser
+    • Stop All
+    • Quit
+
+  The browser opens automatically once each program is ready.
+  First run takes 1-3 minutes while Maven downloads dependencies.
+
+ADDING TO THE DOCK:
+  Drag pbss.app to the Dock (right of the divider).
+
+COMMAND LINE ALIAS (alternative to double-clicking):
+  echo 'alias pbss="/Users/yourname/pbss/pbss.app/Contents/MacOS/pbss"' >> ~/.zshrc
+  source ~/.zshrc
+  # Then type: pbss
+
+LOG FILES (written to the pbss folder):
+  bBuilder.log    bCounter.log    bViewer.log
+
+WHERE OUTPUT FILES ARE WRITTEN:
+  Ballot PDFs and YAML/XML exports  →  pbss/bBuilder/ folder
+  counter_audit.log                 →  pbss/bCounter/ folder
+  vote_summary.yaml, overvotes,
+  write-in images                   →  your ballot images folder
+  counter_results.db                →  pbss/bCounter/ folder

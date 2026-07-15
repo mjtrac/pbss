@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Contests')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <div class="page-header">
+    <h2>Contests &amp; Candidates</h2>
+    <a th:href="@{/data/contests/new}" class="btn">+ New Contest</a>
+  </div>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Election</th>
+        <th>Jurisdiction</th>
+        <th>Title</th>
+        <th>Method</th>
+        <th>Max Choices</th>
+        <th>Candidates</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="c : ${contests}">
+        <td th:text="${c.election != null ? c.election.name : '—'}"></td>
+        <td th:text="${c.election != null and c.election.jurisdiction != null
+                       ? c.election.jurisdiction.name : '—'}"></td>
+        <td th:text="${c.title}"></td>
+        <td th:text="${c.votingMethod}"></td>
+        <td th:text="${c.maxChoices}"></td>
+        <td th:text="${c.candidates.size()}"></td>
+        <td class="actions">
+          <a th:href="@{'/data/contests/' + ${c.id} + '/edit'}" class="btn btn-sm">Edit</a>
+          <a th:href="@{'/data/contests/' + ${c.id} + '/candidates'}" class="btn btn-sm">Candidates</a>
+          <a th:href="@{'/data/contests/' + ${c.id} + '/translate'}" class="btn btn-sm">Translate</a>
+          <form method="post"
+                th:action="@{'/data/contests/' + ${c.id} + '/delete'}"
+                style="display:inline"
+                onsubmit="return confirm('Delete contest \u0022' + [[${c.title}]] + '\u0022?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(contests)}">
+        <td colspan="7" class="empty">
+          No contests yet. <a th:href="@{/data/contests/new}">Create one</a> after
+          setting up an election.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

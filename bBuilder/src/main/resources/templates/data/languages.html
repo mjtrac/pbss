@@ -1,0 +1,89 @@
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg — GPL v3
+  Ballot language management page.
+-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Ballot Languages')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h1>Ballot Languages</h1>
+  <p class="help-text">
+    Add a language here to enable printing ballots in that language.
+    Once languages are defined, use the <strong>Translate</strong> link on any
+    contest or candidate to enter translated text.
+    Ballot PDFs in each language share the same barcodes and indicator positions
+    — the scanning pipeline does not need to be changed.
+  </p>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <!-- Existing languages -->
+  <table th:if="${languages != null and !languages.isEmpty()}">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Language Name</th>
+        <th>Order</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="lang : ${languages}">
+        <td th:text="${lang.languageCode}"></td>
+        <td th:text="${lang.languageName}"></td>
+        <td th:text="${lang.displayOrder}"></td>
+        <td>
+          <form method="post"
+                th:action="@{/data/languages/{id}/delete(id=${lang.id})}">
+            <input type="hidden" th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-sm btn-danger"
+                    data-confirm="Remove this language?">Remove</button>
+          </form>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p th:if="${languages == null or languages.isEmpty()}"
+     class="help-text">No languages added yet. English is always available by default.</p>
+
+  <!-- Add language form -->
+  <h2 style="margin-top:2rem">Add Language</h2>
+  <form method="post" th:action="@{/data/languages}">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="jurisdictionId"
+           th:value="${selectedJurisdiction?.id}"/>
+
+    <div class="form-group">
+      <label>IETF Language Code
+        <span class="help-text">(e.g. en, es, zh, zh-Hant, tl, vi, ko)</span>
+      </label>
+      <input type="text" name="languageCode" required maxlength="16"
+             placeholder="es" style="width:8rem"/>
+    </div>
+    <div class="form-group">
+      <label>Language Name <span class="help-text">(shown in UI)</span></label>
+      <input type="text" name="languageName" required
+             placeholder="Español"/>
+    </div>
+    <div class="form-group">
+      <label>Display Order</label>
+      <input type="number" name="displayOrder" value="0" style="width:5rem"/>
+    </div>
+    <button type="submit" class="btn">Add Language</button>
+  </form>
+
+  <h2 style="margin-top:2rem">Translation Files</h2>
+  <p class="help-text">
+    Fixed ballot strings (voting instructions, "Write-in:", etc.) are loaded from
+    <code>src/main/resources/i18n/ballot_{code}.properties</code>.
+    Files for <strong>en</strong>, <strong>es</strong>, and <strong>zh</strong>
+    are included. Add a new file for any other language code.
+  </p>
+</main>
+</body>
+</html>

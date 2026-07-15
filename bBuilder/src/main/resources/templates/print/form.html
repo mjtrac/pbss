@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Print Ballot')}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2>Print Ballot</h2>
+
+  <div th:if="${#lists.isEmpty(combinations)}" class="alert alert-info">
+    No ballot combinations exist yet.
+    Before printing, complete these steps:
+    <ol style="margin:.5rem 0 0 1.25rem">
+      <li><a th:href="@{/data/regions}">Create regions</a> (precincts and PrecinctGroups)</li>
+      <li><a th:href="@{/data/contests}">Create contests</a> and assign them to regions</li>
+      <li><a th:href="@{/data/ballot-combinations}">Create ballot combinations</a>
+          (Election + Precinct + Party + Ballot Type)</li>
+      <li><a th:href="@{/data/ballot-templates}">Create a ballot design template</a>
+          for your election</li>
+    </ol>
+  </div>
+
+  <div th:if="${not #lists.isEmpty(combinations)}">
+
+    <input type="hidden" id="csrfToken" th:value="${_csrf.token}"/>
+    <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}"/>
+
+    <label>Ballot Combination *
+      <select id="combinationId" required>
+        <option value="">— select —</option>
+        <option th:each="c : ${combinations}"
+                th:value="${c.id}"
+                th:text="${c.election.name + ' | ' + c.region.name + ' | ' +
+                           (c.party != null ? c.party.name : 'Nonpartisan') + ' | ' +
+                           c.ballotType.name}">
+        </option>
+      </select>
+    </label>
+
+    <label>Design Template
+      <select id="templateId">
+        <option value="">— select combination first —</option>
+      </select>
+      <small style="display:block;color:#666;margin-top:.25rem">
+        Templates for the selected election. Create additional templates
+        (e.g. Spanish header) under Setup → Design Templates.
+      </small>
+    </label>
+
+    <label style="max-width:160px">Copies
+      <input type="number" id="copies" value="1" min="1" max="500"/>
+    </label>
+
+    <div class="form-actions">
+      <div class="form-group" th:if="${languages != null and !languages.isEmpty()}"
+           style="margin:.75rem 0">
+        <label for="langSelect">Language</label>
+        <select id="langSelect">
+          <option value="en">English (default)</option>
+          <option th:each="lang : ${languages}"
+                  th:value="${lang.languageCode}"
+                  th:text="${lang.languageName + ' (' + lang.languageCode + ')'}">
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Checkbox and button in their own row, outside form-actions -->
+    <div style="display:flex;align-items:center;gap:1.5rem;margin-top:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <input type="checkbox" id="enablePrinter"/>
+        <span style="white-space:nowrap">Send directly to printer</span>
+      </div>
+      <button class="btn" id="generateBtn">Generate PDF</button>
+    </div>
+
+    <div id="printerSection" style="display:none;margin-top:.5rem">
+      <select id="printerSelect" style="min-width:280px">
+        <option value="">— loading printers… —</option>
+      </select>
+      <small style="display:block;color:#666;margin-top:.25rem">
+        Printers registered with the system print spooler (CUPS / Windows).
+      </small>
+    </div>
+
+  </div>
+
+  <!-- Files-written overlay (plain div — avoids Chrome/Safari focus-trap bug with dialog) -->
+  <div id="filesDialog" style="
+      display:none;position:fixed;inset:0;z-index:9999;
+      background:rgba(0,0,0,.45);
+      align-items:center;justify-content:center">
+    <div style="
+        background:#fff;border:1px solid #b0c4de;border-radius:8px;
+        padding:1.5rem 2rem;max-width:700px;width:90%;
+        box-shadow:0 4px 24px rgba(0,0,0,.35)">
+      <h3 style="margin:0 0 1rem;color:#1a2744">&#10003; Ballot files written</h3>
+      <p style="margin:0 0 .75rem;font-size:.9rem;color:#444">
+        The following files have been written to disk:
+      </p>
+      <ul id="filesDialogList" style="
+          margin:.5rem 0 1rem 1.25rem;font-family:monospace;font-size:.82rem;
+          color:#1a2744;line-height:1.8;word-break:break-all"></ul>
+      <p id="printerNote" style="margin:.5rem 0 0;font-size:.85rem;color:#27ae60;display:none">
+        &#10003; Sent to printer.
+      </p>
+      <p style="margin:.5rem 0 0;font-size:.8rem;color:#888">
+        Press <kbd style="font-family:monospace;background:#eee;padding:1px 5px;
+        border:1px solid #ccc;border-radius:3px">Esc</kbd> or click OK to dismiss.
+      </p>
+      <div style="text-align:right;margin-top:.75rem">
+        <button class="btn" id="filesDialogOk">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/generate-ballot.js(v=20260702)}"></script>
+
+</main>
+</body>
+</html>

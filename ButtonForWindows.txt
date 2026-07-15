@@ -1,0 +1,46 @@
+Starting pbss on Windows
+==========================
+
+Create a file named StartBSuite.bat inside the pbss folder
+(at the same level as bBuilder, bCounter, and bViewer).
+
+Paste the following into it:
+
+------------------------------------------------------------
+@echo off
+echo Starting bBuilder...
+start "bBuilder" cmd /k "cd /d %~dp0bBuilder && mvnw.cmd spring-boot:run"
+echo Waiting for bBuilder to start...
+timeout /t 30
+start http://localhost:8080
+
+echo Starting bCounter...
+start "bCounter" cmd /k "cd /d %~dp0bCounter && mvnw.cmd spring-boot:run"
+echo Waiting for bCounter to start...
+timeout /t 30
+start http://localhost:8081
+
+echo Starting bViewer...
+start "bViewer" cmd /k "cd /d %~dp0bViewer && set COUNTER_DB=%~dp0bCounter\counter_results.db && mvnw.cmd spring-boot:run"
+timeout /t 30
+start http://localhost:8082
+------------------------------------------------------------
+
+Double-click StartBSuite.bat in File Explorer to launch all three programs.
+
+Three separate command windows open (one per program) showing log output.
+Browser tabs open automatically after the wait periods.
+
+NOTE: First run may take 1-3 minutes while Maven downloads dependencies.
+
+STOPPING THE PROGRAMS:
+Close each command window, or press Ctrl+C in each one.
+
+LAYOUT:
+  pbss\
+    StartBSuite.bat       <- double-click to start
+    pbss.app\             <- macOS launcher (ignore on Windows)
+    bBuilder\
+    bCounter\
+    bViewer\
+    README.md

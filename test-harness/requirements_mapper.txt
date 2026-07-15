@@ -1,0 +1,10 @@
+# ballot_mapper.py dependencies
+# Install with: pip install -r requirements_mapper.txt
+# Also requires: brew install tesseract (macOS) or apt install tesseract-ocr (Linux)
+
+opencv-python>=4.8.0
+Pillow>=10.0.0
+pytesseract>=0.3.10
+pyyaml>=6.0
+numpy>=1.24.0
+pyzbar>=0.1.9

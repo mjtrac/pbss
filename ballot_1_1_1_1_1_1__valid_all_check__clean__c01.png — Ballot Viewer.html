@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<!-- saved from url=(0038)http://localhost:8082/viewer/view?id=8 -->
+<html lang="en" style="--header-h: 49px; --nav-h: 39px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png — Ballot Viewer</title>
+  <link rel="stylesheet" href="./ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png — Ballot Viewer_files/viewer.css">
+  <style>
+    /* ── View-page layout ────────────────────────────────────────────────── */
+    body { overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── Nav bar ─────────────────────────────────────────────────────────── */
+    .nav-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #0f172a; border-bottom: 1px solid #1e293b;
+      padding: .4rem 1rem; gap: 1rem; flex-shrink: 0;
+    }
+    .nav-left  { display: flex; align-items: center; gap: .6rem; }
+    .nav-right { display: flex; align-items: center; gap: .9rem; }
+    .nav-btn {
+      padding: .28rem .75rem; background: #1e293b; border: 1px solid #334155;
+      color: #94a3b8; border-radius: 4px; font-size: .82rem; text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-btn:hover:not(.disabled)  { background: #334155; color: #e2e8f0; }
+    .nav-btn.disabled { opacity: .35; cursor: default; pointer-events: none; }
+    .nav-pos { font-size: .78rem; color: #64748b; white-space: nowrap; }
+    .auto-label {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .82rem; color: #94a3b8; cursor: pointer;
+    }
+    .auto-label input[type=checkbox] { cursor: pointer; }
+
+    :root {
+      --header-h: 52px;   /* app-header approximate height */
+      --nav-h:    38px;   /* nav-bar approximate height */
+      --pane-h: calc(100vh - var(--header-h) - var(--nav-h));
+    }
+
+    .view-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      height: var(--pane-h);
+      overflow: hidden;
+    }
+
+    /* Left: scrollable image + canvas pane */
+    .canvas-pane {
+      position: relative;
+      overflow: auto;
+      background: #0f172a;
+      padding: 1rem;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Wrapper holds the image and canvas stacked */
+    .ballot-wrapper {
+      position: relative;
+      display: inline-block;
+      line-height: 0;   /* kills gap below inline img */
+    }
+
+    #ballotImg {
+      display: block;
+      /* width/height set by JS after load */
+    }
+
+    /* Canvas sits directly on top of the image */
+    #overlayCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;   /* let mouse events pass through to image */
+      z-index: 2;
+    }
+
+    /* Invisible hit-area divs layered above canvas for click/hover */
+    .hit-box {
+      position: absolute;
+      cursor: pointer;
+      z-index: 3;
+    }
+    .hit-box:hover + .tooltip, .hit-box:focus + .tooltip { display: block; }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
+    .sidebar {
+      background: #0f172a;
+      border-left: 1px solid #1e293b;
+      overflow-y: auto;
+      padding: 1rem;
+      font-size: .82rem;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .sidebar h2 {
+      font-size: .75rem; color: #64748b; text-transform: uppercase;
+      letter-spacing: .05em; margin: 0 0 .6rem;
+    }
+
+    .zoom-controls {
+      display: flex; gap: .4rem; align-items: center; margin-bottom: .75rem;
+    }
+    .zoom-controls button {
+      background: #1e293b; border: 1px solid #334155; color: #94a3b8;
+      padding: .2rem .55rem; border-radius: 4px; font-size: .82rem; cursor: pointer;
+    }
+    .zoom-controls button:hover { background: #334155; }
+    .zoom-level { font-size: .75rem; color: #64748b; min-width: 36px; text-align: center; }
+    .zoom-input {
+      width: 52px; padding: .15rem .3rem; background: #1e293b;
+      border: 1px solid #334155; border-radius: 4px; color: #e2e8f0;
+      font-size: .78rem; text-align: right;
+      -moz-appearance: textfield;
+    }
+    .zoom-input::-webkit-outer-spin-button,
+    .zoom-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .zoom-input:focus { outline: none; border-color: #3b82f6; }
+
+    .path-info {
+      font-size: .68rem; color: #475569; word-break: break-all;
+      background: #0d1425; padding: .35rem .5rem; border-radius: 4px;
+      margin-bottom: .75rem;
+    }
+
+    .legend {
+      display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: .9rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: .3rem; color: #94a3b8; }
+    .legend-swatch {
+      width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
+    }
+
+    .contest-group { margin-bottom: .9rem; }
+    .contest-name {
+      font-size: .72rem; font-weight: 700; color: #cbd5e1;
+      padding-bottom: .2rem; border-bottom: 1px solid #1e293b; margin-bottom: .3rem;
+    }
+    .candidate-row {
+      display: flex; align-items: center; gap: .35rem;
+      padding: .18rem 0; cursor: pointer; border-radius: 3px;
+    }
+    .candidate-row:hover { background: #1e293b; }
+    .candidate-row.active { background: #1e3a5f; }
+    .cand-swatch {
+      width: 10px; height: 10px; border-radius: 1px; flex-shrink: 0;
+      opacity: .85;
+    }
+    .cand-name { color: #94a3b8; flex: 1; font-size: .75rem; }
+    .cand-status { font-size: .66rem; color: #475569; text-transform: lowercase; }
+    .candidate-row.active .cand-name { color: #fff; }
+  </style>
+<style></style><style></style></head>
+<body>
+
+<header class="app-header">
+  <h1>📄 Ballot Viewer</h1>
+  <a href="http://localhost:8082/viewer" style="font-size:.78rem;color:#3b82f6;text-decoration:none;margin-left:.75rem">
+    ← Ballot List &amp; Filters
+  </a>
+  <a href="http://localhost:8082/viewer/report" style="font-size:.78rem;color:#3b82f6;text-decoration:none;margin-left:1rem">
+    📊 Results
+  </a>
+  <div class="header-user">
+    <span>admin</span>
+    <form method="post" action="http://localhost:8082/viewer/logout" style="display:inline">
+      <input type="hidden" name="_csrf" value="mhNzWWosiouhEqAwtM6TOnSHJKH6igEBTnDlUWjXfFCCZw7pqncXaF4cubiMc5EI1-OnDk2wCZjDvzIsKxXXNFrgHza7UGuL">
+      <button class="logout-btn">Sign Out</button>
+    </form>
+  </div>
+</header>
+
+<!-- Error -->
+
+
+<!-- Nav bar -->
+<div class="nav-bar" id="navBar">
+
+  <div class="nav-left">
+    <a href="http://localhost:8082/viewer/view?id=8#" class="nav-btn" id="prevBtn" title="Previous ballot (p)" data-action="goPrev">
+      ← Prev
+    </a>
+    <span class="nav-pos">
+      <span>120</span>
+      of
+      <span>2244</span>
+    </span>
+    <a href="http://localhost:8082/viewer/view?id=8#" class="nav-btn" id="nextBtn" title="Next ballot (n)" data-action="goNext">
+      Next →
+    </a>
+    <span style="margin-left:.5rem;display:flex;align-items:center;gap:.3rem">
+      <input type="text" id="jumpInput" placeholder="image name or id…" style="width:180px;padding:.22rem .5rem;background:#1e293b;
+                    border:1px solid #334155;border-radius:4px;color:#e2e8f0;
+                    font-size:.78rem">
+      <button class="nav-btn" data-action="jumpTo" title="Go to image by name or id">Go</button>
+    </span>
+  </div>
+
+  <div class="nav-right">
+    <label class="auto-label">
+      <input type="checkbox" id="showBoxes" checked="" data-onchange="toggleBoxes">
+      Boxes
+    </label>
+    <label class="auto-label">
+      <input type="checkbox" id="showNames" checked="" data-onchange="toggleNames">
+      Names
+    </label>
+    <label class="auto-label">
+      <input type="checkbox" id="autoAdvance" data-onchange="onAutoChange">
+      Auto-advance
+    </label>
+    <button class="nav-btn" id="holdBtn" data-action="toggleHold" style="display:none" title="Hold on this image">
+      ▮▮ Hold
+    </button>
+    <label class="auto-label" style="gap:.35rem">
+      every
+      <input type="number" id="autoSecs" value="5" min="1" max="999" style="width:52px;padding:.2rem .35rem;background:#1e293b;
+                    border:1px solid #334155;color:#e2e8f0;border-radius:4px;
+                    font-size:.82rem;text-align:right" data-onchange="resetAutoTimer">
+      s
+    </label>
+    <div id="autoProgress" style="display:none;align-items:center;gap:.4rem">
+      <div style="width:80px;height:4px;background:#1e293b;border-radius:2px;overflow:hidden">
+        <div id="autoBar" style="height:100%;background:#3b82f6;width:0%;transition:width .1s linear"></div>
+      </div>
+      <span id="autoCountdown" style="font-size:.72rem;color:#64748b;min-width:24px"></span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Full-width path bar -->
+<div id="pathBar" style="
+    background:#0d1425;border-bottom:1px solid #1e293b;
+    padding:.3rem 1rem;font-family:monospace;font-size:.75rem;
+    color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    flex-shrink:0">/Users/mjtrac/pbss/test-harness/150_images/Precinct_1/clean/ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png</div>
+
+<!-- Main viewer layout -->
+<div class="view-layout">
+
+  <!-- ── Left: image + canvas overlay ──────────────────────────────────── -->
+  <div class="canvas-pane" id="canvasPane">
+    <div class="ballot-wrapper" id="ballotWrapper" style="width: 829px; height: 1366px;">
+
+      <img src="./ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png — Ballot Viewer_files/image" id="ballotImg" alt="ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png" data-onload="onImageLoad" style="width: 829px; height: 1366px;">
+
+      <!-- Canvas rendered on top of the image -->
+      <canvas id="overlayCanvas" width="829" height="1366" style="width: 829px; height: 1366px;"></canvas>
+
+      <!-- Hit-area divs (invisible, capture mouse events) injected by JS -->
+
+    <div class="hit-box" data-id="260" title="President of the United States
+Alexandria Washington (Rank 4)
+UNMARKED" style="left: 102px; top: 758px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="261" title="President of the United States
+Alexandria Washington (Rank 3)
+UNMARKED" style="left: 126px; top: 758px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="262" title="President of the United States
+Alexandria Washington (Rank 2)
+MARKED at Rank 2" style="left: 149px; top: 758px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="263" title="President of the United States
+Alexandria Washington (Rank 1)
+UNMARKED" style="left: 176px; top: 758px; width: 23px; height: 7px;"></div><div class="hit-box" data-id="264" title="President of the United States
+Benjamin Adams (Rank 4)
+UNMARKED" style="left: 102px; top: 791px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="265" title="President of the United States
+Benjamin Adams (Rank 3)
+UNMARKED" style="left: 126px; top: 791px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="266" title="President of the United States
+Benjamin Adams (Rank 2)
+UNMARKED" style="left: 149px; top: 791px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="267" title="President of the United States
+Benjamin Adams (Rank 1)
+MARKED at Rank 1" style="left: 176px; top: 791px; width: 23px; height: 7px;"></div><div class="hit-box" data-id="268" title="President of the United States
+Carolina Jefferson (Rank 4)
+UNMARKED" style="left: 102px; top: 823px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="269" title="President of the United States
+Carolina Jefferson (Rank 3)
+MARKED at Rank 3" style="left: 126px; top: 823px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="270" title="President of the United States
+Carolina Jefferson (Rank 2)
+UNMARKED" style="left: 149px; top: 823px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="271" title="President of the United States
+Carolina Jefferson (Rank 1)
+UNMARKED" style="left: 176px; top: 823px; width: 23px; height: 7px;"></div><div class="hit-box" data-id="272" title="President of the United States
+Douglas Madison (Rank 4)
+MARKED at Rank 4" style="left: 102px; top: 856px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="273" title="President of the United States
+Douglas Madison (Rank 3)
+UNMARKED" style="left: 126px; top: 856px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="274" title="President of the United States
+Douglas Madison (Rank 2)
+UNMARKED" style="left: 149px; top: 856px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="275" title="President of the United States
+Douglas Madison (Rank 1)
+UNMARKED" style="left: 176px; top: 856px; width: 23px; height: 7px;"></div><div class="hit-box" data-id="276" title="President of the United States
+Eleanor Monroe (Rank 4)
+UNMARKED" style="left: 102px; top: 889px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="277" title="President of the United States
+Eleanor Monroe (Rank 3)
+UNMARKED" style="left: 126px; top: 889px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="278" title="President of the United States
+Eleanor Monroe (Rank 2)
+UNMARKED" style="left: 149px; top: 889px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="279" title="President of the United States
+Eleanor Monroe (Rank 1)
+UNMARKED" style="left: 176px; top: 889px; width: 23px; height: 7px;"></div><div class="hit-box" data-id="280" title="President of the United States
+Write-In (Rank 4)
+UNMARKED" style="left: 102px; top: 921px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="281" title="President of the United States
+Write-In (Rank 3)
+UNMARKED" style="left: 126px; top: 921px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="282" title="President of the United States
+Write-In (Rank 2)
+UNMARKED" style="left: 149px; top: 921px; width: 9px; height: 7px;"></div><div class="hit-box" data-id="283" title="President of the United States
+Write-In (Rank 1)
+UNMARKED" style="left: 176px; top: 921px; width: 23px; height: 7px;"></div><div class="hit-box" data-id="284" title="Representative in Congress
+Alice Smith
+UNMARKED" style="left: 432px; top: 633px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="285" title="Representative in Congress
+Bill Jones
+UNMARKED" style="left: 432px; top: 666px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="286" title="Representative in Congress
+Chuck Edwards
+VOTED" style="left: 432px; top: 698px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="287" title="Representative in Congress
+Dorothy Johnson
+UNMARKED" style="left: 432px; top: 731px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="288" title="Representative in Congress
+Ernest Garcia
+UNMARKED" style="left: 432px; top: 764px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="289" title="Representative in Congress
+Write-In
+UNMARKED" style="left: 432px; top: 796px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="290" title="City Council Member
+Anna Park
+VOTED" style="left: 432px; top: 967px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="291" title="City Council Member
+Brian Foster
+UNMARKED" style="left: 432px; top: 999px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="292" title="City Council Member
+Carmen Lopez
+VOTED" style="left: 432px; top: 1032px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="293" title="City Council Member
+David Kim
+UNMARKED" style="left: 432px; top: 1064px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="294" title="City Council Member
+Eva Patel
+VOTED" style="left: 432px; top: 1097px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="295" title="City Council Member
+Frank Nguyen
+UNMARKED" style="left: 432px; top: 1129px; width: 22px; height: 7px;"></div><div class="hit-box" data-id="296" title="City Council Member
+Write-In
+UNMARKED" style="left: 432px; top: 1162px; width: 22px; height: 7px;"></div></div>
+  </div>
+
+  <!-- ── Right: sidebar ────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <div class="zoom-controls">
+      <button data-action="zoomOut">−</button>
+      <input type="number" id="zoomLabel" class="zoom-input" value="100" min="1" max="800" title="Zoom % — type to set" data-onchange="onZoomInput"><span style="font-size:.72rem;color:#64748b">%</span>
+      <button data-action="zoomIn">+</button>
+      <button data-action="fitToPane">Fit</button>
+      <button data-action="resetZoom">1:1</button>
+      <button data-action="showHelp" title="Keyboard &amp; mouse shortcuts">?</button>
+    </div>
+
+    <div class="path-info" id="pathDisplay" style="word-break:break-all;font-size:.7rem">/Users/mjtrac/pbss/test-harness/150_images/Precinct_1/clean/ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png</div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#22c55e"></div>Voted / Marked
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#eab308"></div>Overvoted
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#3b82f6"></div>Unmarked
+      </div>
+    </div>
+
+    <h2>Contests &amp; Candidates</h2>
+
+    <!-- Sidebar list, grouped by contest -->
+    <div class="contest-group">
+      <div class="contest-name">President of the United States</div>
+      <div class="candidate-row" id="row-260" data-box-id="260" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Alexandria Washington [R4]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-261" data-box-id="261" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Alexandria Washington [R3]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-262" data-box-id="262" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Alexandria Washington [R2]</span>
+        <span class="cand-status">MARKED at Rank 2</span>
+      </div>
+      <div class="candidate-row" id="row-263" data-box-id="263" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Alexandria Washington [R1]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-264" data-box-id="264" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Benjamin Adams [R4]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-265" data-box-id="265" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Benjamin Adams [R3]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-266" data-box-id="266" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Benjamin Adams [R2]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-267" data-box-id="267" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Benjamin Adams [R1]</span>
+        <span class="cand-status">MARKED at Rank 1</span>
+      </div>
+      <div class="candidate-row" id="row-268" data-box-id="268" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Carolina Jefferson [R4]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-269" data-box-id="269" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Carolina Jefferson [R3]</span>
+        <span class="cand-status">MARKED at Rank 3</span>
+      </div>
+      <div class="candidate-row" id="row-270" data-box-id="270" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Carolina Jefferson [R2]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-271" data-box-id="271" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Carolina Jefferson [R1]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-272" data-box-id="272" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Douglas Madison [R4]</span>
+        <span class="cand-status">MARKED at Rank 4</span>
+      </div>
+      <div class="candidate-row" id="row-273" data-box-id="273" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Douglas Madison [R3]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-274" data-box-id="274" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Douglas Madison [R2]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-275" data-box-id="275" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Douglas Madison [R1]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-276" data-box-id="276" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Eleanor Monroe [R4]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-277" data-box-id="277" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Eleanor Monroe [R3]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-278" data-box-id="278" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Eleanor Monroe [R2]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-279" data-box-id="279" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Eleanor Monroe [R1]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-280" data-box-id="280" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Write-In [R4]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-281" data-box-id="281" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Write-In [R3]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-282" data-box-id="282" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Write-In [R2]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-283" data-box-id="283" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Write-In [R1]</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+    </div>
+    <div class="contest-group">
+      <div class="contest-name">Representative in Congress</div>
+      <div class="candidate-row" id="row-284" data-box-id="284" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Alice Smith</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-285" data-box-id="285" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Bill Jones</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-286" data-box-id="286" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Chuck Edwards</span>
+        <span class="cand-status">VOTED</span>
+      </div>
+      <div class="candidate-row" id="row-287" data-box-id="287" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Dorothy Johnson</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-288" data-box-id="288" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Ernest Garcia</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-289" data-box-id="289" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Write-In</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+    </div>
+    <div class="contest-group">
+      <div class="contest-name">City Council Member</div>
+      <div class="candidate-row" id="row-290" data-box-id="290" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Anna Park</span>
+        <span class="cand-status">VOTED</span>
+      </div>
+      <div class="candidate-row" id="row-291" data-box-id="291" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Brian Foster</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-292" data-box-id="292" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Carmen Lopez</span>
+        <span class="cand-status">VOTED</span>
+      </div>
+      <div class="candidate-row" id="row-293" data-box-id="293" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">David Kim</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-294" data-box-id="294" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#22c55e"></div>
+        <span class="cand-name">Eva Patel</span>
+        <span class="cand-status">VOTED</span>
+      </div>
+      <div class="candidate-row" id="row-295" data-box-id="295" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Frank Nguyen</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+      <div class="candidate-row" id="row-296" data-box-id="296" data-action="sidebarClick">
+        <div class="cand-swatch" style="background:#3b82f6"></div>
+        <span class="cand-name">Write-In</span>
+        <span class="cand-status">UNMARKED</span>
+      </div>
+    </div>
+
+  </aside>
+</div><!-- end view-layout -->
+<!-- Server data for viewer-view.js — avoids th:inline="javascript" CSP violation -->
+<div id="ballotData" style="display:none" data-boxes="[{&quot;id&quot;:260,&quot;x&quot;:71,&quot;y&quot;:677,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Alexandria Washington (Rank 4)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Alexandria Washington [R4]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:261,&quot;x&quot;:142,&quot;y&quot;:677,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Alexandria Washington (Rank 3)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Alexandria Washington [R3]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:262,&quot;x&quot;:213,&quot;y&quot;:677,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Alexandria Washington (Rank 2)&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Alexandria Washington [R2]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;MARKED at Rank 2&quot;},{&quot;id&quot;:263,&quot;x&quot;:296,&quot;y&quot;:677,&quot;w&quot;:71,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Alexandria Washington (Rank 1)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Alexandria Washington [R1]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:264,&quot;x&quot;:71,&quot;y&quot;:777,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Benjamin Adams (Rank 4)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Benjamin Adams [R4]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:265,&quot;x&quot;:142,&quot;y&quot;:777,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Benjamin Adams (Rank 3)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Benjamin Adams [R3]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:266,&quot;x&quot;:213,&quot;y&quot;:777,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Benjamin Adams (Rank 2)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Benjamin Adams [R2]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:267,&quot;x&quot;:296,&quot;y&quot;:777,&quot;w&quot;:71,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Benjamin Adams (Rank 1)&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Benjamin Adams [R1]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;MARKED at Rank 1&quot;},{&quot;id&quot;:268,&quot;x&quot;:71,&quot;y&quot;:877,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Carolina Jefferson (Rank 4)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Carolina Jefferson [R4]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:269,&quot;x&quot;:142,&quot;y&quot;:877,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Carolina Jefferson (Rank 3)&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Carolina Jefferson [R3]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;MARKED at Rank 3&quot;},{&quot;id&quot;:270,&quot;x&quot;:213,&quot;y&quot;:877,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Carolina Jefferson (Rank 2)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Carolina Jefferson [R2]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:271,&quot;x&quot;:296,&quot;y&quot;:877,&quot;w&quot;:71,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Carolina Jefferson (Rank 1)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Carolina Jefferson [R1]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:272,&quot;x&quot;:71,&quot;y&quot;:977,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Douglas Madison (Rank 4)&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Douglas Madison [R4]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;MARKED at Rank 4&quot;},{&quot;id&quot;:273,&quot;x&quot;:142,&quot;y&quot;:977,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Douglas Madison (Rank 3)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Douglas Madison [R3]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:274,&quot;x&quot;:213,&quot;y&quot;:977,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Douglas Madison (Rank 2)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Douglas Madison [R2]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:275,&quot;x&quot;:296,&quot;y&quot;:977,&quot;w&quot;:71,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Douglas Madison (Rank 1)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Douglas Madison [R1]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:276,&quot;x&quot;:71,&quot;y&quot;:1077,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Eleanor Monroe (Rank 4)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Eleanor Monroe [R4]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:277,&quot;x&quot;:142,&quot;y&quot;:1077,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Eleanor Monroe (Rank 3)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Eleanor Monroe [R3]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:278,&quot;x&quot;:213,&quot;y&quot;:1077,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Eleanor Monroe (Rank 2)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Eleanor Monroe [R2]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:279,&quot;x&quot;:296,&quot;y&quot;:1077,&quot;w&quot;:71,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Eleanor Monroe (Rank 1)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Eleanor Monroe [R1]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:280,&quot;x&quot;:71,&quot;y&quot;:1177,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Write-In (Rank 4)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Write-In [R4]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:281,&quot;x&quot;:142,&quot;y&quot;:1177,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Write-In (Rank 3)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Write-In [R3]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:282,&quot;x&quot;:213,&quot;y&quot;:1177,&quot;w&quot;:29,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Write-In (Rank 2)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Write-In [R2]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:283,&quot;x&quot;:296,&quot;y&quot;:1177,&quot;w&quot;:71,&quot;h&quot;:21,&quot;contest&quot;:&quot;President of the United States&quot;,&quot;contestType&quot;:&quot;RANKED_CHOICE&quot;,&quot;candidate&quot;:&quot;Write-In (Rank 1)&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Write-In [R1]&quot;,&quot;rankedChoice&quot;:true,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:284,&quot;x&quot;:1083,&quot;y&quot;:293,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;Representative in Congress&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Alice Smith&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Alice Smith&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:285,&quot;x&quot;:1083,&quot;y&quot;:393,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;Representative in Congress&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Bill Jones&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Bill Jones&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:286,&quot;x&quot;:1083,&quot;y&quot;:493,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;Representative in Congress&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Chuck Edwards&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Chuck Edwards&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;VOTED&quot;},{&quot;id&quot;:287,&quot;x&quot;:1083,&quot;y&quot;:593,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;Representative in Congress&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Dorothy Johnson&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Dorothy Johnson&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:288,&quot;x&quot;:1083,&quot;y&quot;:693,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;Representative in Congress&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Ernest Garcia&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Ernest Garcia&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:289,&quot;x&quot;:1083,&quot;y&quot;:793,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;Representative in Congress&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Write-In&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Write-In&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:290,&quot;x&quot;:1083,&quot;y&quot;:1317,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;City Council Member&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Anna Park&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Anna Park&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;VOTED&quot;},{&quot;id&quot;:291,&quot;x&quot;:1083,&quot;y&quot;:1417,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;City Council Member&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Brian Foster&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Brian Foster&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:292,&quot;x&quot;:1083,&quot;y&quot;:1517,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;City Council Member&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Carmen Lopez&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Carmen Lopez&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;VOTED&quot;},{&quot;id&quot;:293,&quot;x&quot;:1083,&quot;y&quot;:1617,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;City Council Member&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;David Kim&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;David Kim&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:294,&quot;x&quot;:1083,&quot;y&quot;:1717,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;City Council Member&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Eva Patel&quot;,&quot;status&quot;:&quot;VOTED&quot;,&quot;color&quot;:&quot;#22c55e&quot;,&quot;label&quot;:&quot;Eva Patel&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;VOTED&quot;},{&quot;id&quot;:295,&quot;x&quot;:1083,&quot;y&quot;:1817,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;City Council Member&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Frank Nguyen&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Frank Nguyen&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;},{&quot;id&quot;:296,&quot;x&quot;:1083,&quot;y&quot;:1917,&quot;w&quot;:67,&quot;h&quot;:21,&quot;contest&quot;:&quot;City Council Member&quot;,&quot;contestType&quot;:&quot;PLURALITY&quot;,&quot;candidate&quot;:&quot;Write-In&quot;,&quot;status&quot;:&quot;UNMARKED&quot;,&quot;color&quot;:&quot;#3b82f6&quot;,&quot;label&quot;:&quot;Write-In&quot;,&quot;rankedChoice&quot;:false,&quot;statusLabel&quot;:&quot;UNMARKED&quot;}]" data-image-dpi="150" data-warp-dpi="300" data-canonical-w="2058" data-canonical-h="2298" data-corner-marks="122.00,827.00,1151.00,827.00,1151.00,1977.00,122.00,1977.00" data-prev-id="712" data-next-id="49" data-was-rotated="false">
+</div>
+
+
+
+<script src="./ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png — Ballot Viewer_files/viewer-view.js"></script>
+
+<!-- Help modal -->
+<div id="helpModal" style="
+    display:none; position:fixed; inset:0; z-index:1000;
+    background:rgba(0,0,0,.65); align-items:center; justify-content:center;">
+  <div style="
+      background:#0f172a; border:1px solid #334155; border-radius:10px;
+      padding:1.75rem 2rem; max-width:500px; width:90%; color:#e2e8f0;
+      box-shadow:0 8px 32px rgba(0,0,0,.6); position:relative;">
+
+    <button data-action="hideHelp" style="
+        position:absolute; top:.75rem; right:.9rem;
+        background:none; border:none; color:#64748b;
+        font-size:1.3rem; cursor:pointer; line-height:1;" title="Close">×</button>
+
+    <h2 style="margin:0 0 1.25rem;font-size:1rem;color:#94a3b8;
+               letter-spacing:.05em;text-transform:uppercase">
+      Keyboard &amp; Mouse Shortcuts
+    </h2>
+
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem;line-height:1.6">
+      <thead>
+        <tr>
+          <th style="text-align:left;color:#475569;padding-bottom:.4rem;
+                     border-bottom:1px solid #1e293b;font-weight:600;
+                     font-size:.72rem;text-transform:uppercase">Key / Action</th>
+          <th style="text-align:left;color:#475569;padding-bottom:.4rem;
+                     border-bottom:1px solid #1e293b;font-weight:600;
+                     font-size:.72rem;text-transform:uppercase;padding-left:.75rem">Effect</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="2" style="padding-top:.6rem;padding-bottom:.2rem;
+            color:#3b82f6;font-weight:600;font-size:.72rem">NAVIGATION</td></tr>
+        <tr>
+          <td><kbd>n</kbd> &nbsp;/&nbsp; <kbd>N</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Next ballot</td>
+        </tr>
+        <tr>
+          <td><kbd>p</kbd> &nbsp;/&nbsp; <kbd>P</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Previous ballot</td>
+        </tr>
+        <tr>
+          <td>Name/ID field + Go</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Jump directly to image by name or ID</td>
+        </tr>
+        <tr>
+          <td>Auto-advance + seconds</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Move to next after N seconds</td>
+        </tr>
+        <tr>
+          <td><kbd>h</kbd> &nbsp;/&nbsp; Hold button</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Pause auto-advance on current image</td>
+        </tr>
+        <tr><td colspan="2" style="padding-top:.7rem;padding-bottom:.2rem;
+            color:#3b82f6;font-weight:600;font-size:.72rem">OVERLAY</td></tr>
+        <tr>
+          <td><kbd>o</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Toggle all overlays on/off</td>
+        </tr>
+        <tr>
+          <td>Boxes checkbox</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Show / hide indicator rectangles</td>
+        </tr>
+        <tr>
+          <td>Names checkbox</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Show / hide candidate name labels</td>
+        </tr>
+
+        <tr><td colspan="2" style="padding-top:.7rem;padding-bottom:.2rem;
+            color:#3b82f6;font-weight:600;font-size:.72rem">SCROLLING</td></tr>
+        <tr>
+          <td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Scroll image pane 120 px</td>
+        </tr>
+        <tr>
+          <td>Mouse wheel / trackpad</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Scroll image pane</td>
+        </tr>
+
+        <tr><td colspan="2" style="padding-top:.7rem;padding-bottom:.2rem;
+            color:#3b82f6;font-weight:600;font-size:.72rem">ZOOM</td></tr>
+        <tr>
+          <td><kbd>+</kbd> &nbsp;/&nbsp; <kbd>=</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Zoom in 5%</td>
+        </tr>
+        <tr>
+          <td><kbd>-</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Zoom out 5%</td>
+        </tr>
+        <tr>
+          <td><kbd>0</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Fit ballot to window</td>
+        </tr>
+        <tr>
+          <td><kbd>1</kbd></td>
+          <td style="padding-left:.75rem;color:#94a3b8">Actual size (100%)</td>
+        </tr>
+        <tr>
+          <td>− / + buttons</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Zoom ±5%</td>
+        </tr>
+        <tr>
+          <td>Zoom % field</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Type any % and press Enter</td>
+        </tr>
+
+        <tr><td colspan="2" style="padding-top:.7rem;padding-bottom:.2rem;
+            color:#3b82f6;font-weight:600;font-size:.72rem">OVERLAYS</td></tr>
+        <tr>
+          <td>Click indicator box</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Highlight box + sidebar entry</td>
+        </tr>
+        <tr>
+          <td>Click sidebar entry</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Highlight box + scroll to it</td>
+        </tr>
+        <tr>
+          <td>Hover over box</td>
+          <td style="padding-left:.75rem;color:#94a3b8">Brighten indicator</td>
+        </tr>
+        <tr>
+          <td style="padding-top:.3rem">
+            <span style="display:inline-block;width:12px;height:12px;
+              background:#22c55e;border-radius:2px;vertical-align:middle"></span>
+            Green
+          </td>
+          <td style="padding-left:.75rem;color:#94a3b8">Voted / Marked</td>
+        </tr>
+        <tr>
+          <td>
+            <span style="display:inline-block;width:12px;height:12px;
+              background:#eab308;border-radius:2px;vertical-align:middle"></span>
+            Yellow
+          </td>
+          <td style="padding-left:.75rem;color:#94a3b8">Overvoted</td>
+        </tr>
+        <tr>
+          <td>
+            <span style="display:inline-block;width:12px;height:12px;
+              background:#3b82f6;border-radius:2px;vertical-align:middle"></span>
+            Blue
+          </td>
+          <td style="padding-left:.75rem;color:#94a3b8">Unmarked</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:1rem;font-size:.72rem;color:#475569;text-align:center">
+      Press <kbd>?</kbd> or <kbd>Esc</kbd> to close
+    </p>
+  </div>
+</div>
+
+<style>
+  kbd {
+    display: inline-block;
+    padding: .1rem .35rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 3px;
+    font-size: .75rem;
+    font-family: monospace;
+    color: #cbd5e1;
+    line-height: 1.4;
+  }
+</style>
+
+
+  <!-- Scanning-in-progress warning banner -->
+  <div id="scanBanner" style="display:none; position:fixed; top:0; left:0; right:0;
+       background:#856404; color:#fff3cd; text-align:center; padding:.5rem;
+       font-size:.9rem; z-index:9999; border-bottom:2px solid #664d03;">
+    ⚙ Scan in progress — results shown may be incomplete
+  </div>
+  <script src="./ballot_1_1_1_1_1_1__valid_all_check__clean__c01.png — Ballot Viewer_files/viewer-view.js"></script>
+
+
+</body></html>

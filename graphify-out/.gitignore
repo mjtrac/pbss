@@ -1,0 +1,7 @@
+.graphify_python
+.graphify_root
+cache/
+graph.html
+cost.json
+# Dated backups graphify writes before an update that would shrink graph.json
+[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/

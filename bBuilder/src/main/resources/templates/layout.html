@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title th:text="${title} + ' — pbss Ballot Builder'">pbss Ballot Builder</title>
+  <link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
+<nav th:fragment="nav">
+  <div class="nav-brand"><a th:href="@{/dashboard}">pbss Ballot Builder</a></div>
+  <div class="nav-links">
+
+    <span class="nav-group" sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">
+      <span class="nav-label">Setup</span>
+      <a th:href="@{/setup/simple-election/new}" style="font-weight:600">⚡ Quick Setup</a>
+      <a th:href="@{/data/elections}">Elections</a>
+      <a th:href="@{/data/regions}">Regions</a>
+      <a th:href="@{/data/parties}">Parties</a>
+      <a th:href="@{/data/ballot-types}">Ballot Types</a>
+      <a th:href="@{/data/contests}">Contests</a>
+      <a th:href="@{/data/languages}">Languages</a>
+    </span>
+
+    <span class="nav-group">
+      <span class="nav-label" sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">Ballots</span>
+      <a th:href="@{/data/ballot-combinations}"
+         sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">Combinations</a>
+      <a th:href="@{/data/ballot-templates}"
+         sec:authorize="hasAnyRole('ADMIN','DATA_ENTRY')">Design Templates</a>
+      <a th:href="@{/print}"
+         sec:authorize="hasAnyRole('ADMIN','PRINTER')">Print Ballot</a>
+    </span>
+
+    <span class="nav-group" sec:authorize="hasRole('ADMIN')">
+      <span class="nav-label">Admin</span>
+      <a th:href="@{/admin/jurisdictions}">Jurisdictions</a>
+      <a th:href="@{/admin}">Users &amp; Logs</a>
+    </span>
+
+    <span class="nav-user">
+      <span sec:authentication="name"></span>
+      &nbsp;|&nbsp;
+      <a th:href="@{/account/password}" style="color:inherit">Change Password</a>
+      &nbsp;|&nbsp;
+      <form method="post" th:action="@{/logout}" style="display:inline;margin:0;padding:0">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit"
+                style="background:none;border:none;color:inherit;cursor:pointer;
+                       font:inherit;padding:0;text-decoration:underline">
+          Logout
+        </button>
+      </form>
+    </span>
+  </div>
+</nav>
+<script th:src="@{/js/unsaved-changes.js}"></script>
+</body>
+</html>

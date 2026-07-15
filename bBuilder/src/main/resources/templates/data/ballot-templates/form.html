@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+  <h2 th:text="${formTitle}">Ballot Design Template</h2>
+
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <form method="post" th:action="@{/data/ballot-templates/save}" class="data-form">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="hidden" name="id"
+           th:if="${template.id != null}" th:value="${template.id}"/>
+
+    <label>Election *
+      <select name="electionId" required>
+        <option value="">-- select election --</option>
+        <option th:each="e : ${elections}"
+                th:value="${e.id}" th:text="${e.name}"
+                th:selected="${template.election != null and template.election.id == e.id}">
+        </option>
+      </select>
+    </label>
+
+    <label>Paper Size *
+      <select name="paperSize" required>
+        <option value="">-- select --</option>
+        <option th:each="ps : ${paperSizes}" th:value="${ps.name()}"
+                th:selected="${template.paperSize == ps}"
+                th:text="${ps.name() == 'LETTER_8_5x11' ? '8.5 × 11  (US Letter)' :
+                           ps.name() == 'LEGAL_8_5x14'  ? '8.5 × 14  (US Legal)'  :
+                           ps.name() == 'HALF_LETTER_8_5x5_5' ? '8.5 × 5.5  (Half Letter)' :
+                           ps.name() == 'HALF_LEGAL_8_5x7'    ? '8.5 × 7    (Half Legal)'  :
+                           ps.name() == 'A4' ? 'A4  (210 × 297 mm)' :
+                           ps.name() == 'A3' ? 'A3  (297 × 420 mm)' :
+                           ps.name() == 'A5' ? 'A5  (148 × 210 mm)' : ps.name()}">
+        </option>
+      </select>
+    </label>
+
+    <fieldset class="voting-method-fieldset">
+      <legend>Vote Indicator Style *</legend>
+      <label class="radio-label" th:each="s : ${indicatorStyles}">
+        <input type="radio" name="voteIndicatorStyle" th:value="${s.name()}"
+               th:checked="${template.voteIndicatorStyle == s}"/>
+        <span class="radio-title" th:text="${s.name()}"></span>
+        <span class="radio-desc"
+              th:text="${s.name() == 'OVAL' ?       'Fill an oval — strongly recommended for optical scan.' :
+                         s.name() == 'BOX' ?   'Fill a rectangle.' :
+                         s.name() == 'ARROW' ?      'Complete an arrow pointing to the candidate.' :
+                         s.name() == 'NUMBER_FIELD'? 'Write a rank numeral — for ranked-choice ballots.' :
+                         s.name() == 'CONNECT_DOTS'? 'Connect the dots — draw a line between two pointed markers.' :
+                         s.name()}">
+        </span>
+      </label>
+    </fieldset>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.5rem">
+      <label style="flex:1;min-width:220px">Primary Font
+        <select name="fontFamilyPrimary">
+          <option th:each="ff : ${fontFamilies}"
+                  th:value="${ff.name()}"
+                  th:text="${ff.label}"
+                  th:selected="${template.fontFamilyPrimary == ff}">
+          </option>
+        </select>
+        <small style="color:#666">Used for all text types unless Alt is checked.</small>
+      </label>
+      <label style="flex:1;min-width:220px">Alternate Font
+        <select name="fontFamilyAlternate">
+          <option th:each="ff : ${fontFamilies}"
+                  th:value="${ff.name()}"
+                  th:text="${ff.label}"
+                  th:selected="${template.fontFamilyAlternate == ff}">
+          </option>
+        </select>
+        <small style="color:#666">Used for text types where Alt is checked below.</small>
+      </label>
+    </div>
+
+    <!-- Columns -->
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+      <label style="flex:0 0 110px">Columns
+        <input type="number" name="columns"
+               th:value="${template.columns != 0 ? template.columns : 3}"
+               min="1" max="5"/>
+      </label>
+    </div>
+
+    <!-- Margins -->
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+      <label style="flex:0 0 130px">Margin Top (pt)
+        <input type="number" name="marginTopPt"
+               th:value="${template.marginTopPt != 0 ? template.marginTopPt : 36}"
+               min="0" max="144" step="1"/>
+      </label>
+      <label style="flex:0 0 140px">Margin Bottom (pt)
+        <input type="number" name="marginBottomPt"
+               th:value="${template.marginBottomPt != 0 ? template.marginBottomPt : 36}"
+               min="0" max="144" step="1"/>
+      </label>
+      <label style="flex:0 0 130px">Margin Left (pt)
+        <input type="number" name="marginLeftPt"
+               th:value="${template.marginLeftPt != 0 ? template.marginLeftPt : 36}"
+               min="0" max="144" step="1"/>
+      </label>
+      <label style="flex:0 0 130px">Margin Right (pt)
+        <input type="number" name="marginRightPt"
+               th:value="${template.marginRightPt != 0 ? template.marginRightPt : 36}"
+               min="0" max="144" step="1"/>
+      </label>
+    </div>
+    <small style="color:#666;margin:-0.5rem 0 1rem;display:block">72 pt = 1 inch. Default margins: 36 pt (0.5 inch).</small>
+
+    <!-- ── Font sizes and styles ──────────────────────────────────────── -->
+    <h3 style="margin-top:1.5rem;margin-bottom:.5rem;border-bottom:1px solid #ddd;padding-bottom:.35rem">
+      Font Sizes and Styles
+    </h3>
+    <p class="help-text">For each text type: size in points, Bold / Italic styling, and whether to use
+       the <strong>Alt</strong> (alternate) font family instead of the primary.</p>
+
+    <table style="width:100%;border-collapse:collapse;margin-bottom:1rem">
+      <thead>
+        <tr style="background:#f5f5f5;font-size:.85rem">
+          <th style="text-align:left;padding:.4rem .6rem;border:1px solid #ddd;width:27%">Text Type</th>
+          <th style="text-align:center;padding:.4rem .6rem;border:1px solid #ddd;width:16%">Size (pt)</th>
+          <th style="text-align:center;padding:.4rem .6rem;border:1px solid #ddd;width:10%">Bold</th>
+          <th style="text-align:center;padding:.4rem .6rem;border:1px solid #ddd;width:10%">Italic</th>
+          <th style="text-align:center;padding:.4rem .6rem;border:1px solid #ddd;width:10%"
+              title="Check to use the Alternate font family for this text type">Alt</th>
+          <th style="text-align:left;padding:.4rem .6rem;border:1px solid #ddd">Example / When used</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Grouping Label</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="groupingLabelFontSize" style="width:70px"
+                   th:value="${template.groupingLabelFontSize != 0 ? template.groupingLabelFontSize : 11}"
+                   min="6" max="24" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="groupingLabelBold" value="true"
+                   th:checked="${template.groupingLabelBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="groupingLabelItalic" value="true"
+                   th:checked="${template.groupingLabelItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="groupingLabelAltFont" value="true"
+                   th:checked="${template.isGroupingLabelAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Section header above a contest: "FEDERAL OFFICES", "STATE MEASURES"
+          </td>
+        </tr>
+
+        <tr style="background:#fafafa">
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Contest Title</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="contestTitleFontSize" style="width:70px"
+                   th:value="${template.contestTitleFontSize != 0 ? template.contestTitleFontSize : 11}"
+                   min="6" max="24" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="contestTitleBold" value="true"
+                   th:checked="${template.contestTitleBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="contestTitleItalic" value="true"
+                   th:checked="${template.contestTitleItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="contestTitleAltFont" value="true"
+                   th:checked="${template.isContestTitleAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Contest name: "U.S. Representative, District 2", "Measure A"
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Instruction</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="instructionFontSize" style="width:70px"
+                   th:value="${template.instructionFontSize != 0 ? template.instructionFontSize : 9}"
+                   min="5" max="16" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="instructionBold" value="true"
+                   th:checked="${template.instructionBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="instructionItalic" value="true"
+                   th:checked="${template.instructionItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="instructionAltFont" value="true"
+                   th:checked="${template.isInstructionAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Voting instruction: "Vote for one", "Rank up to three candidates"
+          </td>
+        </tr>
+
+        <tr style="background:#fafafa">
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Preamble</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="preambleFontSize" style="width:70px"
+                   th:value="${template.preambleFontSize != 0 ? template.preambleFontSize : 9}"
+                   min="5" max="16" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="preambleBold" value="true"
+                   th:checked="${template.preambleBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="preambleItalic" value="true"
+                   th:checked="${template.preambleItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="preambleAltFont" value="true"
+                   th:checked="${template.isPreambleAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Text between instruction and first candidate; e.g. statutory description
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Candidate Name</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="candidateNameFontSize" style="width:70px"
+                   th:value="${template.candidateNameFontSize != 0 ? template.candidateNameFontSize : 10}"
+                   min="6" max="18" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="candidateNameBold" value="true"
+                   th:checked="${template.candidateNameBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="candidateNameItalic" value="true"
+                   th:checked="${template.candidateNameItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="candidateNameAltFont" value="true"
+                   th:checked="${template.isCandidateNameAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Each candidate or option name: "Alice Johnson", "YES", "Write-In"
+          </td>
+        </tr>
+
+        <tr style="background:#fafafa">
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Prefix / Suffix</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="prefixSuffixFontSize" style="width:70px"
+                   th:value="${template.prefixSuffixFontSize != 0 ? template.prefixSuffixFontSize : 9}"
+                   min="5" max="16" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="prefixSuffixBold" value="true"
+                   th:checked="${template.prefixSuffixBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="prefixSuffixItalic" value="true"
+                   th:checked="${template.prefixSuffixItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="prefixSuffixAltFont" value="true"
+                   th:checked="${template.isPrefixSuffixAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Text before/after candidate name on same line: "★", "Incumbent:", "Write-In"
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Candidate Note</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="candidateNoteFontSize" style="width:70px"
+                   th:value="${template.candidateNoteFontSize != 0 ? template.candidateNoteFontSize : 8}"
+                   min="5" max="14" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="candidateNoteBold" value="true"
+                   th:checked="${template.candidateNoteBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="candidateNoteItalic" value="true"
+                   th:checked="${template.candidateNoteItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="candidateNoteAltFont" value="true"
+                   th:checked="${template.isCandidateNoteAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Explanatory note below the name: "Incumbent since 2018", "Appointed by Board"
+          </td>
+        </tr>
+
+        <tr style="background:#fafafa">
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Postamble</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="postambleFontSize" style="width:70px"
+                   th:value="${template.postambleFontSize != 0 ? template.postambleFontSize : 9}"
+                   min="5" max="16" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="postambleBold" value="true"
+                   th:checked="${template.postambleBold}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="postambleItalic" value="true"
+                   th:checked="${template.postambleItalic}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="postambleAltFont" value="true"
+                   th:checked="${template.isPostambleAltFont}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            Text after last candidate: write-in reminder, footnote, disclaimer
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-weight:600">Page Header</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="number" name="headerFontSize" style="width:70px"
+                   th:value="${template.headerFontSize != 0 ? template.headerFontSize : 9}"
+                   min="5" max="12" step="0.5"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">—</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">—</td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;text-align:center">
+            <input type="checkbox" name="headerAltFont" value="true"
+                   th:checked="${template.isHeaderAltFont()}"/>
+          </td>
+          <td style="padding:.4rem .6rem;border:1px solid #ddd;font-size:.85rem;color:#555">
+            One-line ballot metadata at the top of the page
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- ── Header zone HTML ──────────────────────────────────────────────── -->
+    <h3 style="margin-top:1.5rem;margin-bottom:.5rem;border-bottom:1px solid #ddd;padding-bottom:.35rem">
+      Header Zone Content
+    </h3>
+    <p class="help-text">
+      Full HTML + inline CSS for the area to the left of the barcodes.
+      Images can be embedded as data URIs:
+      <code>&lt;img src="data:image/png;base64,..."&gt;</code><br/>
+      Tokens replaced at print time:
+      <code>{electionName}</code> <code>{jurisdictionName}</code>
+      <code>{regionName}</code> <code>{partyName}</code>
+      <code>{ballotTypeName}</code> <code>{indicatorName}</code>
+      <code>{pageNum}</code>
+    </p>
+
+    <details style="margin-bottom:.5rem">
+      <summary style="cursor:pointer;font-size:.85rem;color:#475569">
+        &#9432; Example snippets — click to insert
+      </summary>
+      <div style="font-size:.8rem;margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.5rem">
+        <button type="button" style="font-size:.75rem;padding:.2rem .5rem"
+          data-snippet="default">Default (headline + instructions)</button>
+        <button type="button" style="font-size:.75rem;padding:.2rem .5rem"
+          data-snippet="twocol">Two columns (image + text)</button>
+        <button type="button" style="font-size:.75rem;padding:.2rem .5rem"
+          data-snippet="minimal">Minimal (election name only)</button>
+        <button type="button" style="font-size:.75rem;padding:.2rem .5rem"
+          data-snippet="table">Table layout</button>
+      </div>
+    </details>
+
+    <!-- Dual header editor: raw HTML code on top, Quill WYSIWYG below -->
+    <div style="max-width:576px">  <!-- 6 inches at 96dpi -->
+
+      <!-- Top: raw HTML code -->
+      <div style="margin-bottom:8px">
+        <div style="font-size:.78rem;color:#555;margin-bottom:3px;font-weight:600">
+          HTML / CSS code
+        </div>
+        <textarea id="headerHtmlArea" name="headerHtml" rows="8"
+                  style="font-family:monospace;font-size:.78rem;width:100%;
+                         box-sizing:border-box;
+                         border:1px solid #ccc;border-radius:4px;padding:.5rem;
+                         resize:vertical"
+                  th:text="${template.headerHtml != null
+                             ? template.headerHtml
+                             : T(com.mjtrac.ballot.model.BallotDesignTemplate).DEFAULT_HEADER_HTML}">
+        </textarea>
+      </div>
+
+      <!-- Bottom: Quill WYSIWYG -->
+      <div>
+        <div style="font-size:.78rem;color:#555;margin-bottom:3px;font-weight:600">
+          Visual editor (WYSIWYG)
+        </div>
+        <!-- Quill toolbar -->
+        <div id="quillToolbar" style="border:1px solid #ccc;border-bottom:none;
+             border-radius:4px 4px 0 0;background:#f8f8f8;padding:4px 6px;
+             display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+          <select class="ql-font" title="Font">
+            <option value="">Sans-serif</option>
+            <option value="serif">Serif</option>
+            <option value="monospace">Monospace</option>
+          </select>
+          <select class="ql-size" title="Size">
+            <option value="7pt">7pt</option>
+            <option value="8pt">8pt</option>
+            <option value="9pt" selected>9pt</option>
+            <option value="10pt">10pt</option>
+            <option value="11pt">11pt</option>
+            <option value="12pt">12pt</option>
+            <option value="13pt">13pt</option>
+            <option value="14pt">14pt</option>
+            <option value="16pt">16pt</option>
+            <option value="18pt">18pt</option>
+          </select>
+          <button class="ql-bold"
+                  style="width:auto;padding:2px 6px;font-weight:bold"
+                  title="Bold">B</button>
+          <button class="ql-italic"
+                  style="width:auto;padding:2px 6px;font-style:italic"
+                  title="Italic">I</button>
+          <button class="ql-underline"
+                  style="width:auto;padding:2px 6px;text-decoration:underline"
+                  title="Underline">U</button>
+          <span style="width:1px;height:18px;background:#ccc;display:inline-block;margin:0 2px"></span>
+          <button class="ql-align" value=""
+                  style="width:auto;padding:2px 6px"
+                  title="Align left">≡</button>
+          <button class="ql-align" value="center"
+                  style="width:auto;padding:2px 6px"
+                  title="Align center">≡</button>
+          <button class="ql-align" value="right"
+                  style="width:auto;padding:2px 6px"
+                  title="Align right">≡</button>
+          <span style="width:1px;height:18px;background:#ccc;display:inline-block;margin:0 2px"></span>
+          <select class="ql-lineheight" title="Line spacing">
+            <option value="">Spacing</option>
+            <option value="1">1×</option>
+            <option value="1.2">1.2×</option>
+            <option value="1.4">1.4×</option>
+            <option value="1.5">1.5×</option>
+            <option value="1.6">1.6×</option>
+            <option value="1.8">1.8×</option>
+            <option value="2">2×</option>
+          </select>
+          <button class="ql-clean"
+                  style="width:auto;padding:2px 6px"
+                  title="Remove formatting">✕</button>
+        </div>
+        <!-- Quill editor surface -->
+        <div id="quillEditor"
+             style="border:1px solid #ccc;border-radius:0 0 4px 4px;
+                    min-height:120px;max-height:220px;overflow-y:auto;
+                    font-family:Helvetica,Arial,sans-serif;font-size:9pt;
+                    padding:8px;background:#fff">
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:.75rem;color:#666;margin-top:.25rem">
+      Edit in either pane — changes sync instantly.
+      Leave blank to use the default header.
+      The barcode, orientation marks, and metadata line are always drawn automatically.
+    </p>
+
+    <!-- Quill v2 from CDN -->
+    <link th:href="@{/vendor/quill/quill.snow.css}" rel="stylesheet"/>
+    <script th:src="@{/vendor/quill/quill.js}"></script>
+    <style>
+      #quillEditor .ql-editor {
+        min-height: 100px;
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 9pt;
+        cursor: text;
+        user-select: text;
+        -webkit-user-select: text;
+      }
+      #quillToolbar button {
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1;
+        color: #333;
+        padding: 2px 6px;
+      }
+      #quillToolbar button:hover { background: #e8e8e8; }
+      #quillToolbar select { font-size: 12px; }
+    </style>
+
+    <script th:src="@{/js/header-editor.js}"></script>
+
+    <!-- Barcode position is always TOP_RIGHT — hardcoded for scanning reliability -->
+    <input type="hidden" name="barcodePosition" value="TOP_RIGHT"/>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+      <label style="flex:0 0 180px">QR Code Size (pt)
+        <small style="display:block;color:#666">Square QR code at top-right.
+          72pt = 1" (default). Larger = more reliable scanning.</small>
+        <input type="number" name="barcodeHeightPt" style="width:90px"
+               th:value="${template.barcodeHeightPt != 0 ? template.barcodeHeightPt : 72}"
+               min="36" max="144" step="6"/>
+      </label>
+      <label style="flex:0 0 180px">Linear Barcode Width (pt)
+        <small style="display:block;color:#666">0 = no linear barcode (recommended).
+          Only set if needed for legacy scanners.</small>
+        <input type="number" name="barcodeWidthPt" style="width:90px"
+               th:value="${template.barcodeWidthPt}"
+               min="0" max="216" step="6"/>
+      </label>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="multiSheet" name="multiSheet" value="true"
+             th:checked="${template.multiSheet}"/>
+      <label for="multiSheet" style="font-weight:normal">
+        Multi-sheet ballot — print "Sheet N of M" on each sheet
+      </label>
+    </div>
+
+    <!-- ── Indicator Layout ───────────────────────────────────────────────── -->
+    <h3 style="margin-top:1.5rem;margin-bottom:.5rem;border-bottom:1px solid #ddd;padding-bottom:.35rem">
+      Indicator Layout
+    </h3>
+    <p class="help-text">
+      These options apply to <strong>all contest types</strong> (plurality, approval, and ranked-choice).
+    </p>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="rcvIndicatorsRight" name="rcvIndicatorsRight" value="true"
+             th:checked="${template.rcvIndicatorsRight}"/>
+      <label for="rcvIndicatorsRight" style="font-weight:normal">
+        <strong>Indicators on the right</strong> — candidate name right-justified
+        with a small gap before the vote indicator(s) to the right.
+        Default: indicators on the left, name to the right.
+      </label>
+    </div>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.75rem;align-items:flex-end">
+      <label style="flex:0 0 210px">
+        Indicator Line Width (pt)
+        <small style="display:block;color:#666">Stroke weight for ovals and rectangles.
+          0.5pt is the recommended minimum for reliable scanning.</small>
+        <select name="indicatorLineWidthPt" style="width:90px">
+          <option value="0.5"  th:selected="${template.indicatorLineWidthPt == 0.5  || template.indicatorLineWidthPt == 0}">0.5 — light (default)</option>
+          <option value="0.75" th:selected="${template.indicatorLineWidthPt == 0.75}">0.75 — medium</option>
+          <option value="1.0"  th:selected="${template.indicatorLineWidthPt == 1.0}">1.0 — standard</option>
+          <option value="1.5"  th:selected="${template.indicatorLineWidthPt == 1.5}">1.5 — bold</option>
+          <option value="2.0"  th:selected="${template.indicatorLineWidthPt == 2.0}">2.0 — heavy</option>
+        </select>
+      </label>
+      <label style="flex:0 0 210px">
+        RCV Box Line Width (pt)
+        <small style="display:block;color:#666">Stroke weight for ranked-choice boxes only.</small>
+        <select name="rcvBoxLineWidthPt" style="width:90px">
+          <option value="0.5"  th:selected="${template.rcvBoxLineWidthPt == 0.5  || template.rcvBoxLineWidthPt == 0}">0.5 — light (default)</option>
+          <option value="0.75" th:selected="${template.rcvBoxLineWidthPt == 0.75}">0.75 — medium</option>
+          <option value="1.0"  th:selected="${template.rcvBoxLineWidthPt == 1.0}">1.0 — standard</option>
+          <option value="1.5"  th:selected="${template.rcvBoxLineWidthPt == 1.5}">1.5 — bold</option>
+          <option value="2.0"  th:selected="${template.rcvBoxLineWidthPt == 2.0}">2.0 — heavy</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="checkbox-row" style="margin-top:.6rem">
+      <input type="checkbox" id="indicatorDashed" name="indicatorDashed" value="true"
+             th:checked="${template.indicatorDashed}"/>
+      <label for="indicatorDashed" style="font-weight:normal">
+        <strong>Dashed indicator outlines</strong> — draws ovals, checkboxes and RCV boxes
+        with a dashed stroke so they are visually distinct from voter marks.
+        Uncheck for solid outlines.
+      </label>
+    </div>
+
+    <!-- ── Ranked-Choice Options ─────────────────────────────────────────── -->
+    <h3 style="margin-top:1.5rem;margin-bottom:.5rem;border-bottom:1px solid #ddd;padding-bottom:.35rem">
+      Ranked-Choice Options
+    </h3>
+    <p class="help-text">
+      These options apply only to contests with voting method RANKED_CHOICE.
+    </p>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="rcvShowRankNumbers" name="rcvShowRankNumbers" value="true"
+             th:checked="${template.rcvShowRankNumbers}"/>
+      <label for="rcvShowRankNumbers" style="font-weight:normal">
+        <strong>Show rank numbers above boxes</strong> — prints small numbers
+        ("1", "2", …) centered above each rank box on the first candidate row,
+        so voters can identify the box sequence at a glance.
+      </label>
+    </div>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.75rem;align-items:flex-end">
+      <label style="flex:0 0 180px">
+        Rank Number Font Size (pt)
+        <small style="display:block;color:#666">Only used when rank numbers are shown</small>
+        <input type="number" name="rcvRankNumberFontPt" style="width:80px"
+               th:value="${template.rcvRankNumberFontPt != 0 ? template.rcvRankNumberFontPt : 7}"
+               min="4" max="12" step="0.5"/>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Template</button>
+      <a th:href="@{/data/ballot-templates}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</main>
+</body>
+</html>

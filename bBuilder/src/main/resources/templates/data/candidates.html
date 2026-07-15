@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<!--
+  Copyright (C) 2026 Mitch Trachtenberg
+  This file is part of the Election Ballot System.
+  Licensed under the GNU General Public License v3 or later.
+  See <https://www.gnu.org/licenses/> for the full license text.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head(${formTitle})}"></head>
+<body>
+<nav th:replace="~{layout :: nav}"></nav>
+<main>
+
+  <div class="page-header">
+    <div>
+      <h2 th:text="${formTitle}">Candidates</h2>
+      <p style="margin:.25rem 0 0;color:#666;font-size:.9rem">
+        Election: <strong th:text="${contest.election.name}"></strong>
+        &nbsp;|&nbsp;
+        Voting method: <strong th:text="${contest.votingMethod}"></strong>
+        &nbsp;|&nbsp;
+        Max choices: <strong th:text="${contest.maxChoices}"></strong>
+      </p>
+      <p class="help-text" style="margin-top:.5rem">
+        <strong>Party / Affiliation</strong> here is the label printed next to the
+        candidate's name on the ballot (e.g. "Democratic", "Republican", "Nonpartisan").
+        It is separate from the <em>Party</em> used to define ballot combinations for primaries.
+      </p>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-start">
+      <a th:href="@{'/data/contests/' + ${contest.id} + '/edit'}"
+         class="btn btn-secondary">Back to Contest</a>
+      <a th:href="@{'/data/contests/' + ${contest.id} + '/preview'}"
+         class="btn btn-secondary">Preview Coverage</a>
+    </div>
+  </div>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       EXISTING CANDIDATES / OPTIONS
+       ═══════════════════════════════════════════════════════════ -->
+  <h3>
+    <span th:if="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">Options</span>
+    <span th:unless="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">Candidates</span>
+    <span th:if="${not #lists.isEmpty(contest.candidates)}"
+          style="font-weight:normal;font-size:.85rem;color:#666">
+      (<span th:text="${contest.candidates.size()}"></span> entered)
+    </span>
+  </h3>
+
+  <div th:if="${#lists.isEmpty(contest.candidates)}"
+       class="empty" style="margin:.5rem 0 1.5rem">
+    No
+    <span th:if="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">options</span>
+    <span th:unless="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">candidates</span>
+    added yet. Use the form below.
+  </div>
+
+  <table th:unless="${#lists.isEmpty(contest.candidates)}">
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Prefix</th>
+        <th>Printable Name</th>
+        <th>Record Name</th>
+        <th>Suffix</th>
+        <th>Party</th>
+        <th>Write-In</th>
+        <th>Note</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="c : ${contest.candidates}"
+          th:classappend="${candidate.id != null and candidate.id == c.id} ? 'row-editing' : ''">
+        <td th:text="${c.displayOrder}"></td>
+        <td th:text="${c.printPrefixText and c.prefixText != null ? c.prefixText : '—'}"></td>
+        <td th:text="${c.printableName}"></td>
+        <td th:text="${c.recordName != null and c.recordName != c.printableName ? c.recordName : '—'}"></td>
+        <td th:text="${c.printSuffixText and c.suffixText != null ? c.suffixText : '—'}"></td>
+        <td th:text="${c.partyAffiliation != null ? c.partyAffiliation : '—'}"></td>
+        <td th:text="${c.writeIn ? 'Yes' : ''}"></td>
+        <td th:text="${c.printExplanatoryText and c.explanatoryText != null ? c.explanatoryText : '—'}"></td>
+        <td class="actions">
+          <a th:href="@{'/data/contests/' + ${contest.id}
+                        + '/candidates/' + ${c.id} + '/edit'}"
+             class="btn btn-sm">Edit</a>
+          <form method="post"
+                th:action="@{'/data/contests/' + ${contest.id}
+                             + '/candidates/' + ${c.id} + '/delete'}"
+                style="display:inline"
+                onsubmit="return confirm('Remove \u0022' + [[${c.name}]] + '\u0022?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+          </form>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ADD / EDIT FORM
+       When candidate.id is null  → Add mode
+       When candidate.id is set   → Edit mode (row highlighted above)
+       ═══════════════════════════════════════════════════════════ -->
+  <div style="margin-top:2rem;border-top:2px solid #1a4a7a;padding-top:1.5rem">
+
+    <h3>
+      <span th:if="${candidate.id != null}">
+        Edit
+        <span th:if="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">Option</span>
+        <span th:unless="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">Candidate</span>
+        — <em th:text="${candidate.name}"></em>
+      </span>
+      <span th:unless="${candidate.id != null}">
+        Add
+        <span th:if="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">Option</span>
+        <span th:unless="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">Candidate</span>
+      </span>
+    </h3>
+
+    <!-- POST to /save when editing, /candidates when adding -->
+    <form method="post"
+          th:action="${candidate.id != null}
+                     ? @{'/data/contests/' + ${contest.id}
+                         + '/candidates/' + ${candidate.id} + '/save'}
+                     : @{'/data/contests/' + ${contest.id} + '/candidates'}"
+          class="data-form"
+          id="candidateForm">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+      <div style="display:flex;gap:1.25rem;flex-wrap:wrap">
+
+        <!-- Printable Name -->
+        <label style="flex:2;min-width:220px">
+          <span th:if="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">
+            Printable Label * <small>(as printed on ballot)</small>
+          </span>
+          <span th:unless="${contest.votingMethod != null and contest.votingMethod.name() == 'MEASURE'}">
+            Printable Name * <small>(as printed on the ballot)</small>
+          </span>
+          <input type="text" name="printableName" id="printableName"
+                 th:value="${candidate.printableName != null ? candidate.printableName : candidate.name}"
+                 required maxlength="200"
+                 autofocus
+                 placeholder="Full name as it will appear printed on the ballot"
+                 onblur="syncRecordName()"/>
+        </label>
+
+        <!-- Record Name -->
+        <label style="flex:1;min-width:180px">
+          Record Name <small>(for reports; auto-filled from Printable Name, edit to override)</small>
+          <input type="text" name="recordName" id="recordName"
+                 th:value="${candidate.recordName}"
+                 maxlength="200"
+                 placeholder="Leave blank to use printable name"/>
+        </label>
+
+        <!-- Party / affiliation — not shown for measures -->
+        <label th:unless="${contest.votingMethod != null
+                            and contest.votingMethod.name() == 'MEASURE'}"
+               style="flex:1;min-width:160px">
+          Party / Affiliation
+          <small>(ballot display label only)</small>
+          <input type="text" name="partyAffiliation"
+                 th:value="${candidate.partyAffiliation}"
+                 maxlength="100"
+                 placeholder="e.g. Democratic, Republican, Nonpartisan"/>
+        </label>
+
+      </div>
+
+      <!-- Prefix and suffix -->
+      <div style="display:flex;gap:1.25rem;flex-wrap:wrap;margin-top:.75rem">
+        <label style="flex:1;min-width:180px">
+          Prefix Text
+          <small>(printed before name on same line, e.g. "★", "Incumbent:")</small>
+          <input type="text" name="prefixText"
+                 th:value="${candidate.prefixText}"
+                 maxlength="100"
+                 placeholder="e.g. ★ Incumbent:"/>
+        </label>
+        <div class="print-toggle" style="align-self:flex-end;margin-bottom:.5rem">
+          <label>
+            <input type="checkbox" name="printPrefixText" value="true"
+                   th:checked="${candidate.printPrefixText}"/>
+            Print prefix
+          </label>
+        </div>
+
+        <label style="flex:1;min-width:180px">
+          Suffix Text
+          <small>(printed after name on same line, e.g. "Write-In", "Appointed")</small>
+          <input type="text" name="suffixText"
+                 th:value="${candidate.suffixText}"
+                 maxlength="100"
+                 placeholder="e.g. Write-In"/>
+        </label>
+        <div class="print-toggle" style="align-self:flex-end;margin-bottom:.5rem">
+          <label>
+            <input type="checkbox" name="printSuffixText" value="true"
+                   th:checked="${candidate.printSuffixText}"/>
+            Print suffix
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:1.25rem;flex-wrap:wrap;margin-top:.75rem">
+        <!-- placeholder to re-open the flex row for display order below -->
+        <label style="flex:0 0 110px">
+          Display Order
+          <small>(lower = higher on ballot)</small>
+          <input type="number" name="displayOrder"
+                 th:value="${candidate.displayOrder != 0 ? candidate.displayOrder : contest.candidates.size() + 1}"
+                 min="1"/>
+        </label>
+      </div>
+
+      <!-- Note — directly below name fields -->
+      <label style="margin-top:.5rem">
+        Note <small>(optional; printed below name on ballot if checked)</small>
+        <input type="text" name="explanatoryText"
+               th:value="${candidate.explanatoryText}"
+               maxlength="300"
+               placeholder="e.g. Incumbent, Appointed by Board, Running for first term"/>
+      </label>
+      <div class="print-toggle">
+        <label>
+          <input type="checkbox" name="printExplanatoryText" value="true"
+                 th:checked="${candidate.printExplanatoryText}"/>
+          Print note on ballot
+        </label>
+      </div>
+
+      <!-- Write-in slot — not applicable for measures -->
+      <div class="checkbox-row"
+           th:unless="${contest.votingMethod != null
+                        and contest.votingMethod.name() == 'MEASURE'}">
+        <input type="checkbox" id="writeIn" name="writeIn" value="true"
+               th:checked="${candidate.writeIn}"/>
+        <label for="writeIn" style="font-weight:normal">
+          Write-in slot
+          <small>(pre-fills name as "Write-In" and adds a blank fill line on the ballot)</small>
+        </label>
+      </div>
+
+      <div class="form-actions" style="margin-top:1rem">
+        <button type="submit" class="btn"
+                th:text="${candidate.id != null ? 'Save Changes' : 'Add'}">Add</button>
+        <a th:if="${candidate.id != null}"
+           th:href="@{'/data/contests/' + ${contest.id} + '/candidates'}"
+           class="btn btn-secondary">Cancel Edit</a>
+        <button th:unless="${candidate.id != null}"
+                type="button" class="btn btn-secondary" data-action="clear">Clear</button>
+      </div>
+    </form>
+  </div>
+
+</main>
+<style>
+tr.row-editing td { background: #fffbe6; }
+</style>
+<script th:src="@{/js/candidates.js}"></script>
+</body>
+</html>

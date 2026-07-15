@@ -1,0 +1,65 @@
+# Java build artifacts
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+**/*.gz
+**/#*#
+
+# Mac Finder artifacts
+**/.DS_Store
+
+# Test harness generated files
+test-harness/marked_ballots/
+test-harness/images/
+test-harness/*_images/
+test-harness/election_data.json
+test-harness/ground_truth*.json
+test-harness/verify_report.json
+
+# bBuilder and bCounter generated databases and output
+bBuilder/election_ballot.db
+bCounter/counter_results.db
+bCounter/counter_results.db-shm
+bCounter/counter_results.db-war
+bCounter/writein*.png
+bCounter/pass*html
+
+# Generated ballot files (PDFs, YAMLs, XMLs produced by bBuilder)
+bBuilder/*.pdf
+bBuilder/*.yaml
+bBuilder/*.xml
+
+# Log files
+*.log
+logs/
+
+# bCounter runtime output files
+bCounter/ballot_manifest.csv
+bCounter/cvr_export.csv
+bCounter/overvote_report.txt
+bCounter/rcv_report.html
+bCounter/results_report.html
+bCounter/review_required.txt
+bCounter/counter_results.db
+bCounter/counter_results.db-shm
+bCounter/counter_results.db-wal
+bCounter/bCounter.log
+bCounter/counter_audit.log
+bCounter/writein_*.png
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Test harness generated content
+test-harness/images/
+test-harness/marked_ballots/
+test-harness/election_data.json
+
+# bBuilder generated ballots
+bBuilder_ballots/
+
+# Python virtualenv (not part of source)
+.venv/
+test-harness/scans/
