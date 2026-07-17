@@ -5,7 +5,8 @@ Yes, I'm aware there are other open source ballot counting systems.
 This was my chance to see what current-as-I-write AI systems could
 do for me.  The coding is all from Anthropic's Claude, Sonnet 4.6,
 meaning the level of effort on my part was not huge.  All told, it's
-ten days since I decided to try doing this, and much of my time was
+ten days (update: two months and a bit of Claude 5.0) 
+since I decided to try doing this, and much of my time was
 spent feeding error messages back into Claude when changes caused
 minor problems (variables moved out of scope, etc...).  I added 
 capabilities once I saw how easy it is, with current AI, to do that.  
