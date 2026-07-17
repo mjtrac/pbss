@@ -6,7 +6,7 @@
 
 # pbss — Paper Ballot Software System
 
-(Please note that the most recent version is 0.9.9 not 1.0.0.)
+(Please note that the most recent version is 0.9.12 not 1.0.0.)
 
 pbss is an open-source suite for anyone in or out of government to design, print, scan, count, and audit paper election ballots. It consists of four Spring Boot applications that can be run independently or together:
 
