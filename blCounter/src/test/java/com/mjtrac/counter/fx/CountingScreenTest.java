@@ -2,10 +2,8 @@
  * Copyright (C) 2026 Mitch Trachtenberg — GPL v3
  *
  * CountingScreenTest — validation-path coverage for the ported
- * CountingService (folder validation). A full happy-path scan test needs
- * real fixture image/report wiring (see CornerDetectionTest's test-images)
- * and is left as a scope note for a follow-up pass, same spirit as the
- * BallotDesignTemplate screen's deliberate scope reductions in blBuilder.
+ * CountingService (folder validation). See CountingPipelineGuiTest for the
+ * real happy-path scan, driven against a real generated ballot corpus.
  */
 package com.mjtrac.counter.fx;
 

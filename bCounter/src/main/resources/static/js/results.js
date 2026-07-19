@@ -43,5 +43,8 @@
     setInterval(checkScanStatus, 5000);
     fetchEmbed('/scribble-report', 'scribble-embed', '#92400e');
     fetchEmbed('/rcv-report',      'rcv-embed',      '#555');
+
+    var printBtn = document.getElementById('printResultsBtn');
+    if (printBtn) printBtn.addEventListener('click', function () { window.print(); });
   });
 }());

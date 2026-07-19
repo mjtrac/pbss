@@ -56,11 +56,11 @@
     </div>
     <div id="lastFile" style="font-size:.8rem; color:#777; text-align:center; min-height:1.2em;"></div>
 
-    <!-- Batch comment -->
+    <!-- Start notes -->
     <div style="margin-bottom:1rem;">
       <label for="batchComment"
              style="display:block;font-size:.85rem;font-weight:bold;margin-bottom:.3rem;">
-        Batch Comment <span style="font-weight:normal;color:#777;">(optional — cleared after each scan)</span>
+        Start Notes <span style="font-weight:normal;color:#777;">(picked up when the scan starts — e.g. Precinct 4 morning batch, box 3 of 5)</span>
       </label>
       <textarea id="batchComment" rows="2"
                 placeholder="e.g. Precinct 4 morning batch, box 3 of 5"
@@ -72,6 +72,21 @@
     <div style="text-align:center; margin-top:1.2rem;">
       <button id="btnScan" class="btn-scan" onclick="startScan()">Start Scan</button>
       <button id="btnStop" class="btn-stop" onclick="stopScan()" disabled>Stop</button>
+      <button id="btnBatchSheet" onclick="printBatchSheet()"
+              style="background:#555;color:white;">Print Batch Sheet</button>
+    </div>
+
+    <!-- End notes — e.g. flag a misfeed/doublefeed for manual correction -->
+    <div style="margin-top:1.2rem;">
+      <label for="endNotes"
+             style="display:block;font-size:.85rem;font-weight:bold;margin-bottom:.3rem;">
+        End Notes <span style="font-weight:normal;color:#777;">(e.g. flag a misfeed/doublefeed for manual correction)</span>
+      </label>
+      <textarea id="endNotes" rows="2"
+                style="width:100%;padding:.45rem;border:1px solid #ccc;border-radius:4px;
+                       font-size:.9rem;resize:vertical;font-family:sans-serif;"></textarea>
+      <button onclick="saveEndNote()" style="margin-top:.5rem;">Save End Note</button>
+      <span id="endNoteMsg" style="font-size:.85rem;color:#155724;margin-left:.5rem;"></span>
     </div>
   </div>
 
@@ -122,6 +137,52 @@ function startScan() {
 
 function stopScan() {
   fetch('/scan/stop', { method: 'POST' });
+}
+
+function saveEndNote() {
+  const note = document.getElementById('endNotes').value.trim();
+  if (!note) return;
+  const params = new URLSearchParams();
+  params.append('note', note);
+  fetch('/scan/end-note', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  }).then(r => r.json()).then(d => {
+    if (d.status === 'saved') {
+      document.getElementById('endNotes').value = '';
+      const msg = document.getElementById('endNoteMsg');
+      msg.textContent = 'End note saved.';
+      setTimeout(() => { msg.textContent = ''; }, 4000);
+    } else {
+      alert('Error: ' + (d.message || d.status));
+    }
+  });
+}
+
+// Manual, user-clicked print — opens the browser's print dialog on a
+// small generated page, entirely client-side (uses whatever's currently
+// typed, same as the desktop apps' equivalent — not a persisted value).
+function printBatchSheet() {
+  const start = document.getElementById('batchComment').value || '(none)';
+  const end   = document.getElementById('endNotes').value || '(none)';
+  const now   = new Date().toLocaleString();
+  const w = window.open('', '_blank', 'width=650,height=500');
+  w.document.write(
+    '<html><head><title>Scan Batch Sheet</title></head><body style="font-family:sans-serif;padding:2rem;">' +
+    '<h1 style="font-size:1.8rem;">SCAN BATCH SHEET</h1>' +
+    '<p>' + now + '</p>' +
+    '<h3>Start Notes:</h3><p style="white-space:pre-wrap;">' + escapeHtml(start) + '</p>' +
+    '<h3>End Notes:</h3><p style="white-space:pre-wrap;">' + escapeHtml(end) + '</p>' +
+    '</body></html>'
+  );
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function pollStatus() {

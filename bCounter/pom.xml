@@ -19,17 +19,26 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bCounter</artifactId>
-  <version>0.9.13</version>
+  <version>0.9.14</version>
   <name>bCounter</name>
   <description>Ballot image scanner and vote counter</description>
 
   <properties>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
-    <zxing.version>3.5.3</zxing.version>
   </properties>
 
   <dependencies>
+    <!-- Shared ballot-counting engine (entities, repositories, model,
+         services) — see counter-core/README.md. Requires
+         `mvn install` from ~/pbss2/counter-core before building this
+         module for the first time (or after a counter-core change). -->
+    <dependency>
+      <groupId>com.mjtrac</groupId>
+      <artifactId>counter-core</artifactId>
+      <version>0.9.14</version>
+    </dependency>
+
     <!-- Web + Thymeleaf UI -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -79,24 +88,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-thymeleaf</artifactId>
-    </dependency>
-
-    <!-- ZXing: QR code + Code128 barcode decoding -->
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>core</artifactId>
-      <version>${zxing.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>javase</artifactId>
-      <version>${zxing.version}</version>
-    </dependency>
-
-    <!-- SnakeYAML for YAML bbox report parsing -->
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
     </dependency>
 
     <!-- Session support -->

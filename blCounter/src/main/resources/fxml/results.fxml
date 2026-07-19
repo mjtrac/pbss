@@ -7,7 +7,7 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.mjtrac.counter.fx.ResultsViewController"
             fitToWidth="true">
-    <VBox spacing="16">
+    <VBox fx:id="printableContent" spacing="16">
         <VBox spacing="10" styleClass="card">
             <Label text="Results" styleClass="title-label"/>
             <Label fx:id="messageLabel" wrapText="true" visible="false" managed="false"/>
@@ -29,7 +29,10 @@
                     <Label fx:id="scribbledLabel" style="-fx-font-size:20px;-fx-font-weight:bold;"/>
                 </VBox>
             </HBox>
-            <Button text="Refresh" onAction="#handleRefresh"/>
+            <HBox spacing="10">
+                <Button text="Refresh" onAction="#handleRefresh"/>
+                <Button text="Print Results" onAction="#handlePrintResults"/>
+            </HBox>
         </VBox>
 
         <VBox spacing="10" styleClass="card">

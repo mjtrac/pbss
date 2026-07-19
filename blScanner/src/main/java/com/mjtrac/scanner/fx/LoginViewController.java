@@ -8,6 +8,7 @@ package com.mjtrac.scanner.fx;
 import com.mjtrac.scanner.config.ScannerConfig;
 import com.mjtrac.scanner.entity.ScannerUser;
 import com.mjtrac.scanner.repository.ScannerUserRepository;
+import com.mjtrac.scanner.service.AuditLogService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -28,6 +29,7 @@ public class LoginViewController {
     private final AuthContext authContext;
     private final Navigator navigator;
     private final ScannerConfig config;
+    private final AuditLogService auditLog;
 
     @FXML private Label titleLabel;
     @FXML private Label messageLabel;
@@ -39,12 +41,14 @@ public class LoginViewController {
                                 PasswordEncoder passwordEncoder,
                                 AuthContext authContext,
                                 Navigator navigator,
-                                ScannerConfig config) {
+                                ScannerConfig config,
+                                AuditLogService auditLog) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authContext = authContext;
         this.navigator = navigator;
         this.config = config;
+        this.auditLog = auditLog;
     }
 
     @FXML
@@ -62,11 +66,13 @@ public class LoginViewController {
             .filter(u -> passwordEncoder.matches(password, u.getPasswordHash()));
 
         if (match.isEmpty()) {
+            auditLog.log("LOGIN_FAILED", username, null);
             showError("Invalid username or password.");
             passwordField.clear();
             return;
         }
 
+        auditLog.log("LOGIN", username, null);
         authContext.setCurrentUser(match.get());
         try {
             navigator.showMain();

@@ -8,6 +8,7 @@ package com.mjtrac.scanner.fx;
 import com.mjtrac.scanner.config.ScannerConfig;
 import com.mjtrac.scanner.entity.ScannerUser;
 import com.mjtrac.scanner.repository.ScannerUserRepository;
+import com.mjtrac.scanner.service.AuditLogService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -29,6 +30,7 @@ public class UsersViewController {
     private final ScannerConfig config;
     private final Navigator navigator;
     private final AuthContext authContext;
+    private final AuditLogService auditLog;
 
     @FXML private Label navTitleLabel;
     @FXML private Label messageLabel;
@@ -38,12 +40,14 @@ public class UsersViewController {
     @FXML private ComboBox<String> newRoleCombo;
 
     public UsersViewController(ScannerUserRepository repo, PasswordEncoder encoder,
-                                ScannerConfig config, Navigator navigator, AuthContext authContext) {
+                                ScannerConfig config, Navigator navigator, AuthContext authContext,
+                                AuditLogService auditLog) {
         this.repo = repo;
         this.encoder = encoder;
         this.config = config;
         this.navigator = navigator;
         this.authContext = authContext;
+        this.auditLog = auditLog;
     }
 
     @FXML
@@ -183,6 +187,9 @@ public class UsersViewController {
 
     @FXML
     private void handleSignOut() {
+        if (authContext.getCurrentUser() != null) {
+            auditLog.log("LOGOUT", authContext.getCurrentUser().getUsername(), null);
+        }
         authContext.clear();
         navigateOrAlert(navigator::showLogin);
     }

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.3.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.mjtrac</groupId>
+  <artifactId>counter</artifactId>
+  <version>0.9.14</version>
+  <name>counter</name>
+  <description>Standalone Swing ballot-counting control panel — folders, start/stop, results only</description>
+
+  <properties>
+    <java.version>21</java.version>
+  </properties>
+
+  <dependencies>
+    <!-- Swing is part of java.desktop (JDK-bundled) — no UI framework dependency needed. -->
+
+    <!-- Shared ballot-counting engine (entities, repositories, model,
+         services) — see counter-core/README.md. Requires
+         `mvn install` from ~/pbss2/counter-core before building this
+         module for the first time (or after a counter-core change). -->
+    <dependency>
+      <groupId>com.mjtrac</groupId>
+      <artifactId>counter-core</artifactId>
+      <version>0.9.14</version>
+    </dependency>
+
+    <!-- JPA + SQLite — counting writes vote records here, same DB bCounter/blCounter use.
+         (counter-core brings spring-boot-starter-data-jpa transitively; the
+         datasource driver + dialect are still this app's own concern.) -->
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+      <version>3.45.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-community-dialects</artifactId>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- AssertJ-Swing (core, not the -junit module — this project is JUnit 5,
+         so the Robot lifecycle is managed directly in @BeforeEach/@AfterEach
+         instead of via AssertJ-Swing's JUnit-4-only test-case base class) —
+         open-source (Apache 2.0) robot-driven GUI automation for Swing, the
+         Swing-side counterpart to the TestFX dependency blCounter/blBuilder/
+         blScanner use for their JavaFX screens. -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-swing</artifactId>
+      <version>3.17.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+      <!-- Separate source directory (not just an include-pattern within
+           src/main/resources) so filtering=true applies unambiguously to
+           version.properties without risking corruption of binary resources
+           elsewhere under src/main/resources. Note: this parent POM
+           configures Maven filtering to use @-delimiters, not ${...}. -->
+      <resource>
+        <directory>src/main/version-template</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <plugins>
+      <!-- AssertJ-Swing's internal Timer-protection reflection (last
+           released ~2018, pre-JPMS) needs java.util's TimerTask internals
+           opened up on modern JDKs, or its window-ready detection silently
+           breaks and every component lookup fails as "not showing" even
+           though the window is genuinely on screen. Only exercised by
+           CountingPipelineGuiTest. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.desktop/javax.swing=ALL-UNNAMED --add-opens java.desktop/java.awt=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <!-- Scoped to the repackage execution only — a plugin-level
+               <configuration><skip> would also silently no-op "mvn
+               spring-boot:run", this app's only dev-run path (Swing, no
+               javafx:run alternative). jpackage below uses a plain
+               classpath layout (a plain jar + a flat lib/ of dependency
+               jars via copy-dependencies), not Spring Boot's nested
+               BOOT-INF/lib fat-jar layout, hence repackage is skipped. -->
+          <execution>
+            <id>repackage</id>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Flattens all runtime dependency jars into target/lib/ for jpackage's
+           non-modular (classpath) app-image mode. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals><goal>copy-dependencies</goal></goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

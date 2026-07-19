@@ -1,6 +1,15 @@
 # blCounter
 
-JavaFX desktop conversion of bCounter — headless Spring Boot (DI/JPA/security only) driving a native JavaFX UI. See `~/pbss2/bCounter` for the original web app, left untouched as a reference.
+JavaFX desktop conversion of bCounter — headless Spring Boot (DI/JPA/security only) driving a native JavaFX UI. See `~/pbss2/bCounter` for the original web app.
+
+The counting engine itself (entities, repositories, model, and the 18
+heavy image-processing/tallying services) lives in a shared module,
+[`counter-core`](../counter-core/README.md), also used by bCounter,
+viewer, and counter. **Run `mvn install` in `~/pbss2/counter-core`
+before building this module for the first time.** Only `CounterUserService`
+(diverges per-app — this one implements FX-login-appropriate credential
+checking, not `UserDetailsService`), the `fx/` package, and
+`viewer/controller`/`viewer/config` stay local to blCounter.
 
 ---
 

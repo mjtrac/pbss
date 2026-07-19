@@ -19,20 +19,35 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bCounter</artifactId>
-  <version>0.9.13</version>
+  <version>0.9.14</version>
   <name>bCounter</name>
   <description>Ballot image scanner and vote counter</description>
 
   <properties>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
-    <zxing.version>3.5.3</zxing.version>
     <javafx.version>21.0.4</javafx.version>
     <testfx.version>4.0.18</testfx.version>
     <monocle.version>21.0.2</monocle.version>
+    <!-- Overridable from the command line, e.g. to watch a TestFX test run
+         on a real screen instead of Monocle's off-screen headless platform:
+         ./mvnw test -Dtest=CountingPipelineGuiTest -Dtestfx.headless=false -Dglass.platform= -Dmonocle.platform= -->
+    <testfx.headless>true</testfx.headless>
+    <glass.platform>Monocle</glass.platform>
+    <monocle.platform>Headless</monocle.platform>
   </properties>
 
   <dependencies>
+    <!-- Shared ballot-counting engine (entities, repositories, model,
+         services) — see counter-core/README.md. Requires
+         `mvn install` from ~/pbss2/counter-core before building this
+         module for the first time (or after a counter-core change). -->
+    <dependency>
+      <groupId>com.mjtrac</groupId>
+      <artifactId>counter-core</artifactId>
+      <version>0.9.14</version>
+    </dependency>
+
     <!-- JavaFX desktop UI -->
     <dependency>
       <groupId>org.openjfx</groupId>
@@ -107,24 +122,6 @@
       <artifactId>spring-boot-starter-thymeleaf</artifactId>
     </dependency>
 
-    <!-- ZXing: QR code + Code128 barcode decoding -->
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>core</artifactId>
-      <version>${zxing.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>javase</artifactId>
-      <version>${zxing.version}</version>
-    </dependency>
-
-    <!-- SnakeYAML for YAML bbox report parsing -->
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-    </dependency>
-
     <!-- Session support -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -184,11 +181,11 @@
         <configuration>
           <systemPropertyVariables>
             <testfx.robot>glass</testfx.robot>
-            <testfx.headless>true</testfx.headless>
+            <testfx.headless>${testfx.headless}</testfx.headless>
             <prism.order>sw</prism.order>
             <prism.text>t2k</prism.text>
-            <glass.platform>Monocle</glass.platform>
-            <monocle.platform>Headless</monocle.platform>
+            <glass.platform>${glass.platform}</glass.platform>
+            <monocle.platform>${monocle.platform}</monocle.platform>
           </systemPropertyVariables>
         </configuration>
       </plugin>

@@ -7,6 +7,7 @@ package com.mjtrac.scanner.fx;
 
 import com.mjtrac.scanner.config.ScannerConfig;
 import com.mjtrac.scanner.model.ScanSession;
+import com.mjtrac.scanner.service.AuditLogService;
 import com.mjtrac.scanner.service.ScanService;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -34,6 +35,7 @@ public class ScanViewController {
     private final ScannerConfig config;
     private final AuthContext authContext;
     private final Navigator navigator;
+    private final AuditLogService auditLog;
 
     @FXML private Label navTitleLabel;
     @FXML private HBox adminLinksBox;
@@ -41,19 +43,24 @@ public class ScanViewController {
     @FXML private Label countLabel;
     @FXML private Label lastFileLabel;
     @FXML private TextArea commentArea;
+    @FXML private TextArea endNotesArea;
     @FXML private Button startButton;
     @FXML private Button stopButton;
+    @FXML private Button saveEndNoteButton;
+    @FXML private Button printBatchSheetButton;
+    @FXML private Label endNoteMessageLabel;
     @FXML private Label configSummaryLabel;
     @FXML private Hyperlink editConfigLink;
 
     private Timeline pollTimeline;
 
     public ScanViewController(ScanService scanService, ScannerConfig config,
-                               AuthContext authContext, Navigator navigator) {
+                               AuthContext authContext, Navigator navigator, AuditLogService auditLog) {
         this.scanService = scanService;
         this.config = config;
         this.authContext = authContext;
         this.navigator = navigator;
+        this.auditLog = auditLog;
     }
 
     @FXML
@@ -108,6 +115,24 @@ public class ScanViewController {
     }
 
     @FXML
+    private void handleSaveEndNote() {
+        String note = endNotesArea.getText() == null ? "" : endNotesArea.getText().trim();
+        if (note.isEmpty()) return;
+        scanService.saveEndNote(note);
+        endNotesArea.clear();
+        endNoteMessageLabel.setText("End note saved.");
+    }
+
+    /** Manual, user-clicked print — shows the system print dialog, unlike scanner-core's automatic flag pages. */
+    @FXML
+    private void handlePrintBatchSheet() {
+        String error = BatchSheetPrinter.print(commentArea.getText(), endNotesArea.getText());
+        if (error != null) {
+            new Alert(Alert.AlertType.ERROR, error).showAndWait();
+        }
+    }
+
+    @FXML
     private void handleOpenConfig() {
         try {
             navigator.showConfig();
@@ -128,6 +153,9 @@ public class ScanViewController {
     @FXML
     private void handleSignOut() {
         stopPolling();
+        if (authContext.getCurrentUser() != null) {
+            auditLog.log("LOGOUT", authContext.getCurrentUser().getUsername(), null);
+        }
         authContext.clear();
         try {
             navigator.showLogin();

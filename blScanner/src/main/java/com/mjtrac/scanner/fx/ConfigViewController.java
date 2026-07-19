@@ -6,6 +6,7 @@
 package com.mjtrac.scanner.fx;
 
 import com.mjtrac.scanner.config.ScannerConfig;
+import com.mjtrac.scanner.service.AuditLogService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
@@ -30,6 +31,7 @@ public class ConfigViewController {
     private final ScannerConfig config;
     private final Navigator navigator;
     private final AuthContext authContext;
+    private final AuditLogService auditLog;
 
     @FXML private Label navTitleLabel;
     @FXML private Label messageLabel;
@@ -45,10 +47,12 @@ public class ConfigViewController {
     @FXML private CheckBox duplexCheck;
     @FXML private TextField filenamePrefixField;
 
-    public ConfigViewController(ScannerConfig config, Navigator navigator, AuthContext authContext) {
+    public ConfigViewController(ScannerConfig config, Navigator navigator, AuthContext authContext,
+                                 AuditLogService auditLog) {
         this.config = config;
         this.navigator = navigator;
         this.authContext = authContext;
+        this.auditLog = auditLog;
     }
 
     @FXML
@@ -112,6 +116,9 @@ public class ConfigViewController {
 
     @FXML
     private void handleSignOut() {
+        if (authContext.getCurrentUser() != null) {
+            auditLog.log("LOGOUT", authContext.getCurrentUser().getUsername(), null);
+        }
         authContext.clear();
         navigateOrAlert(navigator::showLogin);
     }

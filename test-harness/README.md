@@ -3,6 +3,11 @@
 Automated test harness for the full pbss pipeline:
 bBuilder → PDF → PNG → marked → distorted → bCounter → verified.
 
+For the **native desktop apps** (blCounter, counter, and friends) instead
+of the web apps, see [README-desktop.md](README-desktop.md) — same
+create/mark/distort/count/verify shape, but counting is driven through each
+app's real GUI (TestFX/AssertJ-Swing) rather than a REST endpoint.
+
 ---
 
 ## Prerequisites

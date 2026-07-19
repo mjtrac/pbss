@@ -58,6 +58,9 @@
     .dim-header { font-size: .75rem; font-weight: 600; color: #888;
                   text-transform: uppercase; letter-spacing: .05em;
                   padding: .3rem .75rem; background: #f0f0f0; }
+    @media print {
+      .app-header, .resume-bar, #scanBanner, .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body th:style="${appBgColor != null && !appBgColor.isEmpty()} ? 'background-color:' + ${appBgColor} : ''">
@@ -286,10 +289,14 @@
   </div>
 
   <!-- Actions -->
-  <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+  <div class="no-print" style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
     <a href="/scan" th:if="${hasMore}" class="btn" style="background:#1a6a6a">
       &#9654; Continue Scanning
     </a>
+
+    <button type="button" id="printResultsBtn" class="btn" style="background:#555">
+      &#128424; Print Results
+    </button>
 
     <form method="post" action="/reset" style="display:inline">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>

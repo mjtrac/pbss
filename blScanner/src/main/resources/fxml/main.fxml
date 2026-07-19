@@ -32,7 +32,7 @@
                            style="-fx-alignment: center;"/>
 
                     <VBox spacing="4">
-                        <Label text="Batch Comment (optional — cleared after each scan)"
+                        <Label text="Start Notes (picked up when the scan starts)"
                                style="-fx-font-weight: bold; -fx-font-size: 12px;"/>
                         <TextArea fx:id="commentArea" wrapText="true" prefRowCount="2"
                                   promptText="e.g. Precinct 4 morning batch, box 3 of 5"/>
@@ -43,7 +43,19 @@
                                 onAction="#handleStart"/>
                         <Button fx:id="stopButton" text="Stop" styleClass="stop-button"
                                 onAction="#handleStop" disable="true"/>
+                        <Button fx:id="printBatchSheetButton" text="Print Batch Sheet"
+                                onAction="#handlePrintBatchSheet"/>
                     </HBox>
+
+                    <VBox spacing="4">
+                        <Label text="End Notes (e.g. flag a misfeed/doublefeed for manual correction)"
+                               style="-fx-font-weight: bold; -fx-font-size: 12px;"/>
+                        <TextArea fx:id="endNotesArea" wrapText="true" prefRowCount="2"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button fx:id="saveEndNoteButton" text="Save End Note" onAction="#handleSaveEndNote"/>
+                            <Label fx:id="endNoteMessageLabel"/>
+                        </HBox>
+                    </VBox>
                 </VBox>
 
                 <VBox spacing="6" styleClass="card">

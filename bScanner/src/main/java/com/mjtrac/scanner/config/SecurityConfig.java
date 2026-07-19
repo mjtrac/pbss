@@ -3,6 +3,7 @@
  */
 package com.mjtrac.scanner.config;
 
+import com.mjtrac.scanner.service.AuditLogService;
 import com.mjtrac.scanner.service.ScannerUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,15 +13,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.*;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final ScannerUserDetailsService userDetailsService;
+    private final AuditLogService auditLog;
 
-    public SecurityConfig(ScannerUserDetailsService userDetailsService) {
+    public SecurityConfig(ScannerUserDetailsService userDetailsService, AuditLogService auditLog) {
         this.userDetailsService = userDetailsService;
+        this.auditLog = auditLog;
     }
 
     @Bean
@@ -50,16 +54,36 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/", true)
+                .successHandler(loginSuccessHandler())
+                .failureHandler(loginFailureHandler())
                 .permitAll()
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/login?logout")
+                .addLogoutHandler((request, response, auth) -> {
+                    if (auth != null)
+                        auditLog.log("LOGOUT", auth.getName(), null);
+                })
                 .permitAll()
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/scan/start", "/scan/stop")
+                .ignoringRequestMatchers("/scan/start", "/scan/stop", "/scan/end-note")
             );
         return http.build();
+    }
+
+    private AuthenticationSuccessHandler loginSuccessHandler() {
+        return (request, response, auth) -> {
+            auditLog.log("LOGIN", auth.getName(), null);
+            response.sendRedirect("/");
+        };
+    }
+
+    private AuthenticationFailureHandler loginFailureHandler() {
+        return (request, response, ex) -> {
+            String attempted = request.getParameter("username");
+            auditLog.log("LOGIN_FAILED", attempted != null ? attempted : "(unknown)", null);
+            response.sendRedirect("/login?error");
+        };
     }
 }

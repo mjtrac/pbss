@@ -7,6 +7,7 @@ package com.mjtrac.counter.fx;
 
 import com.mjtrac.counter.entity.CounterUser;
 import com.mjtrac.counter.repository.CounterUserRepository;
+import com.mjtrac.counter.service.AuditLogService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -19,7 +20,13 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Optional;
 
-/** Mirrors templates/login.html / the removed LoginController form-login flow. */
+/**
+ * Mirrors templates/login.html / the removed LoginController form-login
+ * flow — including its audit logging (CounterSecurityConfig's
+ * loginSuccessHandler/loginFailureHandler on the web side), which this
+ * screen was missing entirely until a user-reported gap: every attempt
+ * here now writes LOGIN/LOGIN_FAILED to AuditLogService too.
+ */
 @Component
 public class LoginViewController {
 
@@ -27,6 +34,7 @@ public class LoginViewController {
     private final PasswordEncoder passwordEncoder;
     private final AuthContext authContext;
     private final Navigator navigator;
+    private final AuditLogService auditLog;
 
     @Value("${app.login-title:pbss Ballot Counter}")
     private String loginTitle;
@@ -40,11 +48,13 @@ public class LoginViewController {
     public LoginViewController(CounterUserRepository userRepository,
                                 PasswordEncoder passwordEncoder,
                                 AuthContext authContext,
-                                Navigator navigator) {
+                                Navigator navigator,
+                                AuditLogService auditLog) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authContext = authContext;
         this.navigator = navigator;
+        this.auditLog = auditLog;
     }
 
     @FXML
@@ -63,11 +73,13 @@ public class LoginViewController {
             .filter(u -> passwordEncoder.matches(password, u.getPasswordHash()));
 
         if (match.isEmpty()) {
+            auditLog.log("LOGIN_FAILED", username, null);
             showError("Invalid username or password.");
             passwordField.clear();
             return;
         }
 
+        auditLog.log("LOGIN", username, null);
         authContext.setCurrentUser(match.get());
         try {
             navigator.showShell();

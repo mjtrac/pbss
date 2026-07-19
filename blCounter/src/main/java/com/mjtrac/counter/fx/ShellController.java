@@ -5,6 +5,7 @@
  */
 package com.mjtrac.counter.fx;
 
+import com.mjtrac.counter.service.AuditLogService;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -25,6 +26,7 @@ public class ShellController {
 
     private final AuthContext authContext;
     private final Navigator navigator;
+    private final AuditLogService auditLog;
 
     @FXML private Label titleLabel;
     @FXML private Label breadcrumbLabel;
@@ -34,9 +36,10 @@ public class ShellController {
     @FXML private VBox adminSection;
     @FXML private StackPane contentArea;
 
-    public ShellController(AuthContext authContext, Navigator navigator) {
+    public ShellController(AuthContext authContext, Navigator navigator, AuditLogService auditLog) {
         this.authContext = authContext;
         this.navigator = navigator;
+        this.auditLog = auditLog;
     }
 
     @FXML
@@ -74,6 +77,9 @@ public class ShellController {
 
     @FXML
     private void handleSignOut() {
+        if (authContext.getCurrentUser() != null) {
+            auditLog.log("LOGOUT", authContext.getCurrentUser().getUsername(), null);
+        }
         authContext.clear();
         try {
             navigator.showLogin();

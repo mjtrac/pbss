@@ -7,7 +7,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bBuilder</artifactId>
-  <version>0.9.13</version>
+  <version>0.9.14</version>
   <packaging>jar</packaging>
 
   <parent>
@@ -37,6 +37,16 @@
   </properties>
 
   <dependencies>
+
+    <!-- Shared ballot-design engine (model, repository, util, generation
+         services) — see builder-core/README.md. Requires `mvn install`
+         from ~/pbss2/builder-core before building this module for the
+         first time (or after a builder-core change). -->
+    <dependency>
+      <groupId>com.mjtrac</groupId>
+      <artifactId>builder-core</artifactId>
+      <version>0.9.14</version>
+    </dependency>
 
     <!-- ── Spring Boot Web + Thymeleaf UI ───────────────────────────── -->
     <dependency>
@@ -81,76 +91,6 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
-    </dependency>
-
-    <!-- ── iText 8 Core (AGPL 3.0) ─────────────────────────────────── -->
-    <!--
-      LICENSE NOTE: iText 8 is AGPL 3.0. Government internal use generally
-      satisfies AGPL. If distributing commercially, a commercial license is
-      required. See https://itextpdf.com/how-buy/legal/agpl-gnu-affero-general-public-license
-    -->
-    <dependency>
-      <groupId>com.itextpdf</groupId>
-      <artifactId>kernel</artifactId>
-      <version>${itext.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.itextpdf</groupId>
-      <artifactId>io</artifactId>
-      <version>${itext.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.itextpdf</groupId>
-      <artifactId>layout</artifactId>
-      <version>${itext.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.itextpdf</groupId>
-      <artifactId>commons</artifactId>
-      <version>${itext.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.itextpdf</groupId>
-      <artifactId>html2pdf</artifactId>
-      <version>5.0.4</version>
-    </dependency>
-    <!--
-      PDFBox is used by PrinterService to rasterise PDF pages for printing.
-      It does not conflict with iText — they operate independently.
-    -->
-    <dependency>
-      <groupId>org.apache.pdfbox</groupId>
-      <artifactId>pdfbox</artifactId>
-      <version>3.0.2</version>
-    </dependency>
-
-    <!-- ── ZXing — barcode generation (Apache 2.0) ──────────────────── -->
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>core</artifactId>
-      <version>${zxing.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>javase</artifactId>
-      <version>${zxing.version}</version>
-    </dependency>
-
-    <!-- ── SnakeYAML 2.x (Apache 2.0) — YAML export ─────────────────── -->
-    <!--
-      SECURITY NOTE: SnakeYAML 1.x had critical RCE CVEs (CVE-2022-1471).
-      Version 2.x is required. Never use new Yaml().load() on untrusted input.
-    -->
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <version>${snakeyaml.version}</version>
-    </dependency>
-
-    <!-- ── Bean Validation ───────────────────────────────────────────── -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
     <!-- ── Testing ───────────────────────────────────────────────────── -->

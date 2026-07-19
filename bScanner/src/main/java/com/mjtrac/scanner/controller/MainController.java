@@ -55,6 +55,16 @@ public class MainController {
         return Map.of("status", "stopped");
     }
 
+    @PostMapping("/scan/end-note")
+    @ResponseBody
+    public Map<String, Object> saveEndNote(@RequestParam String note) {
+        if (note == null || note.isBlank()) {
+            return Map.of("status", "error", "message", "Note is empty.");
+        }
+        scanService.saveEndNote(note.trim());
+        return Map.of("status", "saved");
+    }
+
     // ── Progress polling ──────────────────────────────────────────────────────
 
     @GetMapping("/status")

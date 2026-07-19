@@ -15,10 +15,14 @@ import com.mjtrac.counter.service.ResultsQueryService;
 import com.mjtrac.counter.service.ResultsQueryService.VoteRow;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.print.PrinterJob;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,6 +32,7 @@ public class ResultsViewController {
 
     private final ResultsQueryService queryService;
 
+    @FXML private VBox printableContent;
     @FXML private Label messageLabel;
     @FXML private Label totalBallotsLabel;
     @FXML private Label totalVotesLabel;
@@ -73,6 +78,30 @@ public class ResultsViewController {
     @FXML
     private void handleRefresh() {
         refresh();
+    }
+
+    /**
+     * Prints the summary + votes table as currently shown — javafx.print
+     * (not java.awt.print, used by the Swing/scanner-family batch sheets)
+     * since printing an actual Node is the natural fit here and this app
+     * has no AWT/Swing dependency to reuse.
+     */
+    @FXML
+    private void handlePrintResults() {
+        PrinterJob job = PrinterJob.createPrinterJob();
+        if (job == null) {
+            new Alert(Alert.AlertType.ERROR, "No printer available.").showAndWait();
+            return;
+        }
+        Node node = printableContent;
+        if (job.showPrintDialog(node.getScene().getWindow())) {
+            boolean ok = job.printPage(node);
+            if (ok) {
+                job.endJob();
+            } else {
+                new Alert(Alert.AlertType.ERROR, "Printing failed.").showAndWait();
+            }
+        }
     }
 
     private void refresh() {

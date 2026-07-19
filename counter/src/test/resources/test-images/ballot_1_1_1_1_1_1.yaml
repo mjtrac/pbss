@@ -1,0 +1,396 @@
+combinationId: 1
+unit: inches
+sides:
+- side_number: 1
+  ballotContentArea:
+    offsetFromLeft: '0.8194'
+    offsetFromTop: '5.5208'
+    width: '6.8611'
+    height: '7.6598'
+  cornerMarks:
+  - corner: TL
+    x: '0.9444'
+    y: '5.3750'
+  - corner: TR
+    x: '7.6181'
+    y: '5.3750'
+  - corner: BR
+    x: '7.6181'
+    y: '13.3264'
+  - corner: BL
+    x: '0.8819'
+    y: '13.3264'
+  pageMarks:
+  - corner: PTL
+    x: '0.9444'
+    y: '0.3958'
+  - corner: PTR
+    x: '7.5556'
+    y: '0.3958'
+  barcodeCentre:
+    x: '7.1944'
+    y: '4.2118'
+  contests:
+  - id: 1
+    title: President of the United States
+    contestType: RANKED_CHOICE
+    maxVotes: 4
+    boundingBox:
+      offsetFromLeft: '0.8889'
+      offsetFromTop: '6.2736'
+      width: '3.2500'
+      height: '4.1644'
+    candidates:
+    - id: 1
+      name: Alexandria Washington (Rank 4)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.0556'
+        offsetFromTop: '7.7782'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 1
+      name: Alexandria Washington (Rank 3)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.2917'
+        offsetFromTop: '7.7782'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 1
+      name: Alexandria Washington (Rank 2)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.5278'
+        offsetFromTop: '7.7782'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 1
+      name: Alexandria Washington (Rank 1)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.8056'
+        offsetFromTop: '7.7782'
+        width: '0.2361'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 2
+      name: Benjamin Adams (Rank 4)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.0556'
+        offsetFromTop: '8.1115'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 2
+      name: Benjamin Adams (Rank 3)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.2917'
+        offsetFromTop: '8.1115'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 2
+      name: Benjamin Adams (Rank 2)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.5278'
+        offsetFromTop: '8.1115'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 2
+      name: Benjamin Adams (Rank 1)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.8056'
+        offsetFromTop: '8.1115'
+        width: '0.2361'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 3
+      name: Carolina Jefferson (Rank 4)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.0556'
+        offsetFromTop: '8.4449'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 3
+      name: Carolina Jefferson (Rank 3)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.2917'
+        offsetFromTop: '8.4449'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 3
+      name: Carolina Jefferson (Rank 2)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.5278'
+        offsetFromTop: '8.4449'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 3
+      name: Carolina Jefferson (Rank 1)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.8056'
+        offsetFromTop: '8.4449'
+        width: '0.2361'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 4
+      name: Douglas Madison (Rank 4)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.0556'
+        offsetFromTop: '8.7782'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 4
+      name: Douglas Madison (Rank 3)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.2917'
+        offsetFromTop: '8.7782'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 4
+      name: Douglas Madison (Rank 2)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.5278'
+        offsetFromTop: '8.7782'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 4
+      name: Douglas Madison (Rank 1)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.8056'
+        offsetFromTop: '8.7782'
+        width: '0.2361'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 5
+      name: Eleanor Monroe (Rank 4)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.0556'
+        offsetFromTop: '9.1115'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 5
+      name: Eleanor Monroe (Rank 3)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.2917'
+        offsetFromTop: '9.1115'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 5
+      name: Eleanor Monroe (Rank 2)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.5278'
+        offsetFromTop: '9.1115'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 5
+      name: Eleanor Monroe (Rank 1)
+      writeIn: false
+      indicator:
+        offsetFromLeft: '1.8056'
+        offsetFromTop: '9.1115'
+        width: '0.2361'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 6
+      name: Write-In (Rank 4)
+      writeIn: true
+      indicator:
+        offsetFromLeft: '1.0556'
+        offsetFromTop: '9.4449'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 6
+      name: Write-In (Rank 3)
+      writeIn: true
+      indicator:
+        offsetFromLeft: '1.2917'
+        offsetFromTop: '9.4449'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 6
+      name: Write-In (Rank 2)
+      writeIn: true
+      indicator:
+        offsetFromLeft: '1.5278'
+        offsetFromTop: '9.4449'
+        width: '0.0972'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 6
+      name: Write-In (Rank 1)
+      writeIn: true
+      indicator:
+        offsetFromLeft: '1.8056'
+        offsetFromTop: '9.4449'
+        width: '0.2361'
+        height: '0.0694'
+        indicatorStyle: OVAL
+  - id: 2
+    title: Representative in Congress
+    contestType: PLURALITY
+    maxVotes: 1
+    boundingBox:
+      offsetFromLeft: '4.2500'
+      offsetFromTop: '5.9097'
+      width: '3.2500'
+      height: '2.8866'
+    candidates:
+    - id: 7
+      name: Alice Smith
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '6.4977'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 8
+      name: Bill Jones
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '6.8310'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 9
+      name: Chuck Edwards
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '7.1643'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 10
+      name: Dorothy Johnson
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '7.4977'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 11
+      name: Ernest Garcia
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '7.8310'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 12
+      name: Write-In
+      writeIn: true
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '8.1643'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+  - id: 4
+    title: City Council Member
+    contestType: PLURALITY
+    maxVotes: 3
+    boundingBox:
+      offsetFromLeft: '4.2500'
+      offsetFromTop: '9.3227'
+      width: '3.2500'
+      height: '3.5810'
+    candidates:
+    - id: 17
+      name: Anna Park
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '9.9106'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 18
+      name: Brian Foster
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '10.2440'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 19
+      name: Carmen Lopez
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '10.5773'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 20
+      name: David Kim
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '10.9106'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 21
+      name: Eva Patel
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '11.2440'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 22
+      name: Frank Nguyen
+      writeIn: false
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '11.5773'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL
+    - id: 23
+      name: Write-In
+      writeIn: true
+      indicator:
+        offsetFromLeft: '4.4306'
+        offsetFromTop: '11.9106'
+        width: '0.2222'
+        height: '0.0694'
+        indicatorStyle: OVAL

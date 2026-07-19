@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bScanner</artifactId>
-  <version>0.9.13</version>
+  <version>0.9.14</version>
   <name>bScanner</name>
   <description>Election Ballot Scanner Driver</description>
 
@@ -23,6 +23,16 @@
   </properties>
 
   <dependencies>
+    <!-- Shared scanner-driving engine (entity, repository, model,
+         ScanService, ScannerConfig) — see scanner-core/README.md. Requires
+         `mvn install` from ~/pbss2/scanner-core before building this
+         module for the first time (or after a scanner-core change). -->
+    <dependency>
+      <groupId>com.mjtrac</groupId>
+      <artifactId>scanner-core</artifactId>
+      <version>0.9.14</version>
+    </dependency>
+
     <!-- Web + Thymeleaf UI -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
