@@ -228,6 +228,20 @@ ballot designs pbss currently generates, fails to count votes correctly.
 An earlier investigation this session found a real gap in
 `CornerDetectionService`'s fallback corner search (now fixed) using a
 *stale* leftover ballot fixture from an outdated intermediate state — not
-a reproducible failure against current, freshly-generated ballots. See the
-conversation history around 2026-07-20/21 for the full investigation if
-this ever needs revisiting.
+a reproducible failure against current, freshly-generated ballots.
+
+**On the bug's actual severity, when it does occur:** this is not, and
+was never, a silent-miscount risk. `voteRecord.persist()` — the only code
+path that writes votes to the database — is only reached when a ballot's
+corner detection succeeds; a ballot that fails is excluded from the tally
+entirely, logged by name to `review_required.txt`, and (past
+`scanner.max-review-before-stop`) halts the whole scan rather than
+continuing silently past it. The failure mode is fail-safe: some ballots
+not counted, and the system tells you so — never a wrong vote attributed
+to the wrong candidate. Also worth being precise about: the distortions
+that exposed this (1-2° rotation, mild perspective warp from a page not
+lying flat) are common real-world scanning conditions, not unusual edge
+cases — the reassuring finding here is "doesn't currently reproduce
+against real ballot designs," not "only affects unlikely scenarios." See
+the conversation history around 2026-07-20/21 for the full investigation
+if this ever needs revisiting.
