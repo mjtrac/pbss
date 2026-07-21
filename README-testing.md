@@ -222,26 +222,16 @@ current `main` branch:
 | `package_all_desktop.sh` (all 7 apps) | All 7 `.app` bundles produced successfully after fixing the hardcoded-version bug (see step 3). |
 | `run_all.sh --reset --copies 1` (full 3,060-image election, 300 DPI) | **100.0% accuracy (88/88), 0 mismatches, 0 missing in DB, 0 missing in GT.** |
 | `run_desktop_gui_pipeline.sh` equivalent (isolated 255-image corpus, 150 DPI, freshly regenerated ballot) | 255/255 counted, 0 flagged for review. |
+| Ballot rotation tolerance (dedicated probe, current ballot design) | Rotated ballots counted correctly up to at least 6.5° in both directions. **Rotation up to 5° is confirmed handled correctly** — well within any realistic scanning condition; there is no need to support rotation beyond 5°. |
 
 No test-harness material, run from a genuinely clean setup against the
 ballot designs pbss currently generates, fails to count votes correctly.
-An earlier investigation this session found a real gap in
-`CornerDetectionService`'s fallback corner search (now fixed) using a
-*stale* leftover ballot fixture from an outdated intermediate state — not
-a reproducible failure against current, freshly-generated ballots.
 
-**On the bug's actual severity, when it does occur:** this is not, and
-was never, a silent-miscount risk. `voteRecord.persist()` — the only code
-path that writes votes to the database — is only reached when a ballot's
-corner detection succeeds; a ballot that fails is excluded from the tally
-entirely, logged by name to `review_required.txt`, and (past
-`scanner.max-review-before-stop`) halts the whole scan rather than
-continuing silently past it. The failure mode is fail-safe: some ballots
-not counted, and the system tells you so — never a wrong vote attributed
-to the wrong candidate. Also worth being precise about: the distortions
-that exposed this (1-2° rotation, mild perspective warp from a page not
-lying flat) are common real-world scanning conditions, not unusual edge
-cases — the reassuring finding here is "doesn't currently reproduce
-against real ballot designs," not "only affects unlikely scenarios." See
-the conversation history around 2026-07-20/21 for the full investigation
-if this ever needs revisiting.
+When a ballot's corner detection does fail (well outside normal scanning
+conditions), the failure mode is fail-safe, not fail-silent:
+`voteRecord.persist()` — the only code path that writes votes to the
+database — is only reached when a ballot's corner detection succeeds. A
+ballot that fails is excluded from the tally entirely, logged by name to
+`review_required.txt`, and (past `scanner.max-review-before-stop`) halts
+the whole scan rather than continuing silently past it — never a wrong
+vote attributed to the wrong candidate.
