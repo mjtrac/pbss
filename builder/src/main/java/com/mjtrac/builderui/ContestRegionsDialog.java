@@ -23,12 +23,14 @@ final class ContestRegionsDialog {
 
     private ContestRegionsDialog() {}
 
-    static void show(Frame owner, Contest contest, RegionRepository regionRepo,
+    static void show(Window owner, Contest contest, RegionRepository regionRepo,
                       ContestRepository contestRepo, Runnable onClose) {
-        JDialog dialog = new JDialog(owner, "Assign Regions — " + contest.getTitle(), true);
+        JDialog dialog = new JDialog(owner, "Assign Regions — " + contest.getTitle(), Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setName("regionsDialog");
 
         DefaultListModel<Region> regionModel = new DefaultListModel<>();
         JList<Region> regionList = new JList<>(regionModel);
+        regionList.setName("regionList");
         regionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         regionList.setCellRenderer((list, value, index, isSelected, hasFocus) -> {
             JLabel l = new JLabel(value.getDisplayName()
@@ -50,6 +52,8 @@ final class ContestRegionsDialog {
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton save = new JButton("Save");
         JButton close = new JButton("Close");
+        save.setName("saveButton");
+        close.setName("closeButton");
         buttons.add(close);
         buttons.add(save);
 

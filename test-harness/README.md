@@ -60,6 +60,12 @@ Options:
                                                 # then launches `viewer` on the same database
                                                 # once you close counter. See
                                                 # "Want to just watch counter count?" below.
+./run_all.sh --desktop                         # skip bBuilder entirely — build the test
+                                                # election by driving `builder`'s real Swing
+                                                # UI with a real Robot (DesktopElectionBuilder)
+                                                # instead of bBuilder's REST API or the
+                                                # headless TestElectionBuilder fallback. See
+                                                # test-harness/README-desktop.md.
 ```
 
 ### Want to just watch `counter` count?

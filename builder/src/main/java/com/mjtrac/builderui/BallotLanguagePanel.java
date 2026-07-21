@@ -41,6 +41,9 @@ class BallotLanguagePanel extends SimpleCrudPanel<BallotLanguage> {
         JTextField codeField = new JTextField(l.getLanguageCode(), 24);
         JTextField nameField = new JTextField(l.getLanguageName(), 24);
         JSpinner orderSpinner = new JSpinner(new SpinnerNumberModel(l.getDisplayOrder(), 0, 999, 1));
+        codeField.setName("codeField");
+        nameField.setName("nameField");
+        orderSpinner.setName("orderSpinner");
 
         JPanel grid = fieldGrid();
         addField(grid, 0, "Jurisdiction:", jurisdictionCombo);

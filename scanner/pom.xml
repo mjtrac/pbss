@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>scanner</artifactId>
-  <version>0.9.15</version>
+  <version>0.9.16</version>
   <name>scanner</name>
   <description>Standalone Swing scanner-driving control panel — output folder, start/stop, start/end notes, results only</description>
 
@@ -32,7 +32,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>scanner-core</artifactId>
-      <version>0.9.15</version>
+      <version>0.9.16</version>
     </dependency>
 
     <!-- SQLite driver + dialect — this app's own datasource concern -->

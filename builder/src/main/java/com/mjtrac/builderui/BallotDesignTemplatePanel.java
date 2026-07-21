@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -146,24 +148,30 @@ class BallotDesignTemplatePanel extends SimpleCrudPanel<BallotDesignTemplate> {
             c.gridx = 0; c.gridy = rowIdx;
             table.add(new JLabel(r.label()), c);
 
+            String rowId = "typeRow" + r.label().replaceAll("[^A-Za-z0-9]", "");
+
             JSpinner size = new JSpinner(new SpinnerNumberModel(r.getSize().apply(t).floatValue(), 4f, 72f, 0.5f));
+            size.setName(rowId + "Size");
             c.gridx = 1;
             table.add(size, c);
             applyActions.add(() -> r.setSize().accept(t, ((Number) size.getValue()).floatValue()));
 
             if (r.getBold() != null) {
                 JCheckBox bold = new JCheckBox("", r.getBold().apply(t));
+                bold.setName(rowId + "Bold");
                 c.gridx = 2;
                 table.add(bold, c);
                 applyActions.add(() -> r.setBold().accept(t, bold.isSelected()));
             }
             if (r.getItalic() != null) {
                 JCheckBox italic = new JCheckBox("", r.getItalic().apply(t));
+                italic.setName(rowId + "Italic");
                 c.gridx = 3;
                 table.add(italic, c);
                 applyActions.add(() -> r.setItalic().accept(t, italic.isSelected()));
             }
             JCheckBox alt = new JCheckBox("", r.getAlt().apply(t));
+            alt.setName(rowId + "AltFont");
             c.gridx = 4;
             table.add(alt, c);
             applyActions.add(() -> r.setAlt().accept(t, alt.isSelected()));
@@ -178,6 +186,7 @@ class BallotDesignTemplatePanel extends SimpleCrudPanel<BallotDesignTemplate> {
         List<Runnable> applyActions = new ArrayList<>();
 
         JComboBox<Election> electionCombo = new JComboBox<>();
+        electionCombo.setName("electionCombo");
         for (Election el : electionRepo.findAll()) electionCombo.addItem(el);
         electionCombo.setRenderer((list, value, index, isSelected, hasFocus) -> {
             JLabel l = new JLabel(value != null ? value.getName() : "");
@@ -207,6 +216,15 @@ class BallotDesignTemplatePanel extends SimpleCrudPanel<BallotDesignTemplate> {
         JSpinner marginBottom = new JSpinner(new SpinnerNumberModel(t.getMarginBottomPt(), 0f, 200f, 1f));
         JSpinner marginLeft = new JSpinner(new SpinnerNumberModel(t.getMarginLeftPt(), 0f, 200f, 1f));
         JSpinner marginRight = new JSpinner(new SpinnerNumberModel(t.getMarginRightPt(), 0f, 200f, 1f));
+        paperCombo.setName("paperCombo");
+        indicatorCombo.setName("indicatorCombo");
+        primaryFontCombo.setName("primaryFontCombo");
+        altFontCombo.setName("altFontCombo");
+        columnsSpinner.setName("columnsSpinner");
+        marginTop.setName("marginTop");
+        marginBottom.setName("marginBottom");
+        marginLeft.setName("marginLeft");
+        marginRight.setName("marginRight");
 
         JComponent typographyTable = buildTypographyTable(t, applyActions);
 
@@ -226,6 +244,16 @@ class BallotDesignTemplatePanel extends SimpleCrudPanel<BallotDesignTemplate> {
         JSpinner rcvBoxLineWidth = new JSpinner(new SpinnerNumberModel(t.getRcvBoxLineWidthPt(), 0.1f, 5f, 0.1f));
 
         JTextArea headerHtmlArea = new JTextArea(t.getHeaderHtml(), 6, 30);
+        indicatorLineWidth.setName("indicatorLineWidth");
+        indicatorDashed.setName("indicatorDashed");
+        barcodeWidth.setName("barcodeWidth");
+        barcodeHeight.setName("barcodeHeight");
+        multiSheet.setName("multiSheet");
+        rcvIndicatorsRight.setName("rcvIndicatorsRight");
+        rcvShowRankNumbers.setName("rcvShowRankNumbers");
+        rcvRankNumberFont.setName("rcvRankNumberFont");
+        rcvBoxLineWidth.setName("rcvBoxLineWidth");
+        headerHtmlArea.setName("headerHtmlArea");
 
         JPanel grid = fieldGrid();
         int row = 0;
@@ -249,7 +277,19 @@ class BallotDesignTemplatePanel extends SimpleCrudPanel<BallotDesignTemplate> {
         addField(grid, row++, "RCV: Show Rank Numbers:", rcvShowRankNumbers);
         addField(grid, row++, "RCV Rank Number Font (pt):", rcvRankNumberFont);
         addField(grid, row++, "RCV Box Line Width (pt):", rcvBoxLineWidth);
-        addField(grid, row++, "Header HTML:", new JScrollPane(headerHtmlArea));
+
+        JButton previewHeaderButton = new JButton("Preview in Browser");
+        previewHeaderButton.setName("previewHeaderButton");
+        previewHeaderButton.addActionListener(e -> previewHeaderInBrowser(
+            headerHtmlArea.getText(),
+            (Election) electionCombo.getSelectedItem(),
+            (VoteIndicatorStyle) indicatorCombo.getSelectedItem()));
+        JPanel headerFieldPanel = new JPanel(new BorderLayout(4, 4));
+        headerFieldPanel.add(new JScrollPane(headerHtmlArea), BorderLayout.CENTER);
+        JPanel headerButtonRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerButtonRow.add(previewHeaderButton);
+        headerFieldPanel.add(headerButtonRow, BorderLayout.SOUTH);
+        addField(grid, row++, "Header HTML:", headerFieldPanel);
 
         JScrollPane scroller = new JScrollPane(grid);
         scroller.setPreferredSize(new Dimension(680, 560));
@@ -280,6 +320,53 @@ class BallotDesignTemplatePanel extends SimpleCrudPanel<BallotDesignTemplate> {
                 onSave.accept(t);
             },
             () -> SwingUtilities.getWindowAncestor(grid).dispose());
+    }
+
+    /**
+     * Renders the header field's actual HTML/CSS in the system's real
+     * browser (full CSS support) rather than an embedded Swing component —
+     * JEditorPane's HTML renderer only supports HTML 3.2 and minimal CSS,
+     * which would show a misleadingly plain preview of content that uses
+     * anything beyond basic tags. Substitutes the same {token} placeholders
+     * and Quill-editor class-to-style conversion BallotGenerationService
+     * applies at real render time (see its computeHeaderZoneHeight()),
+     * using the actually-selected election/jurisdiction/indicator where
+     * available so the preview reflects this template, not a generic one.
+     */
+    private void previewHeaderInBrowser(String headerHtml, Election election, VoteIndicatorStyle indicatorStyle) {
+        try {
+            String electionName = election != null ? election.getName() : "Election Name";
+            String jurisdictionName = election != null && election.getJurisdiction() != null
+                ? election.getJurisdiction().getName() : "Jurisdiction";
+            String indicatorName = indicatorStyle != null
+                ? indicatorStyle.name().toLowerCase().replace('_', ' ') : "oval";
+
+            String body = (headerHtml == null ? "" : headerHtml)
+                .replace("{electionName}", electionName)
+                .replace("{jurisdictionName}", jurisdictionName)
+                .replace("{regionName}", "Region")
+                .replace("{partyName}", "Party")
+                .replace("{ballotTypeName}", "Ballot Type")
+                .replace("{indicatorName}", indicatorName)
+                .replace("{pageNum}", "1")
+                .replace("class=\"ql-align-center\"", "style=\"text-align:center\"")
+                .replace("class=\"ql-align-right\"", "style=\"text-align:right\"")
+                .replace("class=\"ql-align-justify\"", "style=\"text-align:justify\"");
+
+            String doc = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>Header preview</title></head>"
+                + "<body>" + body + "</body></html>";
+
+            Path file = Files.createTempFile("pbss-header-preview-", ".html");
+            Files.writeString(file, doc);
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(file.toUri());
+            } else {
+                JOptionPane.showMessageDialog(this, "Wrote preview to " + file + " — open it in a browser manually.");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Could not preview header: " + ex.getMessage(),
+                "Preview Failed", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /** formShell's Save/Cancel buttons need to stay outside the scroll area. */

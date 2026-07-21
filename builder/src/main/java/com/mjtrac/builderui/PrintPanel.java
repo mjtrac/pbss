@@ -58,6 +58,14 @@ class PrintPanel extends JPanel {
         this.ballotService = ballotService;
         setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
+        combinationCombo.setName("combinationCombo");
+        templateCombo.setName("templateCombo");
+        languageCombo.setName("languageCombo");
+        userCombo.setName("userCombo");
+        copiesSpinner.setName("copiesSpinner");
+        messageLabel.setName("messageLabel");
+        openFolderButton.setName("openFolderButton");
+
         combinationCombo.setRenderer(renderer(o -> {
             BallotCombination c = (BallotCombination) o;
             String party = c.getParty() != null ? c.getParty().getName() : "Nonpartisan";
@@ -73,6 +81,7 @@ class PrintPanel extends JPanel {
         combinationCombo.addActionListener(e -> loadTemplatesAndLanguages());
 
         JButton generateBtn = new JButton("Generate PDF");
+        generateBtn.setName("generateButton");
         generateBtn.addActionListener(e -> handleGenerate());
         openFolderButton.addActionListener(e -> openOutputFolder());
 

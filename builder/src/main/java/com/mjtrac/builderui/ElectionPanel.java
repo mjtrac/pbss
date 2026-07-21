@@ -46,6 +46,10 @@ class ElectionPanel extends SimpleCrudPanel<Election> {
         JComboBox<ElectionType> typeCombo = new JComboBox<>(ElectionType.values());
         if (e.getElectionType() != null) typeCombo.setSelectedItem(e.getElectionType());
         JCheckBox uniformCheck = new JCheckBox("Uniform ballot (same for every voter)", e.isUniformBallot());
+        nameField.setName("nameField");
+        dateField.setName("dateField");
+        typeCombo.setName("typeCombo");
+        uniformCheck.setName("uniformCheck");
 
         JPanel grid = fieldGrid();
         addField(grid, 0, "Jurisdiction:", jurisdictionCombo);

@@ -48,6 +48,7 @@ class BallotCombinationPanel extends SimpleCrudPanel<BallotCombination> {
         BallotCombination c = existing != null ? existing : new BallotCombination();
 
         JComboBox<Region> regionCombo = new JComboBox<>();
+        regionCombo.setName("regionCombo");
         for (Region r : regionRepo.findAll()) {
             if (r.getRegionType() == RegionType.SINGLE_PRECINCT) regionCombo.addItem(r);
         }
@@ -55,17 +56,20 @@ class BallotCombinationPanel extends SimpleCrudPanel<BallotCombination> {
         selectById(regionCombo, c.getRegion());
 
         JComboBox<Party> partyCombo = new JComboBox<>();
+        partyCombo.setName("partyCombo");
         partyCombo.addItem(null);
         for (Party p : partyRepo.findAll()) partyCombo.addItem(p);
         partyCombo.setRenderer(nameRenderer(o -> o == null ? "(nonpartisan)" : ((Party) o).getName()));
         selectById(partyCombo, c.getParty());
 
         JComboBox<BallotType> typeCombo = new JComboBox<>();
+        typeCombo.setName("typeCombo");
         for (BallotType t : ballotTypeRepo.findAll()) typeCombo.addItem(t);
         typeCombo.setRenderer(nameRenderer(o -> ((BallotType) o).getName()));
         selectById(typeCombo, c.getBallotType());
 
         JComboBox<Election> electionCombo = new JComboBox<>();
+        electionCombo.setName("electionCombo");
         for (Election el : electionRepo.findAll()) electionCombo.addItem(el);
         electionCombo.setRenderer(nameRenderer(o -> ((Election) o).getName()));
         selectById(electionCombo, c.getElection());

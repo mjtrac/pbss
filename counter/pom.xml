@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>counter</artifactId>
-  <version>0.9.15</version>
+  <version>0.9.16</version>
   <name>counter</name>
   <description>Standalone Swing ballot-counting control panel — folders, start/stop, results only</description>
 
@@ -32,7 +32,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>counter-core</artifactId>
-      <version>0.9.15</version>
+      <version>0.9.16</version>
     </dependency>
 
     <!-- JPA + SQLite — counting writes vote records here, same DB bCounter/blCounter use.

@@ -180,20 +180,51 @@ with Xvfb (X11's XTest extension isn't gated the same way).
 cd counter && ./mvnw test -Dtest=CountingPipelineGuiTest
 ```
 
+## builder — screen tests + `DesktopElectionBuilder` (AssertJ-Swing)
+
+`builder` (added 2026-07-21) has the same AssertJ-Swing setup as `counter`
+— every menu item, every CRUD screen's New/Edit/Delete/Refresh cycle, and
+the Contest→Candidates→Regions dialog cascade, in
+`builder/src/test/java/com/mjtrac/builderui/*GuiTest.java`. Same macOS
+Accessibility caveat as `counter` above, via the identical
+`AbstractBuilderGuiTest.robotAction()` skip-cleanly wrapper. This pass also
+caught and fixed two real bugs nothing had caught before: a
+`ClassCastException` on "Manage Candidates"/"Assign Regions" for any
+already-saved Contest reopened by double-click, and every candidate on a
+newly created Contest being silently duplicated in the database on the
+ordinary create→add-candidates→assign-regions workflow (`contestRepo.save()`
+discarding its merge() return value across the cascade) — see
+`builder/README-testing.md` and `ContestCascadeGuiTest`'s Javadoc for both.
+
+`DesktopElectionBuilder` (same package) is `run_all.sh`'s third path for
+building the test election — alongside `build_election.py` (bBuilder REST,
+the full 15-contest election) and `TestElectionBuilder` (headless, direct
+repository calls) — invoked by `run_all.sh --desktop`. It builds the same
+small election `TestElectionBuilder` does (1 region, 2 Plurality contests,
+4 candidates, 1 combination, 1 template), but by actually clicking through
+`builder`'s real screens with a real `Robot`, cascading through the same
+Contest→Candidates→Regions dialogs the screen tests cover. It runs against
+the real `~/pbss_data` database (not an isolated temp DB — this needs to be
+the database `counter` itself will scan against), and is idempotent: a
+second run detects the already-built election by name and just re-generates
+its PDF/YAML headlessly instead of re-driving several minutes of robot
+clicks.
+
+```bash
+cd builder && mvn test -Dtest=DesktopElectionBuilder -Dtest-election.out=/abs/path/election_data.json
+# or, as part of the full pipeline:
+cd test-harness && ./run_all.sh --desktop
+```
+
 ## Extending this to the other apps
 
 Not yet built (out of scope for this pass, but the pattern above is
 directly reusable):
 
-- **scanner / builder / viewer** (Swing) — same AssertJ-Swing pattern as
-  `counter`: name the relevant components via `setName(...)`, add a
-  `guipipeline`-profile properties file for any DB/output-dir override, add
-  the `assertj-swing` test dependency + the `--add-opens` surefire
-  `argLine` (see `counter/pom.xml` — AssertJ-Swing's internal Timer-based
-  window-ready detection needs `java.util`/`java.desktop` opened up on
-  modern JDKs or it silently breaks component lookup). `builder`'s CRUD
-  screens and `scanner`'s start/end-notes flow are the more involved
-  candidates; `viewer` is read-only and simpler.
+- **scanner / viewer** (Swing) — same AssertJ-Swing pattern as `counter`
+  and `builder`: name the relevant components via `setName(...)`, add the
+  `assertj-swing` test dependency. `scanner`'s start/end-notes flow is the
+  more involved candidate; `viewer` is read-only and simpler.
 - **blBuilder / blScanner** (JavaFX) — blBuilder already has extensive
   TestFX coverage (79 tests, including `PrintScreenTest` driving real PDF
   generation) from its original build — that already satisfies "create

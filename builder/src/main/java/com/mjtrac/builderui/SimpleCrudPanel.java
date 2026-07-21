@@ -27,6 +27,17 @@ abstract class SimpleCrudPanel<T> extends JPanel {
     private boolean firstRefreshDone = false;
 
     SimpleCrudPanel(String title, String[] columnNames, Function<T, Object[]> rowValues) {
+        this(title, columnNames, rowValues, title.replaceAll("[^A-Za-z0-9]", ""));
+    }
+
+    /**
+     * @param idPrefix Robot-lookup prefix for this screen's shared table/New/Edit/Delete/Refresh
+     *                 controls (e.g. "elections" -> "electionsTable", "electionsNewButton", ...).
+     *                 Defaults to a sanitized `title` when not given explicitly, but panels whose
+     *                 title contains spaces/punctuation that would collide or read awkwardly
+     *                 (e.g. "Ballot Design Templates") should pass a shorter explicit prefix.
+     */
+    SimpleCrudPanel(String title, String[] columnNames, Function<T, Object[]> rowValues, String idPrefix) {
         super(new BorderLayout(8, 8));
         // columnNames/rowValues must be set before constructing the table:
         // JTable's constructor synchronously calls back into the table model
@@ -36,6 +47,7 @@ abstract class SimpleCrudPanel<T> extends JPanel {
         this.rowValues = rowValues;
         this.model = new RowModel();
         this.table = new JTable(model);
+        table.setName(idPrefix + "Table");
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         add(new JLabel(title), BorderLayout.NORTH);
@@ -46,6 +58,10 @@ abstract class SimpleCrudPanel<T> extends JPanel {
         JButton editBtn = new JButton("Edit");
         JButton deleteBtn = new JButton("Delete");
         JButton refreshBtn = new JButton("Refresh");
+        newBtn.setName(idPrefix + "NewButton");
+        editBtn.setName(idPrefix + "EditButton");
+        deleteBtn.setName(idPrefix + "DeleteButton");
+        refreshBtn.setName(idPrefix + "RefreshButton");
         buttons.add(newBtn);
         buttons.add(editBtn);
         buttons.add(deleteBtn);
@@ -136,12 +152,28 @@ abstract class SimpleCrudPanel<T> extends JPanel {
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton save = new JButton("Save");
         JButton cancel = new JButton("Cancel");
+        save.setName("saveButton");
+        cancel.setName("cancelButton");
         save.addActionListener(e -> onSave.run());
         cancel.addActionListener(e -> onCancel.run());
         buttons.add(cancel);
         buttons.add(save);
         root.add(buttons, BorderLayout.SOUTH);
         return root;
+    }
+
+    /**
+     * Multi-line JTextArea with word-wrap enabled, for prose fields
+     * (preamble/postamble/instructions/explanatory text) where the field
+     * stays a fixed few rows tall but long text should wrap within that
+     * width rather than requiring horizontal scrolling to read. Not used
+     * for header HTML/CSS fields, where wrapping would obscure structure.
+     */
+    static JTextArea wrappingTextArea(String text, int rows, int cols) {
+        JTextArea area = new JTextArea(text, rows, cols);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        return area;
     }
 
     static JPanel fieldGrid() {

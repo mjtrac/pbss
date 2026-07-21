@@ -24,9 +24,10 @@ final class ContestTranslationDialog {
 
     private ContestTranslationDialog() {}
 
-    static void show(Frame owner, Contest contest, BallotLanguageRepository languageRepo,
+    static void show(Window owner, Contest contest, BallotLanguageRepository languageRepo,
                       ContestTranslationRepository translationRepo) {
-        JDialog dialog = new JDialog(owner, "Translations — " + contest.getTitle(), true);
+        JDialog dialog = new JDialog(owner, "Translations — " + contest.getTitle(), Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setName("contestTranslationDialog");
 
         Long jurisdictionId = contest.getElection() != null && contest.getElection().getJurisdiction() != null
             ? contest.getElection().getJurisdiction().getId() : null;
@@ -52,6 +53,7 @@ final class ContestTranslationDialog {
         }
 
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setName("languageTabs");
         record Fields(JTextField title, JTextArea instructions, JTextArea preamble, JTextArea postamble, JTextField groupingLabel) {}
         java.util.Map<String, Fields> byLanguage = new java.util.LinkedHashMap<>();
 
@@ -61,10 +63,15 @@ final class ContestTranslationDialog {
                 .orElse(null);
 
             JTextField title = new JTextField(existing != null ? existing.getTitle() : "", 24);
-            JTextArea instructions = new JTextArea(existing != null ? existing.getInstructions() : "", 2, 24);
-            JTextArea preamble = new JTextArea(existing != null ? existing.getPreamble() : "", 2, 24);
-            JTextArea postamble = new JTextArea(existing != null ? existing.getPostamble() : "", 2, 24);
+            JTextArea instructions = SimpleCrudPanel.wrappingTextArea(existing != null ? existing.getInstructions() : "", 2, 24);
+            JTextArea preamble = SimpleCrudPanel.wrappingTextArea(existing != null ? existing.getPreamble() : "", 2, 24);
+            JTextArea postamble = SimpleCrudPanel.wrappingTextArea(existing != null ? existing.getPostamble() : "", 2, 24);
             JTextField groupingLabel = new JTextField(existing != null ? existing.getGroupingLabel() : "", 20);
+            title.setName("titleField_" + lang.getLanguageCode());
+            instructions.setName("instructionsArea_" + lang.getLanguageCode());
+            preamble.setName("preambleArea_" + lang.getLanguageCode());
+            postamble.setName("postambleArea_" + lang.getLanguageCode());
+            groupingLabel.setName("groupingLabelField_" + lang.getLanguageCode());
             byLanguage.put(lang.getLanguageCode(), new Fields(title, instructions, preamble, postamble, groupingLabel));
 
             JPanel grid = SimpleCrudPanel.fieldGrid();
@@ -80,6 +87,8 @@ final class ContestTranslationDialog {
 
         JButton save = new JButton("Save All");
         JButton close = new JButton("Close");
+        save.setName("saveAllButton");
+        close.setName("closeButton");
         save.addActionListener(e -> {
             for (var entry : byLanguage.entrySet()) {
                 String code = entry.getKey();

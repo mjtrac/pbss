@@ -37,6 +37,7 @@ class PartyPanel extends SimpleCrudPanel<Party> {
         this.combinationRepo = combinationRepo;
 
         JButton singlePartyBtn = new JButton("Use Single Party");
+        singlePartyBtn.setName("useSinglePartyButton");
         singlePartyBtn.setToolTipText("Replace all parties with one \"" + SINGLE_PARTY_NAME + "\" party — the common case for a general/nonpartisan election");
         singlePartyBtn.addActionListener(e -> useSingleParty());
         addToolbarButton(singlePartyBtn);
@@ -120,6 +121,8 @@ class PartyPanel extends SimpleCrudPanel<Party> {
         JComboBox<Jurisdiction> jurisdictionCombo = JurisdictionCombo.build(jurisdictionRepo, p.getJurisdiction());
         JTextField nameField = new JTextField(p.getName(), 24);
         JTextField abbrevField = new JTextField(p.getAbbreviation(), 24);
+        nameField.setName("nameField");
+        abbrevField.setName("abbrevField");
 
         JPanel grid = fieldGrid();
         addField(grid, 0, "Jurisdiction:", jurisdictionCombo);

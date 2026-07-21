@@ -6,12 +6,6 @@
 
 # pbss — Paper Ballot Software System
 
-(Important note for 7/21: desktop "builder" in release 0.9.15 has a dialog
-bug that prevents the candidate editing and region editing screens from 
-appearing.  This is fixed in the main source but 0.9.15 was built without
-the fix.  An extended test suite will be developed later today and 
-the fix and test suite will be incorporated in 0.9.16.)
-
 pbss is an open-source suite for anyone in or out of government to design,
 print, scan, count, and audit paper election ballots.
 

@@ -16,6 +16,7 @@ final class JurisdictionCombo {
 
     static JComboBox<Jurisdiction> build(JurisdictionRepository repo, Jurisdiction selected) {
         JComboBox<Jurisdiction> combo = new JComboBox<>();
+        combo.setName("jurisdictionCombo");
         for (Jurisdiction j : repo.findAll()) combo.addItem(j);
         combo.setRenderer(new DefaultListCellRenderer() {
             @Override public Component getListCellRendererComponent(

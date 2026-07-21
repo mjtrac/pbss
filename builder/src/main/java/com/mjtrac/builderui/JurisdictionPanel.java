@@ -34,7 +34,11 @@ class JurisdictionPanel extends SimpleCrudPanel<Jurisdiction> {
         JTextField nameField = new JTextField(j.getName(), 24);
         JTextField addressField = new JTextField(j.getAddress(), 24);
         JTextField emailField = new JTextField(j.getContactEmail(), 24);
-        JTextArea instructionsArea = new JTextArea(j.getGeneralVotingInstructions(), 4, 24);
+        JTextArea instructionsArea = wrappingTextArea(j.getGeneralVotingInstructions(), 4, 24);
+        nameField.setName("nameField");
+        addressField.setName("addressField");
+        emailField.setName("emailField");
+        instructionsArea.setName("instructionsArea");
 
         JPanel grid = fieldGrid();
         addField(grid, 0, "Name:", nameField);

@@ -11,6 +11,7 @@ import com.mjtrac.ballot.repository.ContestRepository;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,19 +32,28 @@ final class ContestCandidatesDialog {
 
     private ContestCandidatesDialog() {}
 
-    static void show(Frame owner, Contest contest, ContestRepository contestRepo,
+    static void show(Window owner, Contest contest, ContestRepository contestRepo,
                       BallotLanguageRepository languageRepo, CandidateTranslationRepository candidateTranslationRepo,
                       Runnable onClose) {
-        JDialog dialog = new JDialog(owner, "Candidates — " + contest.getTitle(), true);
+        JDialog dialog = new JDialog(owner, "Candidates — " + contest.getTitle(), Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setName("candidatesDialog");
 
         List<Candidate> working = new ArrayList<>(contest.getCandidates());
         CandidateTableModel model = new CandidateTableModel(working);
         JTable table = new JTable(model);
+        table.setName("candidatesTable");
         table.setRowHeight(24);
+        // "Order" (column 3) is numeric entry — a spinner constrains input
+        // to valid integers directly, rather than free text parsed (and
+        // silently ignored on bad input) after the fact.
+        table.getColumnModel().getColumn(3).setCellEditor(new OrderSpinnerCellEditor());
 
         JButton addBtn = new JButton("Add Candidate");
         JButton removeBtn = new JButton("Remove Selected");
         JButton translationsBtn = new JButton("Translations for Selected");
+        addBtn.setName("addCandidateButton");
+        removeBtn.setName("removeCandidateButton");
+        translationsBtn.setName("candidateTranslationsButton");
         addBtn.addActionListener(e -> {
             Candidate c = new Candidate();
             c.setName("New Candidate");
@@ -78,6 +88,8 @@ final class ContestCandidatesDialog {
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton save = new JButton("Save & Continue");
         JButton close = new JButton("Close");
+        save.setName("saveContinueButton");
+        close.setName("closeButton");
         buttons.add(close);
         buttons.add(save);
 
@@ -89,7 +101,21 @@ final class ContestCandidatesDialog {
             for (Candidate c : working) c.setContest(contest);
             contest.getCandidates().clear();
             contest.getCandidates().addAll(working);
-            contestRepo.save(contest);
+            // contestRepo.save() here goes through JPA merge() (contest
+            // already has an id by this point), which returns a *new*
+            // managed copy rather than mutating `contest` in place -- so
+            // any newly-added (transient, id-less) candidates in `working`
+            // stay id-less on this object even after being inserted. If
+            // ContestRegionsDialog's own save(contest) then runs against
+            // this same, still-transient-looking collection, its cascade
+            // re-inserts every one of them a second time: a real candidate
+            // gets duplicated in the database on the ordinary "save contest
+            // -> add candidates -> assign regions" flow. Syncing back onto
+            // `contest` (the same object reference every downstream dialog
+            // in this cascade shares) is what prevents that.
+            Contest merged = contestRepo.save(contest);
+            contest.getCandidates().clear();
+            contest.getCandidates().addAll(merged.getCandidates());
             dialog.dispose();
             onClose.run();
         });
@@ -146,13 +172,9 @@ final class ContestCandidatesDialog {
                 case 0 -> c.setName((String) value);
                 case 1 -> c.setWriteIn((Boolean) value);
                 case 2 -> c.setPartyAffiliation((String) value);
-                case 3 -> {
-                    try {
-                        c.setDisplayOrder(Integer.parseInt(value.toString()));
-                    } catch (NumberFormatException ignored) {
-                        // leave unchanged on bad input
-                    }
-                }
+                // The spinner editor (OrderSpinnerCellEditor) only ever emits
+                // a valid Integer, unlike the free-text entry this replaced.
+                case 3 -> c.setDisplayOrder((Integer) value);
                 case 4 -> c.setPrefixText((String) value);
                 case 5 -> c.setPrintPrefixText((Boolean) value);
                 case 6 -> c.setSuffixText((String) value);
@@ -161,6 +183,21 @@ final class ContestCandidatesDialog {
                 case 9 -> c.setPrintExplanatoryText((Boolean) value);
             }
             fireTableCellUpdated(row, col);
+        }
+    }
+
+    /** JSpinner-backed editor for the "Order" column — JTable has no built-in spinner editor. */
+    private static class OrderSpinnerCellEditor extends AbstractCellEditor implements TableCellEditor {
+        private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, 999, 1));
+
+        @Override public Object getCellEditorValue() {
+            return spinner.getValue();
+        }
+
+        @Override public Component getTableCellEditorComponent(
+                JTable table, Object value, boolean isSelected, int row, int column) {
+            spinner.setValue(value instanceof Integer i ? i : 1);
+            return spinner;
         }
     }
 }

@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>builder-core</artifactId>
-  <version>0.9.15</version>
+  <version>0.9.16</version>
   <packaging>jar</packaging>
   <name>builder-core</name>
   <description>Shared ballot-design engine: model, repository, util, and generation services — pulled from bBuilder/blBuilder's identical duplicate copies</description>

@@ -66,6 +66,7 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
         boolean isNew = existing == null;
 
         JComboBox<Election> electionCombo = new JComboBox<>();
+        electionCombo.setName("electionCombo");
         for (Election el : electionRepo.findAll()) electionCombo.addItem(el);
         electionCombo.setRenderer(labelRenderer(o -> ((Election) o).getName()));
         selectById(electionCombo, c.getElection());
@@ -76,20 +77,35 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
         JSpinner maxChoicesSpinner = new JSpinner(new SpinnerNumberModel(Math.max(c.getMaxChoices(), 1), 1, 20, 1));
         JSpinner maxRankSpinner = new JSpinner(new SpinnerNumberModel(c.getMaxRankChoices(), 0, 20, 1));
         JSpinner displayOrderSpinner = new JSpinner(new SpinnerNumberModel(c.getDisplayOrder(), 0, 999, 1));
-        JTextArea instructionsArea = new JTextArea(c.getInstructions(), 2, 24);
+        JTextArea instructionsArea = wrappingTextArea(c.getInstructions(), 2, 24);
+        titleField.setName("titleField");
+        methodCombo.setName("methodCombo");
+        maxChoicesSpinner.setName("maxChoicesSpinner");
+        maxRankSpinner.setName("maxRankSpinner");
+        displayOrderSpinner.setName("displayOrderSpinner");
+        instructionsArea.setName("instructionsArea");
 
         JTextField groupingLabelField = new JTextField(c.getGroupingLabel(), 20);
         JCheckBox printGroupingLabel = new JCheckBox("", c.isPrintGroupingLabel());
+        groupingLabelField.setName("groupingLabelField");
+        printGroupingLabel.setName("printGroupingLabel");
 
-        JTextArea preambleArea = new JTextArea(c.getPreamble(), 2, 24);
+        JTextArea preambleArea = wrappingTextArea(c.getPreamble(), 2, 24);
         JCheckBox printPreamble = new JCheckBox("", c.isPrintPreamble());
+        preambleArea.setName("preambleArea");
+        printPreamble.setName("printPreamble");
 
-        JTextArea postambleArea = new JTextArea(c.getPostamble(), 2, 24);
+        JTextArea postambleArea = wrappingTextArea(c.getPostamble(), 2, 24);
         JCheckBox printPostamble = new JCheckBox("", c.isPrintPostamble());
+        postambleArea.setName("postambleArea");
+        printPostamble.setName("printPostamble");
 
-        JTextArea explanatoryTextArea = new JTextArea(c.getExplanatoryText(), 2, 24);
+        JTextArea explanatoryTextArea = wrappingTextArea(c.getExplanatoryText(), 2, 24);
         JCheckBox printExplanatoryText = new JCheckBox("", c.isPrintExplanatoryText());
         JTextField explanatoryLocationField = new JTextField(c.getExplanatoryTextLocation(), 20);
+        explanatoryTextArea.setName("explanatoryTextArea");
+        printExplanatoryText.setName("printExplanatoryText");
+        explanatoryLocationField.setName("explanatoryLocationField");
 
         JPanel grid = fieldGrid();
         int row = 0;
@@ -115,6 +131,9 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
         JButton assignRegionsBtn = new JButton(
             isNew ? "Assign Regions (save first)" : "Assign Regions (" + c.getAssignedRegions().size() + ")");
         JButton translationsBtn = new JButton(isNew ? "Translations (save first)" : "Translations");
+        manageCandidatesBtn.setName("manageCandidatesButton");
+        assignRegionsBtn.setName("assignRegionsButton");
+        translationsBtn.setName("translationsButton");
         manageCandidatesBtn.setEnabled(!isNew);
         assignRegionsBtn.setEnabled(!isNew);
         translationsBtn.setEnabled(!isNew);
@@ -139,7 +158,7 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
         // real cause of "Manage Candidates doesn't lead to anything" after
         // saving a contest. This panel itself is never disposed by that, so
         // its window ancestor stays valid across the whole save+cascade.
-        Frame stableOwner = (Frame) SwingUtilities.getWindowAncestor(this);
+        Window stableOwner = SwingUtilities.getWindowAncestor(this);
 
         JComponent form = formShell(isNew ? "New Contest" : "Edit Contest", scrollerWrap,
             () -> {
@@ -169,13 +188,21 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
             },
             () -> SwingUtilities.getWindowAncestor(grid).dispose());
 
+        // getWindowAncestor(grid) here is the "Edit Contest" JDialog itself
+        // (grid lives inside it) — a java.awt.Dialog, not a Frame. The
+        // dialogs' show() methods take a Window (not Frame) owner
+        // specifically so this cast-free call works for both this path and
+        // stableOwner's Frame above; an earlier (Frame) cast here threw
+        // ClassCastException on every click, for every already-saved
+        // contest reopened by double-click — caught by
+        // ContestCascadeGuiTest.reopeningExistingContestReachesCandidatesAndRegionsButtons.
         manageCandidatesBtn.addActionListener(e ->
-            ContestCandidatesDialog.show((Frame) SwingUtilities.getWindowAncestor(grid), c, repo,
+            ContestCandidatesDialog.show(SwingUtilities.getWindowAncestor(grid), c, repo,
                 languageRepo, candidateTranslationRepo, () -> {}));
         assignRegionsBtn.addActionListener(e ->
-            ContestRegionsDialog.show((Frame) SwingUtilities.getWindowAncestor(grid), c, regionRepo, repo, () -> {}));
+            ContestRegionsDialog.show(SwingUtilities.getWindowAncestor(grid), c, regionRepo, repo, () -> {}));
         translationsBtn.addActionListener(e ->
-            ContestTranslationDialog.show((Frame) SwingUtilities.getWindowAncestor(grid), c, languageRepo, contestTranslationRepo));
+            ContestTranslationDialog.show(SwingUtilities.getWindowAncestor(grid), c, languageRepo, contestTranslationRepo));
 
         return form;
     }

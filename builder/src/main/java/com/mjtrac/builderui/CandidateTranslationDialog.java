@@ -25,7 +25,7 @@ final class CandidateTranslationDialog {
 
     private CandidateTranslationDialog() {}
 
-    static void show(Frame owner, Candidate candidate, Contest contest,
+    static void show(Window owner, Candidate candidate, Contest contest,
                       BallotLanguageRepository languageRepo, CandidateTranslationRepository translationRepo) {
         if (candidate.getId() == null) {
             JOptionPane.showMessageDialog(owner,
@@ -34,7 +34,8 @@ final class CandidateTranslationDialog {
             return;
         }
 
-        JDialog dialog = new JDialog(owner, "Translations — " + candidate.getName(), true);
+        JDialog dialog = new JDialog(owner, "Translations — " + candidate.getName(), Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setName("candidateTranslationDialog");
 
         Long jurisdictionId = contest.getElection() != null && contest.getElection().getJurisdiction() != null
             ? contest.getElection().getJurisdiction().getId() : null;
@@ -60,6 +61,7 @@ final class CandidateTranslationDialog {
         }
 
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setName("languageTabs");
         record Fields(JTextField name, JTextArea explanatoryText) {}
         java.util.Map<String, Fields> byLanguage = new java.util.LinkedHashMap<>();
 
@@ -69,7 +71,9 @@ final class CandidateTranslationDialog {
                 .orElse(null);
 
             JTextField name = new JTextField(existing != null ? existing.getName() : "", 24);
-            JTextArea explanatoryText = new JTextArea(existing != null ? existing.getExplanatoryText() : "", 2, 24);
+            JTextArea explanatoryText = SimpleCrudPanel.wrappingTextArea(existing != null ? existing.getExplanatoryText() : "", 2, 24);
+            name.setName("nameField_" + lang.getLanguageCode());
+            explanatoryText.setName("explanatoryTextArea_" + lang.getLanguageCode());
             byLanguage.put(lang.getLanguageCode(), new Fields(name, explanatoryText));
 
             JPanel grid = SimpleCrudPanel.fieldGrid();
@@ -82,6 +86,8 @@ final class CandidateTranslationDialog {
 
         JButton save = new JButton("Save All");
         JButton close = new JButton("Close");
+        save.setName("saveAllButton");
+        close.setName("closeButton");
         save.addActionListener(e -> {
             for (var entry : byLanguage.entrySet()) {
                 String code = entry.getKey();

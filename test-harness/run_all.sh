@@ -19,6 +19,15 @@
 #                                   # watch it count, then launch `viewer` on the
 #                                   # same database once it's done. Only needs
 #                                   # bBuilder running, not bCounter.
+#   ./run_all.sh --desktop         # skip bBuilder entirely — build the (small,
+#                                   # TestElectionBuilder-sized) test election by
+#                                   # driving builder's real Swing UI via a real
+#                                   # java.awt.Robot (DesktopElectionBuilder),
+#                                   # instead of build_election.py's REST calls
+#                                   # or TestElectionBuilder's direct repository
+#                                   # calls. Pops real windows; idempotent on
+#                                   # re-run (regenerates the existing election's
+#                                   # PDF/YAML instead of re-driving the UI).
 #
 # Output:
 #   election_data.json       — IDs of created entities + generated file paths
@@ -44,6 +53,7 @@ BALLOT_YAML=""
 CONNECT_DOTS=0
 RESET=0
 USE_COUNTER_APP=0
+DESKTOP=0
 
 # Parse args
 while [[ $# -gt 0 ]]; do
@@ -61,6 +71,7 @@ while [[ $# -gt 0 ]]; do
     --connect-dots)   CONNECT_DOTS=1;        shift   ;;
     --reset)          RESET=1;               shift   ;;
     --use-counter-app) USE_COUNTER_APP=1;    shift   ;;
+    --desktop)        DESKTOP=1;             shift   ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
   esac
 done
@@ -221,6 +232,8 @@ BUILDER_READY=0
 BUILDER_ATTEMPTS=10
 if [[ "$USE_EXISTING" == "1" ]]; then
   echo "  Skipped (--use-existing mode doesn't need bBuilder)"
+elif [[ "$DESKTOP" == "1" ]]; then
+  echo "  Skipped (--desktop builds the election via builder's own UI, not bBuilder)"
 else
   for i in $(seq 1 "$BUILDER_ATTEMPTS"); do
     if curl -sf "$BUILDER_HOST/login" > /dev/null 2>&1; then
@@ -243,6 +256,28 @@ fi
 echo ""
 if [[ "$USE_EXISTING" == "1" ]]; then
   echo "Step 2 — Skipped (--use-existing mode)"
+elif [[ "$DESKTOP" == "1" ]]; then
+  echo "Step 2 — Building test election via builder's real UI (--desktop, DesktopElectionBuilder)"
+  BUILDER_DIR="$BSUITE_DIR/builder"
+  if [ ! -d "$BUILDER_DIR" ]; then
+    echo "✗ builder/ not found at $BUILDER_DIR — cannot use --desktop here."
+    exit 1
+  fi
+  echo "  Installing builder-core (if changed) ..."
+  ( cd "$BSUITE_DIR/builder-core" && mvn -q install -DskipTests ) || {
+    echo "✗ builder-core failed to install — see the Maven output above."
+    exit 1
+  }
+  echo "  This pops real windows on your screen and drives them via a real"
+  echo "  java.awt.Robot — see builder/README-testing.md's \"Known"
+  echo "  environment-dependent behavior\" if it fails or hangs (macOS"
+  echo "  Accessibility permission)."
+  ELECTION_DATA_ABS="$(pwd)/election_data.json"
+  ( cd "$BUILDER_DIR" && mvn -q test -Dtest=DesktopElectionBuilder \
+      "-Dtest-election.out=$ELECTION_DATA_ABS" ) || {
+    echo "✗ DesktopElectionBuilder exited with an error — see the Maven output above."
+    exit 1
+  }
 elif [[ "$BUILDER_READY" == "1" ]]; then
   echo "Step 2 — Building test election in bBuilder"
   IND_TYPE="OVAL"

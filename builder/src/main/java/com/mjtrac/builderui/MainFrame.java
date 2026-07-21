@@ -59,9 +59,12 @@ public class MainFrame extends JFrame {
         JMenuBar bar = new JMenuBar();
 
         JMenu home = new JMenu(HOME);
+        home.setName("homeMenu");
         JMenuItem dashboard = new JMenuItem("Dashboard");
+        dashboard.setName("dashboardMenuItem");
         dashboard.addActionListener(e -> navigate(HOME));
         JMenuItem exit = new JMenuItem("Exit");
+        exit.setName("exitMenuItem");
         exit.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
         home.add(dashboard);
         home.addSeparator();
@@ -69,6 +72,7 @@ public class MainFrame extends JFrame {
         bar.add(home);
 
         JMenu setup = new JMenu("Setup");
+        setup.setName("setupMenu");
         addItem(setup, "Elections");
         addItem(setup, "Regions");
         addItem(setup, "Parties");
@@ -78,12 +82,14 @@ public class MainFrame extends JFrame {
         bar.add(setup);
 
         JMenu ballots = new JMenu("Ballots");
+        ballots.setName("ballotsMenu");
         addItem(ballots, "Ballot Combinations");
         addItem(ballots, "Ballot Design Templates");
         addItem(ballots, "Print");
         bar.add(ballots);
 
         JMenu admin = new JMenu("Admin");
+        admin.setName("adminMenu");
         addItem(admin, "Jurisdictions");
         addItem(admin, "Admin (Users)");
         bar.add(admin);
@@ -93,6 +99,7 @@ public class MainFrame extends JFrame {
 
     private void addItem(JMenu menu, String screen) {
         JMenuItem item = new JMenuItem(screen.equals("Admin (Users)") ? "Users" : screen);
+        item.setName(screen.replaceAll("[^A-Za-z0-9]", "") + "MenuItem");
         item.addActionListener(e -> navigate(screen));
         menu.add(item);
     }

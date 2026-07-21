@@ -57,6 +57,12 @@ class AdminPanel extends SimpleCrudPanel<User> {
         JCheckBox dataEntryCheck = new JCheckBox("DATA_ENTRY", u.getRoles().contains(Role.DATA_ENTRY));
         JCheckBox printerCheck = new JCheckBox("PRINTER", u.getRoles().contains(Role.PRINTER));
         JComboBox<Jurisdiction> jurisdictionCombo = JurisdictionCombo.build(jurisdictionRepo, u.getJurisdiction());
+        usernameField.setName("usernameField");
+        passwordField.setName("passwordField");
+        enabledCheck.setName("enabledCheck");
+        adminCheck.setName("adminCheck");
+        dataEntryCheck.setName("dataEntryCheck");
+        printerCheck.setName("printerCheck");
 
         JPanel roles = new JPanel();
         roles.setLayout(new BoxLayout(roles, BoxLayout.X_AXIS));

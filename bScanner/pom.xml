@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bScanner</artifactId>
-  <version>0.9.15</version>
+  <version>0.9.16</version>
   <name>bScanner</name>
   <description>Election Ballot Scanner Driver</description>
 
@@ -30,7 +30,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>scanner-core</artifactId>
-      <version>0.9.15</version>
+      <version>0.9.16</version>
     </dependency>
 
     <!-- Web + Thymeleaf UI -->

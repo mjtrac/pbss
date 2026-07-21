@@ -225,7 +225,8 @@ public class TestElectionBuilder {
         }
     }
 
-    private static void writeElectionDataJson(String outPath, Long combinationId, String precinctName,
+    /** Package-visible (not private) so DesktopElectionBuilder — same package, test source root — can reuse it. */
+    static void writeElectionDataJson(String outPath, Long combinationId, String precinctName,
                                                List<String> yamlFiles, List<String> pdfFiles) throws Exception {
         StringBuilder json = new StringBuilder();
         json.append("{\n  \"combinations\": [\n    {\n");
@@ -241,13 +242,13 @@ public class TestElectionBuilder {
         Files.writeString(path, json.toString());
     }
 
-    private static String jsonArray(List<String> values) {
+    static String jsonArray(List<String> values) {
         List<String> quoted = new ArrayList<>();
         for (String v : values) quoted.add(jsonString(v));
         return "[" + String.join(", ", quoted) + "]";
     }
 
-    private static String jsonString(String s) {
+    static String jsonString(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 }

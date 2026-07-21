@@ -43,6 +43,7 @@ class RegionPanel extends SimpleCrudPanel<Region> {
         this.combinationRepo = combinationRepo;
 
         JButton singleRegionBtn = new JButton("Use Single Region");
+        singleRegionBtn.setName("useSingleRegionButton");
         singleRegionBtn.setToolTipText("Replace all regions with one \"" + SINGLE_REGION_NAME + "\" region — the common case for a single-precinct election");
         singleRegionBtn.addActionListener(e -> useSingleRegion());
         addToolbarButton(singleRegionBtn);
@@ -156,9 +157,14 @@ class RegionPanel extends SimpleCrudPanel<Region> {
         typeCombo.setSelectedItem(r.getRegionType());
         JTextField groupTypeField = new JTextField(r.getGroupType(), 24);
         JTextField descField = new JTextField(r.getDescription(), 24);
+        nameField.setName("nameField");
+        typeCombo.setName("typeCombo");
+        groupTypeField.setName("groupTypeField");
+        descField.setName("descField");
 
         DefaultListModel<Region> memberModel = new DefaultListModel<>();
         JList<Region> memberList = new JList<>(memberModel);
+        memberList.setName("memberList");
         memberList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         memberList.setCellRenderer((list, value, index, isSelected, hasFocus) ->
             new JLabel(value.getName()) {{ setOpaque(true);

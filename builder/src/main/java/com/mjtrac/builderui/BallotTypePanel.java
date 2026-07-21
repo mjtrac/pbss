@@ -40,6 +40,8 @@ class BallotTypePanel extends SimpleCrudPanel<BallotType> {
         JComboBox<Jurisdiction> jurisdictionCombo = JurisdictionCombo.build(jurisdictionRepo, t.getJurisdiction());
         JTextField nameField = new JTextField(t.getName(), 24);
         JTextField descField = new JTextField(t.getDescription(), 24);
+        nameField.setName("nameField");
+        descField.setName("descField");
 
         JPanel grid = fieldGrid();
         addField(grid, 0, "Jurisdiction:", jurisdictionCombo);

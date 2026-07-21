@@ -162,7 +162,7 @@ backend would.
 | `builder-core` | No tests of its own — its model/service/repository classes (package `com.mjtrac.ballot`) are exercised through `blBuilder`'s and `builder`'s test suites below, not directly. |
 | `counter-core` | `BallotViewServiceResolveImagePathTest` (image-path resolution for the viewer). The bulk of the counting engine (corner detection, barcode reading, marker analysis, RCV tabulation) is tested through `bCounter`/`blCounter`'s suites, not here. |
 | `scanner-core` | `ScanServiceNotesTest` (start/end note logging) + `ScanServiceMockScanTest` (real scan-and-count path via a mock `command` backend — added 2026-07-21, previously untested). |
-| `builder` | `BuilderEndToEndTest` (full CRUD → real PDF, headless, through `builder-core`'s own repositories), `RegionPartyShortcutTest` (the "use single party/region" reassign-then-delete shortcuts), `TestElectionBuilderTest` (the headless bBuilder-REST fallback used by `run_all.sh`). No Swing GUI-click-through test exists (no `assertj-swing` dependency in this module). |
+| `builder` | `BuilderEndToEndTest` (full CRUD → real PDF, headless, through `builder-core`'s own repositories), `RegionPartyShortcutTest` (the "use single party/region" reassign-then-delete shortcuts), `TestElectionBuilderTest` (the headless bBuilder-REST fallback used by `run_all.sh`), plus real AssertJ-Swing screen tests (added 2026-07-21) — `MainFrameNavigationGuiTest` (every menu item), one CRUD round-trip test per screen (`ElectionCrudGuiTest`, `RegionCrudGuiTest`, `PartyCrudGuiTest`, `JurisdictionCrudGuiTest`, `BallotTypeCrudGuiTest`, `BallotLanguageCrudGuiTest`, `BallotCombinationCrudGuiTest`, `BallotDesignTemplateCrudGuiTest`, `AdminUserCrudGuiTest`), `ContestCascadeGuiTest` (the save→Candidates→Regions dialog cascade — see below), and `PrintPanelGuiTest` (real PDF generation). |
 | `blBuilder` | `BallotDesignTemplateTest`, `BallotGenerationServiceTest`, `BallotGenerationTest`, `ContestAssignmentServiceTest`, `ExportServiceTest`, `MeasurementUtilTest`, `TemplateReflectedInBallotTest` (all headless service-layer), plus real TestFX/Monocle screen tests: `AdminScreenTest`, `BallotCombinationScreenTest`, `BallotDesignTemplateScreenTest`, `ContestScreenTest`, `LoginScreenTest`, `PartyScreenTest`, `PrintScreenTest`, `RegionScreenTest`. |
 | `counter` | `CountingServiceIntegrationTest` (full scan → results report, real fixture images), `CountingResumeIntegrationTest` (the stop/restart-resumes-correctly regression test — added 2026-07-20), `CountingPipelineGuiTest` (AssertJ-Swing, real Start Counting button clicks against the `desktop_pipeline` corpus — see coverage gap below). |
 | `blCounter` | `BarcodeReaderServiceTest`, `CornerDetectionTest` (300 DPI precision fixtures), `MarkerAnalysisServiceTest`, `RcvTabulationServiceTest` (all headless), plus TestFX/Monocle screen tests: `AccountScreenTest`, `AdminScreenTest`, `CountingScreenTest`, `LoginScreenTest`, `ResultsScreenTest`, `ViewerScreenTest`, and `CountingPipelineGuiTest` (TestFX, real Start Count clicks against the `desktop_pipeline` corpus). |
@@ -188,7 +188,14 @@ test's fail-fast check, which reports the actual folder field values and
 message-label text rather than hanging for the full 20-minute timeout).
 **None of these is a bug** — grant the permission and re-run if you need a
 guaranteed pass, or run under Linux CI with Xvfb, which isn't subject to
-this restriction.
+this restriction. `builder`'s new AssertJ-Swing screen tests (see the
+`builder` row above) are gated by this exact same permission, via the
+identical `AbstractBuilderGuiTest.robotAction()` skip-cleanly wrapper —
+`RegionCrudGuiTest`'s "Use Single Region" test has been observed to skip
+this way with the message "The component to click is out of the boundaries
+of the screen" rather than the Accessibility-specific message, which is the
+same underlying real-`Robot`-on-real-screen fragility, just a different
+symptom of it.
 
 **`blBuilder`/`blCounter`'s TestFX tests do not have this problem** — they
 render off-screen via Monocle, so they're not gated by OS input focus at
@@ -196,8 +203,9 @@ all, and were 100% reliable across every run in this session.
 
 **Coverage gaps** (not fixed as part of this document — noted so they're
 not mistaken for accidental omissions):
-- `builder` and `scanner` have no `assertj-swing` dependency and no
-  GUI-click-through test at all.
+- `scanner` has no `assertj-swing` dependency and no GUI-click-through test
+  at all (`builder` closed this gap 2026-07-21 — see the `builder` row
+  above).
 - `blScanner` has zero automated tests of any kind.
 - There is no scripted end-to-end pipeline for `scanner`/`blScanner`
   analogous to `run_desktop_gui_pipeline.sh` — closing that gap would mean
@@ -213,7 +221,7 @@ current `main` branch:
 | Module | Result |
 |---|---|
 | `builder-core`, `counter-core`, `scanner-core` | Installed cleanly. |
-| `builder` | 5/5 tests pass (`BuilderEndToEndTest` 2, `RegionPartyShortcutTest` 2, `TestElectionBuilderTest` 1). |
+| `builder` | 20/20 tests pass, 1 skip (`BuilderEndToEndTest` 2, `RegionPartyShortcutTest` 2, `TestElectionBuilderTest` 1, plus 15 new AssertJ-Swing screen-test methods across 12 classes — 1 skip in `RegionCrudGuiTest`'s "Use Single Region" test, real-`Robot`-on-real-screen fragility, see [Known environment-dependent behavior](#known-environment-dependent-behavior)). This pass caught and fixed two real bugs nothing had caught before: a `ClassCastException` on "Manage Candidates"/"Assign Regions"/"Translations" for any already-saved Contest reopened by double-click (`ContestPanel` cast a `Window` that could be a `Dialog` to `Frame`), and — more seriously — every candidate on a newly created Contest being silently duplicated in the database on the ordinary create-contest→add-candidates→assign-regions workflow (`contestRepo.save(contest)`'s return value was discarded across the cascade, so JPA `merge()` re-inserted the same still-transient candidates a second time). |
 | `blBuilder` | 79/79 tests pass across all 15 test classes. |
 | `counter` | 3/3 tests pass, 1 skip (`CountingPipelineGuiTest` — Accessibility permission not granted to this shell on this run). |
 | `blCounter` | Full suite passes; `CountingPipelineGuiTest` passes cleanly (23.03s) against a freshly regenerated corpus. |

@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>viewer</artifactId>
-  <version>0.9.15</version>
+  <version>0.9.16</version>
   <name>viewer</name>
   <description>Standalone Swing ballot image viewer — reads the same counter_results.db as bCounter/blCounter</description>
 
@@ -36,7 +36,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>counter-core</artifactId>
-      <version>0.9.15</version>
+      <version>0.9.16</version>
     </dependency>
 
     <!-- SQLite driver + dialect — this app's own datasource concern -->
