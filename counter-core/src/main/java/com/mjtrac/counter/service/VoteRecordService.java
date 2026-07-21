@@ -164,7 +164,10 @@ public class VoteRecordService {
             }
         }
 
-        if (result.markings == null || result.markings.isEmpty()) return PersistStatus.SAVED;
+        if (result.markings == null || result.markings.isEmpty()) {
+            renameToCounted(imagePath);
+            return PersistStatus.SAVED;
+        }
 
         // ── Determine overvoted contests ──────────────────────────────────────
         // Group marked indicators by contestId; apply FPTP overvote rule
@@ -301,7 +304,20 @@ public class VoteRecordService {
             voteRepo.save(vo);
         }
 
-        // ── Rename image to mark it as counted ────────────────────────────────
+        renameToCounted(imagePath);
+        return PersistStatus.SAVED;
+    }
+
+    /**
+     * Renames a scanned image to mark it as counted, so findImagesRecursive()
+     * skips it on a later restart. Must run on every path that successfully
+     * persists a BallotImage — including the no-markings (blank ballot) early
+     * return above — or a stop/restart re-queues and re-scans it indefinitely
+     * (harmless, since the image_path unique constraint blocks a double count,
+     * but wasteful and confusing: the restarted session's progress count no
+     * longer reflects genuine remaining work).
+     */
+    private void renameToCounted(Path imagePath) {
         try {
             Path counted = imagePath.resolveSibling(
                 imagePath.getFileName().toString() + ".counted");
@@ -311,7 +327,6 @@ public class VoteRecordService {
             log.warn("Could not rename " + imagePath.getFileName()
                 + " — continuing: " + ex.getMessage());
         }
-        return PersistStatus.SAVED;
     }
 
     /**
@@ -333,6 +348,19 @@ public class VoteRecordService {
             .sorted()
             .forEach(images::add);
         return images;
+    }
+
+    /**
+     * True if the folder tree contains at least one ".counted" file — used
+     * to distinguish "this folder has nothing new to scan because everything
+     * in it was already counted" from "this folder genuinely has no images"
+     * when findImagesRecursive() comes back empty.
+     */
+    public boolean anyAlreadyCounted(Path root) throws Exception {
+        try (var stream = Files.walk(root)) {
+            return stream.anyMatch(p -> Files.isRegularFile(p)
+                && p.getFileName().toString().toLowerCase().endsWith(".counted"));
+        }
     }
 
     /**

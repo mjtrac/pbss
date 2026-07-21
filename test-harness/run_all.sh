@@ -3,7 +3,7 @@
 #
 # Prerequisites:
 #   - bBuilder running at localhost:8080
-#   - bCounter running at localhost:8081
+#   - bCounter running at localhost:8081 (unless --use-counter-app — see below)
 #   - Python 3.9+ with requirements installed
 #
 # Usage:
@@ -13,6 +13,12 @@
 #   ./run_all.sh --connect-dots  # use CONNECT_DOTS indicator style instead of OVAL
 #   ./run_all.sh --reset --dpi 150  # also wipe bCounter's persisted DB + output
 #                                   # dirs first (prompts for confirmation)
+#   ./run_all.sh --use-counter-app  # skip waiting for bCounter entirely — instead
+#                                   # launch the `counter` Swing app (in the
+#                                   # foreground, folders pre-filled) so you can
+#                                   # watch it count, then launch `viewer` on the
+#                                   # same database once it's done. Only needs
+#                                   # bBuilder running, not bCounter.
 #
 # Output:
 #   election_data.json       — IDs of created entities + generated file paths
@@ -37,6 +43,7 @@ BALLOT_PDF=""
 BALLOT_YAML=""
 CONNECT_DOTS=0
 RESET=0
+USE_COUNTER_APP=0
 
 # Parse args
 while [[ $# -gt 0 ]]; do
@@ -53,6 +60,7 @@ while [[ $# -gt 0 ]]; do
     --ballot-yaml)    BALLOT_YAML="$2";      shift 2 ;;
     --connect-dots)   CONNECT_DOTS=1;        shift   ;;
     --reset)          RESET=1;               shift   ;;
+    --use-counter-app) USE_COUNTER_APP=1;    shift   ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
   esac
 done
@@ -186,7 +194,11 @@ echo "║           pbss Test Harness                              ║"
 echo "╠════════════════════════════════════════════════════════════╣"
 echo "║  seed=$SEED  copies=$COPIES  quick=$QUICK                  ║"
 echo "║  bBuilder: $BUILDER_HOST"
+if [[ "$USE_COUNTER_APP" == "1" ]]; then
+echo "║  counter:  Swing app (--use-counter-app), no bCounter needed"
+else
 echo "║  bCounter: $COUNTER_HOST"
+fi
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -201,26 +213,64 @@ if [ "$SCAN_DPI" != "300" ]; then
 fi
 
 # ── Step 1: Wait for bBuilder ────────────────────────────────────────────────
+# Only 10 attempts (~30s), not the old 3-minute wait — if bBuilder genuinely
+# isn't running, Step 2 below falls back to creating the test election
+# directly via `builder`'s own repositories instead of failing outright.
 echo "Step 1 — Waiting for bBuilder to be ready"
-for i in $(seq 1 60); do
-  if curl -sf "$BUILDER_HOST/login" > /dev/null 2>&1; then
-    echo "  ✓ bBuilder is ready"
-    break
+BUILDER_READY=0
+BUILDER_ATTEMPTS=10
+if [[ "$USE_EXISTING" == "1" ]]; then
+  echo "  Skipped (--use-existing mode doesn't need bBuilder)"
+else
+  for i in $(seq 1 "$BUILDER_ATTEMPTS"); do
+    if curl -sf "$BUILDER_HOST/login" > /dev/null 2>&1; then
+      echo "  ✓ bBuilder is ready"
+      BUILDER_READY=1
+      break
+    fi
+    echo "  ... waiting ($i/$BUILDER_ATTEMPTS)"
+    sleep 3
+  done
+  if [[ "$BUILDER_READY" == "0" ]]; then
+    echo ""
+    echo "  ⚠  bBuilder never became ready at $BUILDER_HOST after $BUILDER_ATTEMPTS attempts."
+    echo "     Falling back to creating the test election directly via builder"
+    echo "     (no bBuilder/HTTP needed) — see Step 2."
   fi
-  echo "  ... waiting ($i/60)"
-  sleep 3
-done
+fi
 
-# ── Step 2: Build election via API (skipped in --use-existing mode) ───────────
+# ── Step 2: Build the test election (skipped in --use-existing mode) ─────────
 echo ""
-if [[ "$USE_EXISTING" == "0" ]]; then
+if [[ "$USE_EXISTING" == "1" ]]; then
+  echo "Step 2 — Skipped (--use-existing mode)"
+elif [[ "$BUILDER_READY" == "1" ]]; then
   echo "Step 2 — Building test election in bBuilder"
   IND_TYPE="OVAL"
   [[ "$CONNECT_DOTS" == "1" ]] && IND_TYPE="CONNECT_DOTS"
   "$PYTHON3" build_election.py --host "$BUILDER_HOST" --out election_data.json \
     --indicator-type "$IND_TYPE"
 else
-  echo "Step 2 — Skipped (--use-existing mode)"
+  echo "Step 2 — Building test election via builder (bBuilder unreachable)"
+  BUILDER_DIR="$BSUITE_DIR/builder"
+  if [ ! -d "$BUILDER_DIR" ]; then
+    echo "✗ builder/ not found at $BUILDER_DIR — cannot fall back. Start bBuilder and re-run:"
+    echo "    cd $BSUITE_DIR/bBuilder && ./mvnw spring-boot:run"
+    exit 1
+  fi
+  echo "  Installing builder-core (if changed) ..."
+  ( cd "$BSUITE_DIR/builder-core" && mvn -q install -DskipTests ) || {
+    echo "✗ builder-core failed to install — see the Maven output above."
+    exit 1
+  }
+  # Captured here, before the subshell's own `cd` — $(pwd) evaluated inside
+  # that subshell would resolve to $BUILDER_DIR instead of test-harness/.
+  ELECTION_DATA_ABS="$(pwd)/election_data.json"
+  ( cd "$BUILDER_DIR" && ./mvnw -q spring-boot:run \
+      -Dspring-boot.run.main-class=com.mjtrac.builderui.TestElectionBuilder \
+      -Dspring-boot.run.arguments="--test-election.out=$ELECTION_DATA_ABS" ) || {
+    echo "✗ TestElectionBuilder exited with an error — see the Maven output above."
+    exit 1
+  }
 fi
 echo ""
 
@@ -280,20 +330,41 @@ TOTAL=$(find "$IMAGES_DIR" -name "*.png" | wc -l | tr -d ' ')
 echo "  Total images in tree: $TOTAL"
 echo ""
 
-# ── Step 5: Wait for bCounter ────────────────────────────────────────────────
-echo "Step 5 — Waiting for bCounter to be ready"
-for i in $(seq 1 60); do
-  if curl -sf "$COUNTER_HOST/login" > /dev/null 2>&1; then
-    echo "  ✓ bCounter is ready"
-    break
+# ── Step 5: Wait for bCounter (skipped entirely with --use-counter-app) ──────
+if [[ "$USE_COUNTER_APP" == "0" ]]; then
+  echo "Step 5 — Waiting for bCounter to be ready"
+  COUNTER_READY=0
+  for i in $(seq 1 60); do
+    if curl -sf "$COUNTER_HOST/login" > /dev/null 2>&1; then
+      echo "  ✓ bCounter is ready"
+      COUNTER_READY=1
+      break
+    fi
+    echo "  ... waiting ($i/60)"
+    sleep 3
+  done
+  if [[ "$COUNTER_READY" == "0" ]]; then
+    echo ""
+    echo "✗ bCounter never became ready at $COUNTER_HOST after 3 minutes."
+    echo "  Start it first, in its own terminal:"
+    echo "    cd $BSUITE_DIR/bCounter && ./mvnw spring-boot:run"
+    echo "  Then re-run this script once you see \"Started ... Application\"."
+    echo ""
+    echo "  Or skip bCounter entirely and watch the counter Swing app instead:"
+    echo "    ./run_all.sh --use-counter-app"
+    exit 1
   fi
-  echo "  ... waiting ($i/60)"
-  sleep 3
-done
+else
+  echo "Step 5 — Skipping bCounter wait (--use-counter-app)"
+fi
 
 # ── Step 6: Run counter ───────────────────────────────────────────────────────
 echo ""
-echo "Step 6 — Running bCounter on test image tree"
+if [[ "$USE_COUNTER_APP" == "1" ]]; then
+  echo "Step 6 — Running the counter Swing app on test image tree"
+else
+  echo "Step 6 — Running bCounter on test image tree"
+fi
 
 if [[ "$RESET" == "1" ]]; then
   echo ""
@@ -338,17 +409,49 @@ else
   echo "  YAML dir: $YAML_DIR"
 fi
 
-NEW_ELECTION_FLAG=""
-[[ "$RESET" == "1" ]] && NEW_ELECTION_FLAG="--new-election"
+if [[ "$USE_COUNTER_APP" == "1" ]]; then
+  IMAGES_ABS="$(pwd)/$IMAGES_DIR"
+  COUNTER_DIR="$BSUITE_DIR/counter"
+  if [ ! -d "$COUNTER_DIR" ]; then
+    echo "✗ counter/ not found at $COUNTER_DIR — cannot use --use-counter-app here."
+    exit 1
+  fi
 
-"$PYTHON3" run_counter.py \
-  --dpi "$SCAN_DPI" \
-  --host          "$COUNTER_HOST" \
-  --images        "$(pwd)/$IMAGES_DIR" \
-  --yaml-dir      "$YAML_DIR" \
-  --election-data election_data.json \
-  $NEW_ELECTION_FLAG
-echo ""
+  echo "  Installing counter-core (if changed) ..."
+  ( cd "$BSUITE_DIR/counter-core" && mvn -q install -DskipTests ) || {
+    echo "✗ counter-core failed to install — see the Maven output above."
+    exit 1
+  }
+
+  echo ""
+  echo "── Launching counter ────────────────────────────────────────"
+  echo "  Ballot images folder    : $IMAGES_ABS"
+  echo "  Ballot templates folder : $YAML_DIR"
+  echo ""
+  echo "  Both fields above should already be pre-filled when the window"
+  echo "  opens. Sign in (default: admin / ChangeMe123!), confirm the"
+  echo "  folders, click \"Start Counting\", and watch it go."
+  echo "  Close the counter window when it's done to continue this script."
+  echo ""
+  ( cd "$COUNTER_DIR" && ./mvnw -q spring-boot:run \
+      -Dspring-boot.run.arguments="--scanner.default.image.dir=$IMAGES_ABS --scanner.default.report.dir=$YAML_DIR" ) || {
+    echo "✗ counter exited with an error — see the Maven output above."
+    exit 1
+  }
+  echo ""
+else
+  NEW_ELECTION_FLAG=""
+  [[ "$RESET" == "1" ]] && NEW_ELECTION_FLAG="--new-election"
+
+  "$PYTHON3" run_counter.py \
+    --dpi "$SCAN_DPI" \
+    --host          "$COUNTER_HOST" \
+    --images        "$(pwd)/$IMAGES_DIR" \
+    --yaml-dir      "$YAML_DIR" \
+    --election-data election_data.json \
+    $NEW_ELECTION_FLAG
+  echo ""
+fi
 
 # ── Step 7: Verify results ────────────────────────────────────────────────────
 echo "Step 7 — Verifying results against ground truth"
@@ -367,11 +470,31 @@ fi
   --gt  "$IMAGES_DIR/ground_truth_all.json" \
   --out verify_report.json
 
+# ── Step 8: Review in viewer (only with --use-counter-app) ───────────────────
+if [[ "$USE_COUNTER_APP" == "1" ]]; then
+  VIEWER_DIR="$BSUITE_DIR/viewer"
+  echo ""
+  if [ -d "$VIEWER_DIR" ]; then
+    echo "Step 8 — Launching viewer to review the ballots just counted"
+    echo "  Sign in (admin / ChangeMe123!, or any VIEWER-role account)."
+    echo "  Close the viewer window when you're done to finish this script."
+    echo ""
+    ( cd "$VIEWER_DIR" && ./mvnw -q spring-boot:run ) || \
+      echo "  ⚠  viewer exited with an error — see the Maven output above (verify_report.json was still written)."
+  else
+    echo "  ⚠  viewer/ not found at $VIEWER_DIR — skipping Step 8."
+  fi
+fi
+
 echo ""
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║  Test harness complete                                     ║"
 echo "║                                                            ║"
+if [[ "$USE_COUNTER_APP" == "1" ]]; then
+echo "║  Full report:       verify_report.json                     ║"
+else
 echo "║  Review results at: http://localhost:8081/results          ║"
 echo "║  View ballots at:   http://localhost:8082                  ║"
 echo "║  Full report:       verify_report.json                     ║"
+fi
 echo "╚════════════════════════════════════════════════════════════╝"

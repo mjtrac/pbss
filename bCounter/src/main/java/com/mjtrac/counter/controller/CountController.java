@@ -65,6 +65,9 @@ public class CountController {
     @Value("${scanner.parallel-threads:0}")
     private int parallelThreads;
 
+    @Value("${viewer.server.port:8082}")
+    private int viewerPort;
+
     private int resolvedThreads() {
         if (parallelThreads > 0) return parallelThreads;
         return Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
@@ -103,7 +106,7 @@ public class CountController {
         java.nio.file.Path dbPath = java.nio.file.Paths.get(
             System.getProperty("user.dir"), "counter_results.db");
         model.addAttribute("dbExists", java.nio.file.Files.exists(dbPath));
-        model.addAttribute("viewerUrl", "http://localhost:${viewer.server.port:8082}/viewer/");
+        model.addAttribute("viewerUrl", "http://localhost:" + viewerPort + "/viewer/");
 
         // Results from a previous scan — link + generation time, so a returning
         // user doesn't have to start a new scan just to see prior results.

@@ -23,6 +23,8 @@ abstract class SimpleCrudPanel<T> extends JPanel {
 
     private final RowModel model;
     private final JTable table;
+    private final JPanel buttons;
+    private boolean firstRefreshDone = false;
 
     SimpleCrudPanel(String title, String[] columnNames, Function<T, Object[]> rowValues) {
         super(new BorderLayout(8, 8));
@@ -39,7 +41,7 @@ abstract class SimpleCrudPanel<T> extends JPanel {
         add(new JLabel(title), BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton newBtn = new JButton("New");
         JButton editBtn = new JButton("Edit");
         JButton deleteBtn = new JButton("Delete");
@@ -78,9 +80,27 @@ abstract class SimpleCrudPanel<T> extends JPanel {
     private final String[] columnNames;
     private final Function<T, Object[]> rowValues;
 
+    /** Lets a subclass add its own button(s) next to New/Edit/Delete/Refresh — e.g. a quick-setup shortcut. */
+    protected final void addToolbarButton(JButton button) {
+        buttons.add(button);
+    }
+
+    /**
+     * Override to offer a one-time quick-setup dialog the very first time
+     * this screen is opened with no existing rows (e.g. "Use Single
+     * Party?"). Only fires once per panel instance, on the first refresh()
+     * call, and only if the list was actually empty at that point.
+     */
+    protected void onFirstOpenEmpty() {}
+
     /** Called once after construction (subclass fields aren't set until then). */
     void refresh() {
-        model.setRows(loadAll());
+        List<T> rows = loadAll();
+        model.setRows(rows);
+        if (!firstRefreshDone) {
+            firstRefreshDone = true;
+            if (rows.isEmpty()) onFirstOpenEmpty();
+        }
     }
 
     private T selected() {

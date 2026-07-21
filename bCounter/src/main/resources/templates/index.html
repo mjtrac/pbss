@@ -62,7 +62,7 @@
       <a th:if="${hasSession}" th:href="@{/scan}">▶ Continue Counting</a>
       <a th:if="${hasSession}" th:href="@{/report}">📊 View Report</a>
       <a th:if="${dbExists}"
-         href="http://localhost:8082/viewer/"
+         th:href="${viewerUrl}"
          target="_blank"
          style="margin-top:.5rem;display:block;color:#7dd3fc">
         🔍 View Counted Ballots

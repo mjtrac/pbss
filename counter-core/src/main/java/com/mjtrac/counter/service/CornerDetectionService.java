@@ -550,14 +550,41 @@ public class CornerDetectionService implements BallotCornerDetectorService {
             log.debug("TL/TR predicted from PTL+BL / PTR+BR geometry: TL=({},{}) TR=({},{})",
                 tlCx, tlCy, trCx, trCy);
 
+        } else if (bl != null && br != null) {
+            // PTL/PTR search failed, but BL/BR (and the tilt angle measured
+            // from the bottom border line) are available. Predict TL/TR by
+            // rotating the YAML BL->TL / BR->TR offset by the *measured*
+            // tilt angle and anchoring it to the *measured* BL/BR position,
+            // instead of using the raw (un-rotated) YAML absolute position.
+            //
+            // The raw-absolute-position fallback this replaces was only
+            // ever exactly right for an unrotated page; at even a small
+            // measured tilt, the true TL/TR position is displaced along the
+            // full BL-to-TL page height (commonly 8+ inches), so a fixed
+            // TOLERANCE_IN=0.65" window around the untilted position misses
+            // marks that combine a page-height-scaled rotation offset with
+            // any additional translation -- exactly the corpus of real
+            // failures (rot_ccw_1, rot_ccw_1_5, rot_cw_1_5, rot_cw_2_0,
+            // rot_ccw1_trans, perspective) that exposed this.
+            double tlDxIn = hints[0][0] - hints[3][0], tlDyIn = hints[0][1] - hints[3][1];
+            double trDxIn = hints[1][0] - hints[2][0], trDyIn = hints[1][1] - hints[2][1];
+            tlCx = (int)Math.round(bl[0] + (tlDxIn * lineCosT - tlDyIn * lineSinT) * dpi);
+            tlCy = (int)Math.round(bl[1] + (tlDxIn * lineSinT + tlDyIn * lineCosT) * dpi);
+            trCx = (int)Math.round(br[0] + (trDxIn * lineCosT - trDyIn * lineSinT) * dpi);
+            trCy = (int)Math.round(br[1] + (trDxIn * lineSinT + trDyIn * lineCosT) * dpi);
+            smallTolPx = (int)(0.35 * dpi);
+            log.debug("TL/TR predicted from BL/BR + measured tilt (PTL/PTR unavailable): TL=({},{}) TR=({},{})",
+                tlCx, tlCy, trCx, trCy);
         } else {
-            // Fall back to YAML hint positions with full tolerance
+            // True last resort: no PTL/PTR and no BL/BR either -- nothing
+            // measured to anchor or rotate by, so fall back to the raw
+            // (un-rotated) YAML absolute position with full tolerance.
             tlCx = (int)(hints[0][0] * dpi);
             tlCy = (int)(hints[0][1] * dpi);
             trCx = (int)(hints[1][0] * dpi);
             trCy = (int)(hints[1][1] * dpi);
             smallTolPx = tolPx;
-            log.debug("TL/TR from YAML hints (PTL/PTR unavailable): TL=({},{}) TR=({},{})",
+            log.debug("TL/TR from raw YAML hints (no PTL/PTR, no BL/BR): TL=({},{}) TR=({},{})",
                 tlCx, tlCy, trCx, trCy);
         }
 

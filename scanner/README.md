@@ -64,7 +64,11 @@ regardless of whether printing succeeds.
 Reads/writes the same `~/pbss_data/db/scanner.db` bScanner/blScanner use,
 including `ScannerUser` for login —
 `spring.jpa.hibernate.ddl-auto=update`, so it can also be the first thing
-to ever run against a fresh `pbss_data` directory.
+to ever run against a fresh `pbss_data` directory. On an empty
+`scanner_users` table, `ScannerDataInitializer` seeds a default
+`admin`/`ChangeMe123!` account (mirroring bScanner's own
+`DataInitializer`) — without it, a truly fresh install with no other app
+ever run first would have no account to sign in with at all.
 
 ## Run from source (development)
 

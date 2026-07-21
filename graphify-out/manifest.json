@@ -430,8 +430,8 @@
     "semantic_hash": "aff97d717b0b91303dcbe89e4659f3d7"
   },
   "bCounter/src/main/resources/templates/index.html": {
-    "mtime": 1784396662.469166,
-    "ast_hash": "fb5b556e4f457a5a4f442ff17410c6ea",
+    "mtime": 1784572390.058754,
+    "ast_hash": "6b8a0cc8c4256bc8f26b1944e481ceba",
     "semantic_hash": ""
   },
   "bCounter/src/main/resources/templates/login.html": {
@@ -630,8 +630,8 @@
     "semantic_hash": "6bb726a52a35fc9932a322ffba1a5b0a"
   },
   "test-harness/run_all.sh": {
-    "mtime": 1784396662.524261,
-    "ast_hash": "1722ba163a39863eb3e885bfbf25a0d3",
+    "mtime": 1784581890.8367288,
+    "ast_hash": "98007ac8cc1ec68cca8448ded37a324c",
     "semantic_hash": ""
   },
   "test-harness/run_counter.py": {
@@ -685,8 +685,8 @@
     "semantic_hash": "5c59d9c8b6a1c38afacf845c1d264ed3"
   },
   "test-harness/README.md": {
-    "mtime": 1784488601.8936763,
-    "ast_hash": "90659303776a7f510dcfffb5bf47dda2",
+    "mtime": 1784582145.481976,
+    "ast_hash": "bb4d4c537e8820aeddc95e48a5044078",
     "semantic_hash": ""
   },
   "test-harness/indicator_style.yaml": {
@@ -855,8 +855,8 @@
     "semantic_hash": ""
   },
   "bCounter/src/main/resources/templates/admin/user-form.html": {
-    "mtime": 1784396662.468751,
-    "ast_hash": "e25e73c44d357674ff91fc6cabe70ed9",
+    "mtime": 1784572450.4963982,
+    "ast_hash": "bb4ddb49190b380a2c53e755388b694c",
     "semantic_hash": ""
   },
   "bBuilder/src/main/java/com/mjtrac/ballot/ElectionBallotApplication.java": {
@@ -1050,13 +1050,13 @@
     "semantic_hash": ""
   },
   "bCounter/src/main/java/com/mjtrac/counter/controller/AdminController.java": {
-    "mtime": 1784396662.4591327,
-    "ast_hash": "923ed1f572323357e61d5ec218cf06ff",
+    "mtime": 1784572437.9052126,
+    "ast_hash": "b527ac55aa684b2c01f886759d093de9",
     "semantic_hash": ""
   },
   "bCounter/src/main/java/com/mjtrac/counter/controller/CountController.java": {
-    "mtime": 1784396662.459284,
-    "ast_hash": "f24427ceaf55c54aff93eb23645e15a3",
+    "mtime": 1784572371.7148309,
+    "ast_hash": "43610293381ecb52a45b9a51eff19559",
     "semantic_hash": ""
   },
   "bCounter/src/main/java/com/mjtrac/counter/controller/LoginController.java": {
@@ -1950,8 +1950,8 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/HomePanel.java": {
-    "mtime": 1784498296.995211,
-    "ast_hash": "4d66ae28c368d3bb5c324ca9db87d45b",
+    "mtime": 1784573012.3526187,
+    "ast_hash": "0cd22e590d5e5929c733cada5b704c6d",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/JurisdictionCombo.java": {
@@ -1975,8 +1975,8 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/PartyPanel.java": {
-    "mtime": 1784485064.9389215,
-    "ast_hash": "6f6247865948775cd11994624679d16e",
+    "mtime": 1784573227.444356,
+    "ast_hash": "f2f6ef5ed496ce43a53d769fe246d78c",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/PrintPanel.java": {
@@ -1985,13 +1985,13 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/RegionPanel.java": {
-    "mtime": 1784485219.373253,
-    "ast_hash": "b3c2b06d9396271596e1295305bf441b",
+    "mtime": 1784573253.0363834,
+    "ast_hash": "d69265c866a5ce8317ba8b8d9f621d82",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/SimpleCrudPanel.java": {
-    "mtime": 1784496367.3337743,
-    "ast_hash": "6bd76787b56fa5d54cc36a9891510af2",
+    "mtime": 1784573107.7288346,
+    "ast_hash": "4a05d2c16c69dcb7bbb790a514079824",
     "semantic_hash": ""
   },
   "builder/src/test/java/com/mjtrac/builderui/BuilderEndToEndTest.java": {
@@ -2000,8 +2000,8 @@
     "semantic_hash": ""
   },
   "builder/src/test/java/com/mjtrac/builderui/ScreenshotGenerator.java": {
-    "mtime": 1784507197.3088245,
-    "ast_hash": "d12e0e81fc538fb98257bf9190d4564b",
+    "mtime": 1784573025.5203273,
+    "ast_hash": "a17e3c9cb3e6f27a0dc3ef9f6b0f5fce",
     "semantic_hash": ""
   },
   "counter-core/pom.xml": {
@@ -2125,13 +2125,13 @@
     "semantic_hash": ""
   },
   "counter-core/src/main/java/com/mjtrac/counter/service/CornerDetectionService.java": {
-    "mtime": 1784480742.0168257,
-    "ast_hash": "c45508a4fc0c8684f4500a80b8a26c88",
+    "mtime": 1784594257.1239548,
+    "ast_hash": "3ba93db52e56623886bd48b19c3a3d16",
     "semantic_hash": ""
   },
   "counter-core/src/main/java/com/mjtrac/counter/service/CountingService.java": {
-    "mtime": 1784480742.027661,
-    "ast_hash": "26917b4ad38c3c3ae52b08aa4e39089c",
+    "mtime": 1784588838.1071682,
+    "ast_hash": "33acf7c7ba1ba0eb61889ddcce3f2c65",
     "semantic_hash": ""
   },
   "counter-core/src/main/java/com/mjtrac/counter/service/HomographyService.java": {
@@ -2170,8 +2170,8 @@
     "semantic_hash": ""
   },
   "counter-core/src/main/java/com/mjtrac/counter/service/VoteRecordService.java": {
-    "mtime": 1784480742.0840712,
-    "ast_hash": "c94f556e9fe2105150cc3118bfece246",
+    "mtime": 1784588851.0852365,
+    "ast_hash": "d994b1de7dc574424e82f180a55e6af5",
     "semantic_hash": ""
   },
   "counter-core/src/main/java/com/mjtrac/counter/service/VoteTallyService.java": {
@@ -2220,8 +2220,8 @@
     "semantic_hash": ""
   },
   "counter/src/main/java/com/mjtrac/counterui/MainFrame.java": {
-    "mtime": 1784502820.0922797,
-    "ast_hash": "1269e47dce69b7ae20e4dd3b2d12ba80",
+    "mtime": 1784594888.3660083,
+    "ast_hash": "65c92832646b9b852dc0d154e6388570",
     "semantic_hash": ""
   },
   "counter/src/test/java/com/mjtrac/counter/service/CountingServiceIntegrationTest.java": {
@@ -2440,8 +2440,8 @@
     "semantic_hash": ""
   },
   "counter/README.md": {
-    "mtime": 1784504566.2038968,
-    "ast_hash": "61d81fa74d7df2cda6317596a8d45ca5",
+    "mtime": 1784571637.7264817,
+    "ast_hash": "84eb9feb6601c3aac521c62f388760b0",
     "semantic_hash": ""
   },
   "counter/src/test/resources/test-images/ballot_1_1_1_1_1_1.yaml": {
@@ -2460,13 +2460,13 @@
     "semantic_hash": ""
   },
   "scanner-core/README.md": {
-    "mtime": 1784504728.6726496,
-    "ast_hash": "7fca0cd5667a92f2a7b27ebc98b31cf3",
+    "mtime": 1784571436.4407282,
+    "ast_hash": "5137af684e0bf8b9c7687b88bdc3dbd8",
     "semantic_hash": ""
   },
   "scanner/README.md": {
-    "mtime": 1784504705.546322,
-    "ast_hash": "7414a4c24c6d2284936c2fa5f07d7247",
+    "mtime": 1784571655.8714058,
+    "ast_hash": "0c0cd6f24fb7c003d1c4785c4c6bdbba",
     "semantic_hash": ""
   },
   "test-harness/README-desktop.md": {
@@ -2497,6 +2497,36 @@
   "counter/src/test/resources/test-images/ballot_1_1_1_1_1_1__overvote_plurality__clean__c01.png": {
     "mtime": 1784523079.1465025,
     "ast_hash": "ed3ab9c6c94999612d45c96bc903150b",
+    "semantic_hash": ""
+  },
+  "builder/src/main/java/com/mjtrac/builderui/TestElectionBuilder.java": {
+    "mtime": 1784581749.0658367,
+    "ast_hash": "bcf9059aba9ef43a96f38afd9070c5f0",
+    "semantic_hash": ""
+  },
+  "builder/src/test/java/com/mjtrac/builderui/RegionPartyShortcutTest.java": {
+    "mtime": 1784573371.049877,
+    "ast_hash": "ecae15c3321d0cfa96bee5ab571952d6",
+    "semantic_hash": ""
+  },
+  "builder/src/test/java/com/mjtrac/builderui/TestElectionBuilderTest.java": {
+    "mtime": 1784581766.2707133,
+    "ast_hash": "73676d635ee6050180369be7faed4626",
+    "semantic_hash": ""
+  },
+  "counter/src/main/java/com/mjtrac/counterui/CounterDataInitializer.java": {
+    "mtime": 1784571346.7719512,
+    "ast_hash": "ed641dbea4b428f3cf5f9004e84ce588",
+    "semantic_hash": ""
+  },
+  "scanner/src/main/java/com/mjtrac/scannerui/ScannerDataInitializer.java": {
+    "mtime": 1784571399.293474,
+    "ast_hash": "4ec733ba4e2efa3790ca29f7a6f2fb17",
+    "semantic_hash": ""
+  },
+  "counter/src/test/java/com/mjtrac/counter/service/CountingResumeIntegrationTest.java": {
+    "mtime": 1784588872.513859,
+    "ast_hash": "06ab72706d41cd277e261e5094b6d988",
     "semantic_hash": ""
   }
 }

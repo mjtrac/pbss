@@ -62,6 +62,17 @@ public class ScreenshotGenerator {
 
             shoot(frame, "builder_1_home.png");
 
+            JButton toggle = findButtonByText(frame, "?");
+            if (toggle != null) {
+                toggle.doClick();
+                // The resize is deferred via invokeLater — flush it before validating/painting.
+                SwingUtilities.invokeAndWait(() -> {});
+                frame.validate();
+                shoot(frame, "builder_1b_home_expanded.png");
+            } else {
+                System.out.println("WARNING: no step-annotation toggle button found");
+            }
+
             navigate(frame, "Contests");
             shoot(frame, "builder_2_contests.png");
 
@@ -84,6 +95,17 @@ public class ScreenshotGenerator {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    private static JButton findButtonByText(Container root, String text) {
+        for (Component c : root.getComponents()) {
+            if (c instanceof JButton b && text.equals(b.getText())) return b;
+            if (c instanceof Container child) {
+                JButton found = findButtonByText(child, text);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private static void seedData(ConfigurableApplicationContext ctx) {

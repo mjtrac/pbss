@@ -1,16 +1,16 @@
-# Graph Report - pbss2  (2026-07-19)
+# Graph Report - pbss2  (2026-07-20)
 
 ## Corpus Check
-- 376 files · ~733,100 words
+- 382 files · ~739,177 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5312 nodes · 12117 edges · 396 communities (266 shown, 130 thin omitted)
-- Extraction: 83% EXTRACTED · 17% INFERRED · 0% AMBIGUOUS · INFERRED: 2087 edges (avg confidence: 0.8)
+- 5392 nodes · 12384 edges · 390 communities (263 shown, 127 thin omitted)
+- Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 2178 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `20bed03c`
+- Built from commit: `11c78aba`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,6 +19,7 @@
 - Ballot Generation Tests
 - Ballot Template Scanner v7
 - bBuilder Security & User Management
+- Ballot Template Scanner v7
 - Candidate Record Domain Model
 - Print Log Model
 - Election Domain Model
@@ -335,10 +336,8 @@
 - PartyScreenTest.java
 - BallotType
 - Party
-- UserService
 - CandidatePosition
 - ContestPosition
-- BallotDesignTemplateTest
 - PrintScreenTest.java
 - ScannerUser
 - AccountController.java
@@ -356,8 +355,6 @@
 - IndicatorBox
 - SecurityConfig.java
 - AccountController.java
-- UserService
-- BallotDesignTemplatePanel
 - Jurisdiction
 - SeedContestsController
 - generate-all.js
@@ -367,15 +364,13 @@
 - ScreenshotGenerator
 - launch.sh
 - mvnw
-- .show
 - region-form.js
 - mvnw
-- .main
 - com.mjtrac:bScanner
+- .producesValidElectionDataAndIsIdempotentAcrossRuns
 - com.mjtrac:bBuilder
-- MarkerAnalysisServiceTest
+- Conflicts with the Test Harness
 - bCounter — Usage Guide
-- PrintViewController
 - ViewerController
 - CounterUserRepository
 - ShellController
@@ -400,16 +395,16 @@
 - com.mjtrac:bCounter
 
 ## God Nodes (most connected - your core abstractions)
-1. `BallotDesignTemplate` - 185 edges
-2. `Contest` - 90 edges
-3. `Jurisdiction` - 86 edges
-4. `JurisdictionRepository` - 79 edges
-5. `Candidate` - 76 edges
-6. `Region` - 76 edges
-7. `BallotGenerationService` - 72 edges
-8. `BallotCombination` - 71 edges
-9. `Election` - 68 edges
-10. `User` - 65 edges
+1. `BallotDesignTemplate` - 186 edges
+2. `Jurisdiction` - 94 edges
+3. `Contest` - 92 edges
+4. `JurisdictionRepository` - 80 edges
+5. `Region` - 79 edges
+6. `Candidate` - 77 edges
+7. `BallotCombination` - 74 edges
+8. `BallotGenerationService` - 72 edges
+9. `Election` - 70 edges
+10. `User` - 66 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `testyaml_debug.png (Ballot Template Debug Render)` --semantically_similar_to--> `testyamlv21.yaml (ballot template fixture, v21)`  [INFERRED] [semantically similar]
@@ -437,11 +432,15 @@
 - **Ballot Generation Pipeline Pages** — bbuilder_src_main_resources_templates_print_form_page, bbuilder_src_main_resources_templates_print_generate_all_page, bbuilder_src_main_resources_templates_setup_simple_election_page [INFERRED 0.75]
 - **Independently duplicated ballot-overlay homography viewers** — bcounter_src_main_resources_templates_viewer_view_page, bcounter_src_main_viewer_view_page, bviewer_src_main_resources_templates_view_page, ballot_viewer_src_main_resources_templates_view_page [INFERRED 0.85]
 
-## Communities (396 total, 130 thin omitted)
+## Communities (390 total, 127 thin omitted)
 
 ### Community 0 - "Region Management"
-Cohesion: 0.06
-Nodes (7): BallotDesignTemplate, FontFamily, COURIER, HELVETICA, TIMES, Entity, Table
+Cohesion: 0.03
+Nodes (36): GetMapping, Model, BallotDesignTemplate, FontFamily, COURIER, HELVETICA, TIMES, Entity (+28 more)
+
+### Community 1 - "Ballot Generation Tests"
+Cohesion: 0.10
+Nodes (15): BallotTypeViewController, ComboBox, Component, FXML, Label, TableView, TextField, BallotTypeRepository (+7 more)
 
 ### Community 2 - "Ballot Template Scanner v7"
 Cohesion: 0.33
@@ -451,17 +450,21 @@ Nodes (6): Contest/Field Bounding Box Overlays (President, Representative, City 
 Cohesion: 0.19
 Nodes (11): AuthenticationFailureHandler, AuthenticationSuccessHandler, Bean, Configuration, DaoAuthenticationProvider, EnableWebSecurity, HttpSecurity, PasswordEncoder (+3 more)
 
+### Community 4 - "Ballot Template Scanner v7"
+Cohesion: 0.08
+Nodes (16): LanguageController, BallotLanguageRepository, CandidateTranslationRepository, ContestTranslationRepository, BallotTranslationService, Logger, CandidateTranslationDialog, ContestCandidatesDialog (+8 more)
+
 ### Community 5 - "Candidate Record Domain Model"
 Cohesion: 0.05
-Nodes (32): BallotGenerationServiceTest, ActiveProfiles, DisplayName, SpringBootTest, Test, BallotGenerationTest, ActiveProfiles, Contest (+24 more)
+Nodes (33): BallotGenerationServiceTest, ActiveProfiles, Contest, DisplayName, SpringBootTest, Test, BallotGenerationTest, ActiveProfiles (+25 more)
 
 ### Community 6 - "Print Log Model"
 Cohesion: 0.08
 Nodes (25): bBuilder, bCounter, bScanner, Building Distributable Web JARs, Building the recommended apps, bViewer (embedded in bCounter), Configuring These Apps (Property Overrides), Data Directories (+17 more)
 
 ### Community 7 - "Election Domain Model"
-Cohesion: 0.11
-Nodes (9): CandidateTally, MarkingResult, ScanResult, ScanSession, ImageContestResult, BufferedImage, Logger, Transactional (+1 more)
+Cohesion: 0.13
+Nodes (8): CandidateTally, MarkingResult, ScanSession, ImageContestResult, BufferedImage, Logger, Transactional, VoteTallyService
 
 ### Community 8 - "Ballot Template Scanner v5"
 Cohesion: 0.06
@@ -469,23 +472,23 @@ Nodes (31): Applications and Databases, ballot_combinations, ballot_design_templ
 
 ### Community 9 - "Barcode Record Domain Model"
 Cohesion: 0.04
-Nodes (16): Contest, Entity, Table, VotingMethod, APPROVAL, MEASURE, PLURALITY, RANKED_CHOICE (+8 more)
+Nodes (8): Contest, Entity, Table, VotingMethod, APPROVAL, MEASURE, PLURALITY, RANKED_CHOICE
 
 ### Community 10 - "Election Domain Model"
-Cohesion: 0.08
-Nodes (3): Entity, Table, VoteOpportunity
+Cohesion: 0.05
+Nodes (13): CandidateRecord, Entity, Table, ContestRecord, Entity, Table, Entity, Table (+5 more)
 
 ### Community 11 - "Ballot Corner Detection & Homography"
-Cohesion: 0.08
-Nodes (12): CandidateRecord, Entity, Table, ContestRecord, Entity, Table, VoteStatus, OVERVOTED (+4 more)
+Cohesion: 0.17
+Nodes (13): Callback, ComboBox, Component, FXML, HBox, Label, ListCell, ListView (+5 more)
 
 ### Community 12 - "bBuilder Controllers & Repositories"
-Cohesion: 0.10
-Nodes (17): Controller, PreAuthorize, RequestMapping, RegionController, Repository, JurisdictionRepository, AdminPanel, Component (+9 more)
+Cohesion: 0.39
+Nodes (7): BufferedImage, DisplayName, IndicatorBox, PageLayout, SpringBootTest, Test, MarkerAnalysisServiceTest
 
 ### Community 13 - "Counter Security Config"
-Cohesion: 0.08
-Nodes (21): BatchSheet, BatchSheetPrinter, Graphics, Graphics2D, Override, PageFormat, Printable, FlagPage (+13 more)
+Cohesion: 0.12
+Nodes (13): BatchSheet, BatchSheetPrinter, Graphics, Graphics2D, Override, PageFormat, Printable, BatchSheet (+5 more)
 
 ### Community 14 - "pbss Project Documentation & Fixtures"
 Cohesion: 0.07
@@ -496,7 +499,7 @@ Cohesion: 0.09
 Nodes (20): BarcodeReaderServiceTest, BufferedImage, DisplayName, SpringBootTest, Test, BarcodeReaderServiceTest, BufferedImage, DisplayName (+12 more)
 
 ### Community 16 - "Ballot Image & Vote Opportunity Model"
-Cohesion: 0.08
+Cohesion: 0.09
 Nodes (8): BarcodeRecord, Entity, Table, BarcodeRecordRepository, Repository, ArloExportService, Logger, Transactional
 
 ### Community 17 - "Viewer View Script"
@@ -508,7 +511,7 @@ Cohesion: 0.21
 Nodes (11): CounterSecurityConfig, AuthenticationFailureHandler, AuthenticationSuccessHandler, Bean, Configuration, DaoAuthenticationProvider, EnableWebSecurity, HttpSecurity (+3 more)
 
 ### Community 20 - "bBuilder Domain Model Setters & Tests"
-Cohesion: 0.20
+Cohesion: 0.25
 Nodes (3): HomographyService, BufferedImage, Logger
 
 ### Community 21 - "Vote Record Service Service Logic"
@@ -532,56 +535,56 @@ Cohesion: 0.09
 Nodes (42): Image, ImageDraw, Random, apply_scenario(), apply_scribble(), auto_scenarios_from_boxes(), draw_annotation_text(), draw_arrow() (+34 more)
 
 ### Community 26 - "Candidate Domain Model"
-Cohesion: 0.11
-Nodes (13): BallotViewPanel, Component, IndicatorBox, JButton, JCheckBox, JLabel, JScrollPane, BufferedImage (+5 more)
+Cohesion: 0.13
+Nodes (8): Dimension, BufferedImage, Color, Graphics, Graphics2D, IndicatorBox, Override, OverlayImagePanel
 
 ### Community 27 - "Party Controller & Domain Model"
-Cohesion: 0.16
-Nodes (6): AuthContext, Component, Role, ADMIN, COUNTER_OPERATOR, VIEWER
+Cohesion: 0.24
+Nodes (5): AuthContext, Component, Component, PasswordEncoder, LoginDialog
 
 ### Community 28 - "Test API Controller Endpoints"
-Cohesion: 0.18
+Cohesion: 0.16
 Nodes (8): GetMapping, PostMapping, RequestMapping, ResponseEntity, Transactional, TestApiController, DeleteMapping, RestController
 
 ### Community 29 - "Ballot Image Domain Model"
-Cohesion: 0.22
+Cohesion: 0.20
 Nodes (11): CountController, Controller, GetMapping, HttpSession, Logger, Model, PostMapping, RedirectAttributes (+3 more)
 
 ### Community 30 - "User Domain Model"
-Cohesion: 0.15
+Cohesion: 0.13
 Nodes (8): ActionEvent, Component, JButton, JLabel, JPanel, JTextField, Timer, MainFrame
 
 ### Community 31 - "Ballot Combination Controller & Domain Model"
-Cohesion: 0.09
-Nodes (22): BallotDesignTemplateController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+14 more)
+Cohesion: 0.18
+Nodes (5): AbstractTableModel, CandidateTableModel, Override, Override, RowModel
 
 ### Community 32 - "Jurisdiction Controller Endpoints"
 Cohesion: 0.11
 Nodes (13): build_export_rows(), DbEntry, export_csv(), export_xlsx(), get_vote_totals(), merge_databases(), MergeApp, Build a flat list of rows for CSV/Excel export.      Each row represents one (db (+5 more)
 
 ### Community 33 - "Language Controller & Domain Model"
-Cohesion: 0.33
-Nodes (6): HomePanel, JComponent, Step, Dimension, JPanel, Override
+Cohesion: 0.57
+Nodes (4): HomePanel, JComponent, Step, JPanel
 
 ### Community 34 - "Mark Ballots Test Harness Script"
-Cohesion: 0.15
-Nodes (10): Component, JButton, JCheckBox, JComponent, JLabel, JPanel, JSpinner, JTextField (+2 more)
+Cohesion: 0.13
+Nodes (11): ScanSession, Component, JButton, JCheckBox, JComponent, JLabel, JPanel, JSpinner (+3 more)
 
 ### Community 35 - "Configuration Documentation"
 Cohesion: 0.13
 Nodes (8): BallotMapper, After all indicators for a contest are captured, offer to inset         each ind, v20: Save current layout zones/markers/columns to sidecar JSON., v22: Track which item is nearest cursor for nudge operations., v22: Nudge or resize the hovered item by 1 image pixel., C = next contest, c = previous contest (in indicator phase)., Move to the next contest needing indicators., Generate YAML conforming to bBuilder's format so bCounter can         read it wi
 
 ### Community 36 - "Viewer Controller Endpoints"
-Cohesion: 0.10
+Cohesion: 0.08
 Nodes (3): BallotImage, Entity, Table
 
 ### Community 37 - "Readme Documentation"
-Cohesion: 0.18
-Nodes (9): Component, JButton, JComboBox, JComponent, JLabel, JSpinner, ListCellRenderer, PrintPanel (+1 more)
+Cohesion: 0.07
+Nodes (20): ComboBox, Component, FXML, Label, Spinner, PrintViewController, BallotCombination, Entity (+12 more)
 
 ### Community 38 - "Ballot Mapper Test Harness Script (part 2)"
-Cohesion: 0.39
-Nodes (3): BallotDesignTemplateTest, DisplayName, Test
+Cohesion: 0.21
+Nodes (7): Component, FXML, Label, TableView, TextArea, TextField, JurisdictionViewController
 
 ### Community 39 - "bScanner Scan Control Service"
 Cohesion: 0.14
@@ -593,7 +596,7 @@ Nodes (9): MapperApp, Draw drag handles at corners of a selected box., Return ca
 
 ### Community 41 - "Bbox Report Loader Domain Model"
 Cohesion: 0.10
-Nodes (18): DefaultMutableTreeNode, DefaultTreeCellRenderer, DefaultTreeModel, Icon, JTree, TreePath, CandidateCellRenderer, ContestCandidateWindow (+10 more)
+Nodes (19): DefaultMutableTreeNode, DefaultTreeCellRenderer, DefaultTreeModel, Icon, JFrame, JTree, TreePath, CandidateCellRenderer (+11 more)
 
 ### Community 42 - "Count Controller Endpoints"
 Cohesion: 0.13
@@ -604,8 +607,8 @@ Cohesion: 0.14
 Nodes (13): BBuilderClient, BCounterClient, create_rcv_ballot_image(), fail(), main(), mark_oval(), ok(), Fill an oval indicator at (x,y,w,h) — simulates a voter mark. (+5 more)
 
 ### Community 44 - "Vote Tally & Scan Session"
-Cohesion: 0.14
-Nodes (7): BallotGenerationService, BitMatrix, Contest, Logger, PdfCanvas, PdfDocument, PdfFont
+Cohesion: 0.17
+Nodes (7): ArrowIndicatorAnalyzer, BufferedImage, BufferedImage, IndicatorBox, Logger, PageLayout, MarkerAnalysisService
 
 ### Community 45 - "Ballot Mapper Test Harness Script (part 3)"
 Cohesion: 0.15
@@ -620,28 +623,28 @@ Cohesion: 0.13
 Nodes (19): ask_contest_title(), find_blob_centre(), main(), ocr_candidate_beside(), ocr_contest_title_multiline(), ocr_first_line(), ocr_region(), pattern_correlation() (+11 more)
 
 ### Community 48 - "Contest Controller & Domain Model"
-Cohesion: 0.17
+Cohesion: 0.16
 Nodes (5): ContestTranslation, Entity, Table, ContestTranslationDialog, Frame
 
 ### Community 49 - "Election Domain Model"
-Cohesion: 0.11
-Nodes (9): Contest, Contest, Contest, Candidate, Entity, Table, CandidateTableModel, Override (+1 more)
+Cohesion: 0.08
+Nodes (10): Contest, Candidate, Entity, Table, CandidateTranslation, Entity, Table, Frame (+2 more)
 
 ### Community 50 - "Contest Translation Domain Model"
-Cohesion: 0.29
-Nodes (3): BarcodeService, BitMatrix, PdfCanvas
+Cohesion: 0.14
+Nodes (9): BallotViewPanel, Component, IndicatorBox, JButton, JCheckBox, JLabel, JScrollPane, JComponent (+1 more)
 
 ### Community 51 - "Bcounter Usage Documentation"
-Cohesion: 0.13
-Nodes (14): BallotImageRepository, Repository, ContestRecordRepository, Repository, Logger, Transactional, PersistStatus, ERROR (+6 more)
+Cohesion: 0.11
+Nodes (18): BallotImageRepository, Repository, CandidateRecordRepository, Repository, ContestRecordRepository, Repository, Repository, VoteOpportunityRepository (+10 more)
 
 ### Community 52 - "Ballot Type Controller Endpoints"
-Cohesion: 0.15
+Cohesion: 0.14
 Nodes (11): Controller, GetMapping, Model, PostMapping, PreAuthorize, ResponseBody, ResponseEntity, UserDetails (+3 more)
 
 ### Community 53 - "Ballot Design Profile Script"
-Cohesion: 0.13
-Nodes (15): ContestViewController, Callback, CheckBox, ComboBox, Component, Contest, FXML, Label (+7 more)
+Cohesion: 0.08
+Nodes (23): ContestController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+15 more)
 
 ### Community 54 - "Corner Detection Service Service Logic"
 Cohesion: 0.14
@@ -652,48 +655,48 @@ Cohesion: 0.20
 Nodes (5): BallotMapper, v22: Nudge or resize the hovered item by 1 image pixel., C = next contest, c = previous contest (in indicator phase)., Move to the next contest needing indicators., Generate YAML conforming to bBuilder's format so bCounter can         read it wi
 
 ### Community 56 - "Vote Opportunity View Domain Model"
-Cohesion: 0.12
-Nodes (11): BallotCornerDetectorService, BufferedImage, PageLayout, CornerDetectionService, BufferedImage, Logger, Override, PageLayout (+3 more)
+Cohesion: 0.24
+Nodes (6): CornerDetectionService, BufferedImage, Logger, Override, PageLayout, Primary
 
 ### Community 57 - "Ballot Translation Service Service Logic"
-Cohesion: 0.11
-Nodes (15): Component, FXML, Label, Spinner, TableView, TextField, LanguageViewController, BallotLanguage (+7 more)
+Cohesion: 0.21
+Nodes (5): BallotLanguage, Entity, Table, JComponent, Override
 
 ### Community 58 - "Marker Analysis Service Test"
 Cohesion: 0.09
 Nodes (21): 2a. Create a Jurisdiction and Election, 2b. Create a Contest and Candidates, 2c. Define a Region and Combination, 2d. Generate the Ballot, 2e. Delete and Use the Seed Button, 4a. The Scanning Progress Page, 4b. Tilt Correction, 4c. Upside-Down Ballots (+13 more)
 
 ### Community 59 - "Ballot Design Template Domain Model (part 3)"
-Cohesion: 0.24
-Nodes (10): AdminController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+2 more)
+Cohesion: 0.20
+Nodes (11): AdminController, Controller, GetMapping, Model, ModelAttribute, PostMapping, PreAuthorize, RedirectAttributes (+3 more)
 
 ### Community 60 - "Admin Controller & User Management"
-Cohesion: 0.14
-Nodes (9): BufferedImage, Logger, ScannerService, AccumulatorEntry, BufferedImage, Logger, PageLayout, ScribbleDetectionService (+1 more)
+Cohesion: 0.22
+Nodes (6): AccumulatorEntry, BufferedImage, Logger, PageLayout, ScribbleDetectionService, ScribbleResult
 
 ### Community 61 - "Layout Template"
 Cohesion: 0.39
 Nodes (7): BufferedImage, DisplayName, IndicatorBox, PageLayout, SpringBootTest, Test, MarkerAnalysisServiceTest
 
 ### Community 62 - "Candidate Translation Domain Model"
-Cohesion: 0.24
-Nodes (7): CardLayout, Component, JComponent, JMenuBar, JPanel, MainFrame, JMenu
+Cohesion: 0.12
+Nodes (12): CardLayout, Component, JComponent, JMenuBar, JPanel, MainFrame, ConfigurableApplicationContext, Container (+4 more)
 
 ### Community 63 - "Viewer Navigation Test Tests"
-Cohesion: 0.21
-Nodes (10): ContestAssignmentServiceTest, Contest, DisplayName, ExtendWith, Test, ContestAssignmentServiceTest, Contest, DisplayName (+2 more)
+Cohesion: 0.11
+Nodes (19): BallotCombinationController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+11 more)
 
 ### Community 64 - "Vote Tally & Scan Session"
-Cohesion: 0.13
-Nodes (11): JCheckBoxMenuItem, JFrame, BallotListPanel, JLabel, JTable, JTextField, CardLayout, Component (+3 more)
+Cohesion: 0.14
+Nodes (10): JCheckBoxMenuItem, BallotListPanel, JLabel, JTable, JTextField, CardLayout, Component, JMenuBar (+2 more)
 
 ### Community 65 - "Ballot Dimensions Domain Model"
-Cohesion: 0.15
-Nodes (13): Controller, GetMapping, HttpSession, IndicatorBox, Model, PostMapping, ResponseBody, ResponseEntity (+5 more)
+Cohesion: 0.21
+Nodes (10): Controller, GetMapping, HttpSession, IndicatorBox, Model, PostMapping, ResponseBody, ResponseEntity (+2 more)
 
 ### Community 66 - "Viewer Navigation Test"
-Cohesion: 0.12
-Nodes (10): Controller, GetMapping, Model, PostMapping, RedirectAttributes, LanguageController, CandidateTranslationRepository, ContestTranslationRepository (+2 more)
+Cohesion: 0.21
+Nodes (5): Controller, GetMapping, Model, PostMapping, RedirectAttributes
 
 ### Community 67 - "Ballot View Service Service Logic (part 2)"
 Cohesion: 0.14
@@ -708,12 +711,12 @@ Cohesion: 0.33
 Nodes (10): GlobalExceptionHandler, ControllerAdvice, HttpServletRequest, Logger, Model, ExceptionHandler, MethodArgumentTypeMismatchException, MissingServletRequestParameterException (+2 more)
 
 ### Community 70 - "Contest Assignment Service Test"
-Cohesion: 0.24
+Cohesion: 0.22
 Nodes (9): CountingServiceIntegrationTest, DynamicPropertyRegistry, DynamicPropertySource, EnableJpaRepositories, EntityScan, SpringBootApplication, SpringBootTest, Test (+1 more)
 
 ### Community 71 - "Global Exception Handler Domain Model"
-Cohesion: 0.15
-Nodes (8): AuditLogService, Logger, AuthContext, Component, Component, Frame, PasswordEncoder, LoginDialog
+Cohesion: 0.10
+Nodes (9): ScanResult, AuditLogService, Logger, CountingService, Logger, ScanSession, BufferedImage, Logger (+1 more)
 
 ### Community 72 - "Page Reachability Test"
 Cohesion: 0.09
@@ -740,19 +743,19 @@ Cohesion: 0.35
 Nodes (12): pbss script, both_running(), builder_running(), counter_running(), is_running(), open_when_ready(), run_test_harness(), start_all() (+4 more)
 
 ### Community 79 - "Schema Documentation"
-Cohesion: 0.17
-Nodes (9): ExportServiceTest, BeforeEach, DisplayName, ExtendWith, MockitoSettings, Test, BallotLayoutService, PageLayout (+1 more)
+Cohesion: 0.32
+Nodes (6): ExportServiceTest, BeforeEach, DisplayName, ExtendWith, MockitoSettings, Test
 
 ### Community 80 - "Ballot Type Domain Model"
-Cohesion: 0.19
-Nodes (11): ApplicationRunner, CounterDataInitializer, ApplicationArguments, Component, Override, CounterUserService, PasswordEncoder, CounterDataInitializer (+3 more)
+Cohesion: 0.17
+Nodes (12): ApplicationRunner, CounterDataInitializer, ApplicationArguments, Component, Override, CounterUserService, PasswordEncoder, UserDetails (+4 more)
 
 ### Community 81 - "Scan Service Service Logic"
 Cohesion: 0.18
 Nodes (15): Candidates Management Page, Contest Form Page, Contest Coverage Preview Page, Contest Translation Page, Contests List Page, Election Form Page, Elections List Page, Ballot Languages Page (+7 more)
 
 ### Community 82 - "Security Config Domain Model"
-Cohesion: 0.25
+Cohesion: 0.26
 Nodes (4): Homography, Point, HomographyTest, Test
 
 ### Community 83 - "Rcv Tabulate Test Harness Script"
@@ -764,16 +767,16 @@ Cohesion: 0.17
 Nodes (11): dependencies, playwright, description, main, name, private, scripts, viewer-check (+3 more)
 
 ### Community 85 - "Election Controller Endpoints"
-Cohesion: 0.21
+Cohesion: 0.19
 Nodes (4): CoordinateDebugService, Logger, PageLayout, SuppressWarnings
 
 ### Community 86 - "Security Test Tests"
-Cohesion: 0.24
-Nodes (7): ConfigController, Controller, GetMapping, Model, PostMapping, RedirectAttributes, RequestMapping
+Cohesion: 0.17
+Nodes (5): BallotCornerDetectorService, BufferedImage, PageLayout, Override, Point2D
 
 ### Community 87 - "pbss Fragment"
-Cohesion: 0.13
-Nodes (19): PostMapping, BeforeEach, BeforeEach, BeforeEach, BeforeEach, Role, BeforeEach, BeforeEach (+11 more)
+Cohesion: 0.12
+Nodes (17): PostMapping, Role, BeforeEach, BeforeEach, BeforeEach, BeforeEach, Role, BeforeEach (+9 more)
 
 ### Community 88 - "Viewer Controller Endpoints (part 2)"
 Cohesion: 0.40
@@ -792,12 +795,12 @@ Cohesion: 0.21
 Nodes (11): format_text(), IrvBallot, load_ballots(), load_ranked_contests(), main(), A single ranked-choice ballot with a mutable current-rank pointer., Advance past eliminated candidates; return active choice or None., Run IRV tabulation.      Returns a dict:       {         "contest":  str, (+3 more)
 
 ### Community 92 - "bBuilder Security Config"
-Cohesion: 0.11
-Nodes (19): Accessing bCounter in a Browser, bCounter (scanning and results) — port 8081, bCounter — Usage Guide, bViewer (ballot image review) — port 8082, Configuration overrides at startup, Conflicts with the Test Harness, Delete the database before restarting a scan, Do not run bCounter and the test harness simultaneously on different (+11 more)
+Cohesion: 0.14
+Nodes (14): Accessing bCounter in a Browser, bCounter (scanning and results) — port 8081, bCounter — Usage Guide, bViewer (ballot image review) — port 8082, Configuration overrides at startup, From a packaged JAR (deployment), From the source tree (development), Key Configuration Properties (+6 more)
 
 ### Community 93 - "Ballot Design Template Test Tests"
-Cohesion: 0.17
-Nodes (12): ElectionController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+4 more)
+Cohesion: 0.36
+Nodes (6): ElectionController, Controller, GetMapping, Model, PreAuthorize, RequestMapping
 
 ### Community 94 - "Viewer Index Script"
 Cohesion: 0.26
@@ -844,16 +847,16 @@ Cohesion: 0.23
 Nodes (6): BuilderApp, Bean, EntityScan, PasswordEncoder, SpringBootApplication, Launcher
 
 ### Community 105 - "Viewer Security Config Domain Model"
-Cohesion: 0.20
-Nodes (6): AuthContext, Component, Component, Frame, PasswordEncoder, LoginDialog
+Cohesion: 0.12
+Nodes (15): CounterUserService, PasswordEncoder, CounterUserRepository, Repository, CounterDataInitializer, ApplicationArguments, Component, PasswordEncoder (+7 more)
 
 ### Community 106 - "Candidate View Domain Model"
-Cohesion: 0.10
-Nodes (12): Controller, GetMapping, Model, PostMapping, ResponseBody, MainController, Component, ScannerConfig (+4 more)
+Cohesion: 0.07
+Nodes (19): ConfigController, Controller, GetMapping, Model, PostMapping, RedirectAttributes, RequestMapping, Controller (+11 more)
 
 ### Community 107 - "Run Counter Test Harness Script"
-Cohesion: 0.12
-Nodes (16): BallotCombinationScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test (+8 more)
+Cohesion: 0.24
+Nodes (8): BallotCombinationScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test
 
 ### Community 108 - "Viewer Server Config Domain Model"
 Cohesion: 0.29
@@ -864,8 +867,8 @@ Cohesion: 0.28
 Nodes (3): blCounter, Known Issues, Viewer screen: image doesn't reliably render on navigation (unresolved)
 
 ### Community 110 - "Election Ballot Application Domain Model"
-Cohesion: 0.15
-Nodes (8): BallotCombinationPanel, Component, JComboBox, ListCellRenderer, JComboBox, JComponent, JTable, SimpleCrudPanel
+Cohesion: 0.22
+Nodes (5): JButton, JComboBox, JComponent, JTable, SimpleCrudPanel
 
 ### Community 111 - "Ballot Mapper Test Harness Script (part 4)"
 Cohesion: 0.20
@@ -960,16 +963,16 @@ Cohesion: 0.45
 Nodes (4): CounterCspComplianceTest, DisplayName, MethodSource, ParameterizedTest
 
 ### Community 135 - "Schema Documentation (part 3)"
-Cohesion: 0.08
-Nodes (23): AdminController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+15 more)
+Cohesion: 0.06
+Nodes (34): Bean, Configuration, DaoAuthenticationProvider, EnableWebSecurity, HttpSecurity, PasswordEncoder, SecurityFilterChain, SecurityConfig (+26 more)
 
 ### Community 136 - "Auth Controller Endpoints"
-Cohesion: 0.07
-Nodes (26): GetMapping, Model, PostMapping, RedirectAttributes, Callback, ComboBox, Component, FXML (+18 more)
+Cohesion: 0.09
+Nodes (14): GetMapping, Model, PostMapping, RedirectAttributes, Entity, Override, Table, Region (+6 more)
 
 ### Community 137 - "Election Counter Application Domain Model"
-Cohesion: 0.17
-Nodes (12): Output Files, pbss Test Harness, Prerequisites, Quick Start, Resetting Between Runs, Running Individual Steps, Step 1 — `build_election.py`, Step 2 — `mark_ballots.py` (+4 more)
+Cohesion: 0.15
+Nodes (13): Output Files, pbss Test Harness, Prerequisites, Quick Start, Resetting Between Runs, Running Individual Steps, Step 1 — `build_election.py`, Step 2 — `mark_ballots.py` (+5 more)
 
 ### Community 138 - "Arrow Indicator Analyzer Domain Model"
 Cohesion: 0.38
@@ -988,8 +991,8 @@ Cohesion: 0.50
 Nodes (5): ballot-viewer Ballot Overlay View Page (legacy/simplified fork), bViewer Ballot Overlay View Page (embedded in bCounter, CSP-safe), Canonical-to-image homography overlay algorithm, viewer-view.html (top-level duplicate/legacy copy), bViewer Standalone Ballot Overlay View Page
 
 ### Community 142 - "Viewer View Template"
-Cohesion: 0.10
-Nodes (16): ElectionViewController, CheckBox, ComboBox, Component, FXML, Label, TableView, TextField (+8 more)
+Cohesion: 0.22
+Nodes (9): CountingResumeIntegrationTest, DynamicPropertyRegistry, DynamicPropertySource, EnableJpaRepositories, EntityScan, SpringBootApplication, SpringBootTest, Test (+1 more)
 
 ### Community 143 - "Ballot Design Template Controller Endpoints"
 Cohesion: 0.28
@@ -1072,28 +1075,28 @@ Cohesion: 0.31
 Nodes (4): ConfigurableApplicationContext, JFrame, SuppressWarnings, ScreenshotGenerator
 
 ### Community 283 - "AuditLogService"
-Cohesion: 0.11
-Nodes (7): AbstractTableModel, Override, RowModel, BallotImageSummary, Component, Override, RowModel
+Cohesion: 0.12
+Nodes (7): BallotImageSummary, BallotViewService, EntityManager, Transactional, Component, Override, RowModel
 
 ### Community 286 - ".boxes"
 Cohesion: 0.13
-Nodes (11): Component, Navigator, Bean, ConfigurableApplicationContext, EnableJpaRepositories, EntityScan, Override, PasswordEncoder (+3 more)
+Nodes (12): Application, Component, Navigator, Bean, ConfigurableApplicationContext, EnableJpaRepositories, EntityScan, Override (+4 more)
 
 ### Community 287 - "com.mjtrac:bCounter"
 Cohesion: 0.22
 Nodes (9): Ballot Design Templates: full field set, still no WYSIWYG, Build a standalone desktop program, builder, Contest sub-screens: Candidates, Regions, Translations, Data, Implementation notes, Layout, Run from source (development) (+1 more)
 
 ### Community 288 - "com.mjtrac:bScanner"
-Cohesion: 0.14
+Cohesion: 0.16
 Nodes (9): BallotDesignTemplateViewController, ComboBox, Component, FXML, Label, Spinner, StringConverter, TableView (+1 more)
 
 ### Community 289 - "BallotCombination"
 Cohesion: 0.36
-Nodes (6): DynamicPropertyRegistry, DynamicPropertySource, EntityScan, SpringBootApplication, SpringBootTest, TestConfig
+Nodes (7): BuilderEndToEndTest, DynamicPropertyRegistry, DynamicPropertySource, EntityScan, SpringBootApplication, SpringBootTest, TestConfig
 
 ### Community 290 - "BBuilderFxApplication"
-Cohesion: 0.16
-Nodes (9): BBuilderFxApplication, Bean, ConfigurableApplicationContext, Override, PasswordEncoder, SpringBootApplication, Stage, Component (+1 more)
+Cohesion: 0.12
+Nodes (10): BBuilderFxApplication, Bean, ConfigurableApplicationContext, Override, PasswordEncoder, SpringBootApplication, Stage, Launcher (+2 more)
 
 ### Community 291 - "Region"
 Cohesion: 0.22
@@ -1116,32 +1119,32 @@ Cohesion: 0.19
 Nodes (7): Component, FXML, Label, Node, StackPane, VBox, ShellController
 
 ### Community 296 - "BallotGenerationTest"
-Cohesion: 0.26
-Nodes (3): CountingService, Logger, ScanSession
+Cohesion: 0.23
+Nodes (8): Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping, JurisdictionController
 
 ### Community 297 - "ScannerUser"
-Cohesion: 0.09
-Nodes (9): AuthContext, Component, Override, Entity, Table, ScannerUser, AuthContext, Component (+1 more)
+Cohesion: 0.10
+Nodes (8): AuthContext, Component, Override, Entity, Table, ScannerUser, AuthContext, Component
 
 ### Community 298 - "TemplateReflectedInBallotTest"
-Cohesion: 0.15
-Nodes (5): CandidateTranslation, Entity, Table, CandidateTranslationDialog, Frame
+Cohesion: 0.24
+Nodes (8): Controller, GetMapping, Model, PasswordEncoder, PostMapping, RedirectAttributes, RequestMapping, UsersController
 
 ### Community 299 - "Party"
 Cohesion: 0.21
-Nodes (8): ContestController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping
+Nodes (8): FlagPage, FlagPagePrinter, Graphics, Graphics2D, Logger, Override, PageFormat, PrintService
 
 ### Community 300 - "ScanViewController"
-Cohesion: 0.15
-Nodes (10): Button, Component, FXML, HBox, Label, TextArea, Timeline, ScanViewController (+2 more)
+Cohesion: 0.17
+Nodes (9): Button, Component, FXML, HBox, Label, TextArea, Timeline, ScanViewController (+1 more)
 
 ### Community 301 - "BallotGenerationServiceTest"
-Cohesion: 0.25
-Nodes (8): BallotCombinationController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping
+Cohesion: 0.26
+Nodes (8): Button, Component, FXML, Label, PasswordEncoder, PasswordField, TextField, LoginViewController
 
 ### Community 302 - "BallotGenerationServiceTest"
-Cohesion: 0.18
-Nodes (10): BallotTypeController, Controller, GetMapping, Model, PreAuthorize, RequestMapping, BallotTypeRepository, Repository (+2 more)
+Cohesion: 0.08
+Nodes (22): BallotTypeController, Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+14 more)
 
 ### Community 303 - "Election"
 Cohesion: 0.25
@@ -1152,32 +1155,32 @@ Cohesion: 0.19
 Nodes (9): ConfigViewController, CheckBox, ComboBox, Component, FXML, Label, Spinner, TextField (+1 more)
 
 ### Community 305 - "JurisdictionViewController"
-Cohesion: 0.09
-Nodes (16): Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping, JurisdictionController (+8 more)
+Cohesion: 0.10
+Nodes (9): Entity, Table, Jurisdiction, JComponent, JurisdictionCombo, Component, JComponent, Override (+1 more)
 
 ### Community 308 - "AdminViewController"
-Cohesion: 0.10
-Nodes (10): Entity, Table, PrintLog, Query, Repository, Repository, PrintLogRepository, Transactional (+2 more)
+Cohesion: 0.06
+Nodes (21): AdminViewController, CheckBox, ComboBox, Component, FXML, Label, PasswordField, TableView (+13 more)
 
 ### Community 309 - "BallotTypeViewController"
-Cohesion: 0.12
-Nodes (14): PostMapping, RedirectAttributes, BallotTypeViewController, ComboBox, Component, FXML, Label, TableView (+6 more)
+Cohesion: 0.22
+Nodes (5): BallotType, Entity, Table, JComponent, Override
 
 ### Community 310 - "DashboardController"
 Cohesion: 0.26
 Nodes (5): DashboardController, Component, FXML, Label, VBox
 
 ### Community 311 - "PartyViewController"
-Cohesion: 0.11
-Nodes (14): PostMapping, RedirectAttributes, ComboBox, Component, FXML, Label, TableView, TextField (+6 more)
+Cohesion: 0.24
+Nodes (8): AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test, PartyScreenTest
 
 ### Community 312 - "ContestTranslation"
 Cohesion: 0.38
-Nodes (4): Container, BallotViewPanelLayoutTest, JButton, Test
+Nodes (4): BallotViewPanelLayoutTest, Container, JButton, Test
 
 ### Community 313 - "ScannerUserRepository"
-Cohesion: 0.10
-Nodes (22): DataInitializer, ApplicationArguments, Component, Logger, Override, PasswordEncoder, Controller, GetMapping (+14 more)
+Cohesion: 0.12
+Nodes (20): DataInitializer, ApplicationArguments, Component, Logger, Override, PasswordEncoder, DataInitializer, ApplicationArguments (+12 more)
 
 ### Community 314 - "BallotType"
 Cohesion: 0.29
@@ -1192,8 +1195,8 @@ Cohesion: 0.29
 Nodes (7): Build a standalone desktop program, Data, Implementation notes, Optional: flag pages on an attached printer, Run from source (development), scanner, What it does
 
 ### Community 317 - "RegionController"
-Cohesion: 0.09
-Nodes (19): BallotController, RequestMapping, ExtendWith, BallotCombinationRepository, Repository, BallotDesignTemplateRepository, Repository, CandidateRepository (+11 more)
+Cohesion: 0.06
+Nodes (33): BallotController, RequestMapping, BallotDesignTemplateController, Controller, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping (+25 more)
 
 ### Community 318 - "LoginScreenTest.java"
 Cohesion: 0.23
@@ -1204,8 +1207,8 @@ Cohesion: 0.29
 Nodes (7): Build a standalone desktop program, Implementation notes, Login, Run from source (development), Scope, viewer, Why this exists
 
 ### Community 321 - "LoginViewController"
-Cohesion: 0.26
-Nodes (8): Button, Component, FXML, Label, PasswordEncoder, PasswordField, TextField, LoginViewController
+Cohesion: 0.14
+Nodes (6): AuthContext, Component, Role, ADMIN, DATA_ENTRY, PRINTER
 
 ### Community 322 - "BallotCombination"
 Cohesion: 0.33
@@ -1216,15 +1219,15 @@ Cohesion: 0.33
 Nodes (6): counter-core, If you change something here, Using it, Version, What's deliberately *not* in it, What's in it
 
 ### Community 324 - "BallotDesignTemplateScreenTest.java"
-Cohesion: 0.26
-Nodes (8): BallotDesignTemplateScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test
+Cohesion: 0.11
+Nodes (14): BallotDesignTemplateTest, DisplayName, Test, BallotDesignTemplateTest, DisplayName, Test, BallotDesignTemplateScreenTest, AfterAll (+6 more)
 
 ### Community 325 - "RegionScreenTest.java"
 Cohesion: 0.24
 Nodes (9): AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, SuppressWarnings, Test (+1 more)
 
 ### Community 326 - "LoginViewController"
-Cohesion: 0.16
+Cohesion: 0.15
 Nodes (13): Button, Component, FXML, Label, PasswordEncoder, PasswordField, TextField, LoginViewController (+5 more)
 
 ### Community 327 - "UsersController"
@@ -1232,8 +1235,8 @@ Cohesion: 0.53
 Nodes (4): Bean, Configuration, PasswordEncoder, PasswordEncoderConfig
 
 ### Community 328 - "AdminScreenTest.java"
-Cohesion: 0.17
-Nodes (12): AdminScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test (+4 more)
+Cohesion: 0.27
+Nodes (8): AdminScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test
 
 ### Community 329 - "BallotCombinationScreenTest.java"
 Cohesion: 0.33
@@ -1251,17 +1254,9 @@ Nodes (6): If you change something here, scanner-core, Using it, Version, What's
 Cohesion: 0.70
 Nodes (4): DatabaseConfig, Configuration, EnableJpaRepositories, EnableTransactionManagement
 
-### Community 333 - "UserService"
-Cohesion: 0.10
-Nodes (6): Override, UserDetails, JComponent, Override, JComponent, Override
-
 ### Community 335 - "ContestPosition"
 Cohesion: 0.40
 Nodes (5): First-run: remove macOS quarantine, Installation, Logs, macOS Launcher (pbss.app), Menu options
-
-### Community 336 - "BallotDesignTemplateTest"
-Cohesion: 0.45
-Nodes (3): BallotDesignTemplateTest, DisplayName, Test
 
 ### Community 337 - "PrintScreenTest.java"
 Cohesion: 0.27
@@ -1288,43 +1283,35 @@ Cohesion: 0.67
 Nodes (3): Build a standalone desktop program (manual steps), Native Desktop Versions, Run from source (development)
 
 ### Community 347 - "MeasurementUtilTest"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (7): DisplayName, Test, MeasurementUtilTest, DisplayName, Test, MeasurementUtilTest, MeasurementUtil
 
 ### Community 350 - ".analyse"
-Cohesion: 0.17
-Nodes (7): ArrowIndicatorAnalyzer, BufferedImage, BufferedImage, IndicatorBox, Logger, PageLayout, MarkerAnalysisService
+Cohesion: 0.21
+Nodes (7): Component, FXML, Label, Spinner, TableView, TextField, LanguageViewController
 
 ### Community 351 - "IndicatorBox"
-Cohesion: 0.20
-Nodes (8): Controller, GetMapping, Model, PreAuthorize, RequestMapping, PartyController, Repository, PartyRepository
+Cohesion: 0.08
+Nodes (24): Controller, GetMapping, Model, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping, PartyController (+16 more)
 
 ### Community 352 - "SecurityConfig.java"
 Cohesion: 0.29
-Nodes (9): Bean, Configuration, DaoAuthenticationProvider, EnableWebSecurity, HttpSecurity, PasswordEncoder, SecurityFilterChain, SecurityConfig (+1 more)
+Nodes (3): BallotLayoutService, PageLayout, ExportService
 
 ### Community 353 - "AccountController.java"
-Cohesion: 0.29
-Nodes (7): AccountController, Controller, GetMapping, PostMapping, RedirectAttributes, RequestMapping, UserDetails
-
-### Community 354 - "UserService"
-Cohesion: 0.18
-Nodes (5): Role, Transactional, PasswordEncoder, Transactional, UserService
-
-### Community 355 - "BallotDesignTemplatePanel"
-Cohesion: 0.19
-Nodes (7): BallotDesignTemplatePanel, Component, JComponent, JPanel, JScrollPane, Override, TypeRow
+Cohesion: 0.20
+Nodes (8): Role, ADMIN, COUNTER_OPERATOR, VIEWER, ConfigurableApplicationContext, JButton, JFrame, ScreenshotGenerator
 
 ### Community 356 - "Jurisdiction"
-Cohesion: 0.20
-Nodes (6): Entity, Table, Jurisdiction, JComboBox, JurisdictionCombo, Override
+Cohesion: 0.36
+Nodes (4): Config, EntityScan, SpringBootApplication, TestElectionBuilder
 
 ### Community 357 - "SeedContestsController"
-Cohesion: 0.32
-Nodes (8): Controller, PostMapping, PreAuthorize, RedirectAttributes, RequestMapping, Transactional, UserDetails, SeedContestsController
+Cohesion: 0.07
+Nodes (27): PostMapping, RedirectAttributes, Transactional, RedirectAttributes, UserDetails, ElectionViewController, CheckBox, ComboBox (+19 more)
 
 ### Community 358 - "generate-all.js"
-Cohesion: 0.12
+Cohesion: 0.14
 Nodes (10): CountingViewController, Button, CheckBox, Component, FXML, Label, Spinner, TextField (+2 more)
 
 ### Community 359 - "SimpleElectionController"
@@ -1333,47 +1320,47 @@ Nodes (7): Controller, GetMapping, Model, PreAuthorize, RedirectAttributes, Requ
 
 ### Community 360 - "unsaved-changes.js"
 Cohesion: 0.12
-Nodes (13): Application, ApplicationListener, CounterFxApplication, Bean, ConfigurableApplicationContext, EnableJpaRepositories, EntityScan, Override (+5 more)
+Nodes (12): ApplicationListener, CounterFxApplication, Bean, ConfigurableApplicationContext, EnableJpaRepositories, EntityScan, Override, SpringBootApplication (+4 more)
 
 ### Community 361 - "CountingPipelineGuiTest.java"
 Cohesion: 0.43
 Nodes (5): AfterEach, CountingPipelineGuiTest, ConfigurableApplicationContext, Test, FrameFixture
 
 ### Community 362 - "ScreenshotGenerator"
-Cohesion: 0.38
-Nodes (3): ConfigurableApplicationContext, JFrame, ScreenshotGenerator
+Cohesion: 0.36
+Nodes (7): DynamicPropertyRegistry, DynamicPropertySource, EntityScan, SpringBootApplication, SpringBootTest, RegionPartyShortcutTest, TestConfig
 
 ### Community 366 - "region-form.js"
-Cohesion: 0.20
-Nodes (9): AdminViewController, CheckBox, Component, FXML, Label, PasswordField, Role, TableView (+1 more)
+Cohesion: 0.11
+Nodes (15): Override, AdminViewController, CheckBox, Component, FXML, Label, PasswordField, Role (+7 more)
 
 ### Community 370 - "com.mjtrac:bScanner"
 Cohesion: 0.50
 Nodes (4): com.mjtrac:bScanner, com.mjtrac:bScanner, com.mjtrac:scanner, com.mjtrac:scanner-core
 
+### Community 371 - ".producesValidElectionDataAndIsIdempotentAcrossRuns"
+Cohesion: 0.48
+Nodes (3): ConfigurableApplicationContext, Test, TestElectionBuilderTest
+
 ### Community 372 - "com.mjtrac:bBuilder"
 Cohesion: 0.67
 Nodes (3): com.mjtrac:bBuilder, com.mjtrac:builder, com.mjtrac:builder-core
 
-### Community 374 - "MarkerAnalysisServiceTest"
-Cohesion: 0.39
-Nodes (7): BufferedImage, DisplayName, IndicatorBox, PageLayout, SpringBootTest, Test, MarkerAnalysisServiceTest
+### Community 373 - "Conflicts with the Test Harness"
+Cohesion: 0.40
+Nodes (5): Conflicts with the Test Harness, Delete the database before restarting a scan, Do not run bCounter and the test harness simultaneously on different, Image files are renamed during scanning, The test harness holds its own HTTP session
 
 ### Community 376 - "bCounter — Usage Guide"
 Cohesion: 0.10
 Nodes (19): Accessing bCounter in a Browser, bCounter (scanning and results) — port 8081, bCounter — Usage Guide, bViewer (ballot image review) — port 8082, Configuration overrides at startup, Conflicts with the Test Harness, Delete the database before restarting a scan, Do not run bCounter and the test harness simultaneously on different (+11 more)
-
-### Community 379 - "PrintViewController"
-Cohesion: 0.23
-Nodes (6): ComboBox, Component, FXML, Label, Spinner, PrintViewController
 
 ### Community 380 - "ViewerController"
 Cohesion: 0.22
 Nodes (11): Controller, GetMapping, HttpSession, IndicatorBox, Logger, Model, PostMapping, ResponseBody (+3 more)
 
 ### Community 382 - "CounterUserRepository"
-Cohesion: 0.10
-Nodes (16): Override, Role, Transactional, UserDetails, BeforeEach, CounterUserService, PasswordEncoder, Role (+8 more)
+Cohesion: 0.16
+Nodes (6): Role, Transactional, BeforeEach, Role, Transactional, Override
 
 ### Community 384 - "ShellController"
 Cohesion: 0.21
@@ -1408,8 +1395,8 @@ Cohesion: 0.27
 Nodes (8): AccountScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test
 
 ### Community 402 - "AdminScreenTest.java"
-Cohesion: 0.18
-Nodes (10): AdminScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test (+2 more)
+Cohesion: 0.27
+Nodes (8): AdminScreenTest, AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test
 
 ### Community 403 - "CountingScreenTest.java"
 Cohesion: 0.27
@@ -1436,8 +1423,8 @@ Cohesion: 0.27
 Nodes (8): AfterAll, ConfigurableApplicationContext, ExtendWith, FxRobot, Stage, Start, Test, ViewerScreenTest
 
 ### Community 416 - "RcvTabulationServiceTest"
-Cohesion: 0.10
-Nodes (18): ActiveProfiles, DisplayName, SpringBootTest, Test, RcvTabulationServiceTest, ActiveProfiles, DisplayName, SpringBootTest (+10 more)
+Cohesion: 0.11
+Nodes (16): ActiveProfiles, DisplayName, SpringBootTest, Test, RcvTabulationServiceTest, ActiveProfiles, DisplayName, SpringBootTest (+8 more)
 
 ### Community 417 - "DashboardController"
 Cohesion: 0.33
@@ -1458,22 +1445,22 @@ Nodes (5): com.mjtrac:bCounter, com.mjtrac:bCounter, com.mjtrac:counter, com.mjt
 ## Knowledge Gaps
 - **522 isolated node(s):** `launch.sh script`, `p.sh script`, `com.mjtrac:bCounter`, `NONE`, `GLOB` (+517 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **130 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **127 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `Ballot Languages Page` and `Generate All Ballots Page`?**
   _Edge tagged AMBIGUOUS (relation: shares_data_with) - confidence is low._
-- **Why does `BallotDesignTemplate` connect `Region Management` to `com.mjtrac:bScanner`, `BallotDesignTemplatePanel`, `Ballot Template Scanner v7`, `Candidate Record Domain Model`, `Ballot Mapper Test Harness Script (part 2)`, `Readme Documentation`, `Vote Tally & Scan Session`, `BallotDesignTemplateTest`, `Contest Translation Domain Model`, `pbss Fragment`, `PrintViewController`, `Test API Controller Endpoints`, `RegionController`, `Ballot Combination Controller & Domain Model`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
-- **Why does `CounterUserRepository` connect `CounterUserRepository` to `Global Exception Handler Domain Model`, `Page Reachability Test`, `Party Controller & Domain Model`, `LoginViewController`, `Viewer Security Config Domain Model`, `region-form.js`, `Ballot Type Domain Model`, `AdminScreenTest.java`, `AdminViewController`, `Ballot Design Template Domain Model (part 3)`?**
+- **Why does `BallotDesignTemplate` connect `Region Management` to `com.mjtrac:bScanner`, `BallotDesignTemplateScreenTest.java`, `Readme Documentation`, `Candidate Record Domain Model`, `SeedContestsController`, `Auth Controller Endpoints`, `pbss Fragment`, `Test API Controller Endpoints`, `RegionController`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Why does `CounterUserRepository` connect `Viewer Security Config Domain Model` to `Global Exception Handler Domain Model`, `Page Reachability Test`, `Party Controller & Domain Model`, `LoginViewController`, `region-form.js`, `Ballot Type Domain Model`, `Ballot Design Template Domain Model (part 3)`, `RegionController`, `CounterUserRepository`?**
   _High betweenness centrality (0.043) - this node is a cross-community bridge._
-- **Why does `CountingService` connect `BallotGenerationTest` to `generate-all.js`, `Global Exception Handler Domain Model`, `unsaved-changes.js`, `bScanner Scan Control Service`, `Election Domain Model`, `Contest Assignment Service Test`, `Bcounter Usage Documentation`, `Admin Controller & User Management`, `User Domain Model`?**
+- **Why does `BallotViewService` connect `AuditLogService` to `Vote Tally & Scan Session`, `Ballot Dimensions Domain Model`, `Viewer Controller Endpoints`, `Contest Translation Domain Model`, `Bcounter Usage Documentation`, `Candidate Domain Model`, `ViewerController`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
-- **Are the 17 inferred relationships involving `BallotDesignTemplate` (e.g. with `.seedInitialData()` and `.newForm()`) actually correct?**
-  _`BallotDesignTemplate` has 17 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 14 inferred relationships involving `Contest` (e.g. with `.seedInitialData()` and `.newForm()`) actually correct?**
-  _`Contest` has 14 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 10 inferred relationships involving `Jurisdiction` (e.g. with `.newForm()` and `.returnToForm()`) actually correct?**
-  _`Jurisdiction` has 10 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 18 inferred relationships involving `BallotDesignTemplate` (e.g. with `.seedInitialData()` and `.newForm()`) actually correct?**
+  _`BallotDesignTemplate` has 18 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 11 inferred relationships involving `Jurisdiction` (e.g. with `.newForm()` and `.returnToForm()`) actually correct?**
+  _`Jurisdiction` has 11 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 16 inferred relationships involving `Contest` (e.g. with `.seedInitialData()` and `.newForm()`) actually correct?**
+  _`Contest` has 16 INFERRED edges - model-reasoned connections that need verification._

@@ -45,7 +45,11 @@ Reads and writes the same `~/pbss_data/db/counter_results.db` and
 `~/pbss_data/reports/` (etc.) that bCounter/blCounter use —
 `spring.jpa.hibernate.ddl-auto=update`, so it can also be the *first*
 thing to ever run against a fresh `pbss_data` directory (it'll create the
-schema itself, same as bCounter does).
+schema itself, same as bCounter does). On an empty `counter_user` table,
+`CounterDataInitializer` seeds a default `admin`/`ChangeMe123!` account
+(mirroring bCounter's own `CounterDataInitializer`) — without it, a truly
+fresh install with no other app ever run first would have no account to
+sign in with at all.
 
 ## Run from source (development)
 

@@ -15,13 +15,18 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * The entire UI: two folder fields (with defaults), Start/Stop, a live
- * progress readout, and a button pointing at the results folder once a scan
- * finishes. Deliberately minimal — no results browser, no report viewer of
- * its own; scan parameters beyond the two folders (threshold, darkness,
- * DPI, paper width) are fixed via application.properties rather than
- * exposed here. See CountingViewController (blCounter's JavaFX equivalent,
- * which this mirrors) for the fuller-featured version.
+ * The entire UI: two folder fields (with defaults), Start/Resume + Pause, a
+ * live progress readout, and a button pointing at the results folder once a
+ * scan finishes. Pause leaves the session in place and relabels Start to
+ * Resume (continuing via CountingService.resumeScan() from wherever it
+ * stopped, not re-scanning from the beginning); genuine completion (the
+ * image queue runs out on its own) is the only thing that auto-runs
+ * finish() and disables both buttons, showing where the results landed.
+ * Deliberately minimal — no results browser, no report viewer of its own;
+ * scan parameters beyond the two folders (threshold, darkness, DPI, paper
+ * width) are fixed via application.properties rather than exposed here. See
+ * CountingViewController (blCounter's JavaFX equivalent, which this
+ * mirrors) for the fuller-featured version.
  */
 @Component
 public class MainFrame extends JFrame {
@@ -38,7 +43,7 @@ public class MainFrame extends JFrame {
     private final JTextField imageFolderField;
     private final JTextField reportFolderField;
     private final JButton startButton = new JButton("Start Counting");
-    private final JButton stopButton = new JButton("Stop");
+    private final JButton pauseButton = new JButton("Pause");
     private final JButton openResultsButton = new JButton("Open Results Folder");
     private final JButton printResultsButton = new JButton("Print Results");
     private final JLabel statusLabel = new JLabel("Ready");
@@ -69,7 +74,7 @@ public class MainFrame extends JFrame {
         imageFolderField.setName("imageFolderField");
         reportFolderField.setName("reportFolderField");
         startButton.setName("startButton");
-        stopButton.setName("stopButton");
+        pauseButton.setName("pauseButton");
         openResultsButton.setName("openResultsButton");
         printResultsButton.setName("printResultsButton");
         statusLabel.setName("statusLabel");
@@ -92,10 +97,10 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
 
         startButton.addActionListener(this::handleStart);
-        stopButton.addActionListener(this::handleStop);
+        pauseButton.addActionListener(this::handlePause);
         openResultsButton.addActionListener(this::handleOpenResults);
         printResultsButton.addActionListener(this::handlePrintResults);
-        stopButton.setEnabled(false);
+        pauseButton.setEnabled(false);
         openResultsButton.setEnabled(false);
         printResultsButton.setEnabled(false);
     }
@@ -126,7 +131,7 @@ public class MainFrame extends JFrame {
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
         buttons.add(startButton);
-        buttons.add(stopButton);
+        buttons.add(pauseButton);
         c.gridy = row++;
         root.add(buttons, c);
 
@@ -170,30 +175,51 @@ public class MainFrame extends JFrame {
 
     private void handleStart(ActionEvent e) {
         clearMessage();
-        try {
-            countingService.startNewSession(
-                stripTrailingSlash(imageFolderField.getText()), stripTrailingSlash(reportFolderField.getText()),
-                fixedThreshold, fixedDarkPctMin, fixedDpi, false, "", fixedPaperWidthIn);
-        } catch (Exception ex) {
-            showError(ex.getMessage());
-            return;
-        }
-        try {
-            countingService.startScan(currentUsername());
-        } catch (IllegalStateException ex) {
-            showError(ex.getMessage());
-            return;
+        // A session that's been started, isn't currently scanning, and
+        // stopped via stopRequested (either the user's own Pause or the
+        // max-review-before-stop halt) is resumable in place — continuing
+        // from session.currentIndex, not re-enumerating the image folder
+        // and re-scanning everything from the start. Anything else (never
+        // started, or genuinely complete) is a fresh start.
+        ScanSession existing = countingService.getSession();
+        boolean resuming = existing.isStarted() && !existing.scanning && existing.stopRequested;
+        if (resuming) {
+            try {
+                countingService.resumeScan(currentUsername());
+            } catch (IllegalStateException ex) {
+                showError(ex.getMessage());
+                return;
+            }
+        } else {
+            try {
+                countingService.startNewSession(
+                    stripTrailingSlash(imageFolderField.getText()), stripTrailingSlash(reportFolderField.getText()),
+                    fixedThreshold, fixedDarkPctMin, fixedDpi, false, "", fixedPaperWidthIn);
+            } catch (Exception ex) {
+                showError(ex.getMessage());
+                return;
+            }
+            try {
+                countingService.startScan(currentUsername());
+            } catch (IllegalStateException ex) {
+                showError(ex.getMessage());
+                return;
+            }
         }
         finishRequested = false;
         openResultsButton.setEnabled(false);
         startButton.setEnabled(false);
-        stopButton.setEnabled(true);
+        pauseButton.setEnabled(true);
         startPolling();
     }
 
-    private void handleStop(ActionEvent e) {
+    private void handlePause(ActionEvent e) {
         countingService.stopScan();
-        stopButton.setEnabled(false);
+        // The scan loop notices stopRequested and exits asynchronously;
+        // render() relabels Start -> Resume and re-enables it once that's
+        // actually observed (session.scanning == false). Disable Pause
+        // immediately since pausing an already-stopping scan is meaningless.
+        pauseButton.setEnabled(false);
     }
 
     private void handleOpenResults(ActionEvent e) {
@@ -276,11 +302,19 @@ public class MainFrame extends JFrame {
         render(session);
 
         if (!session.scanning && session.isStarted()) {
-            if (session.scanError != null) {
+            // Genuine completion (the scan loop ran out of images on its
+            // own) is the only case that should auto-run finish() and write
+            // final reports -- a user-requested Pause, or the
+            // max-review-before-stop halt, both leave stopRequested true and
+            // just need to stop polling until the user clicks Resume.
+            boolean genuinelyComplete = session.scanError == null && !session.stopRequested;
+            if (genuinelyComplete) {
+                if (!finishRequested) {
+                    finishRequested = true;
+                    runFinish();
+                }
+            } else {
                 stopPolling();
-            } else if (!finishRequested) {
-                finishRequested = true;
-                runFinish();
             }
         }
     }
@@ -301,7 +335,10 @@ public class MainFrame extends JFrame {
                 } catch (Exception ex) {
                     showError("Could not write final results: " + ex.getMessage());
                 }
-                startButton.setEnabled(true);
+                // Nothing left to count -- keep both Start/Resume and Pause
+                // disabled. render() below shows where the results landed.
+                startButton.setEnabled(false);
+                pauseButton.setEnabled(false);
                 render(countingService.getSession());
             }
         }.execute();
@@ -318,16 +355,46 @@ public class MainFrame extends JFrame {
             // line push the window wider than its content area.
             statusLabel.setText("<html><body style='width:520px'>Error: "
                 + session.scanError.replace("&", "&amp;").replace("<", "&lt;") + "</body></html>");
+            // Resumable in place, same as a plain Pause -- resumeScan()
+            // clears scanError and continues from where it stopped.
+            startButton.setText("Resume");
             startButton.setEnabled(true);
-            stopButton.setEnabled(false);
+            pauseButton.setEnabled(false);
         } else if (finishRequested && !session.scanning) {
-            statusLabel.setText("Complete — " + session.processed() + " image(s) counted");
+            String dir = countingService.getReportOutputDir();
+            statusLabel.setText("<html><body style='width:520px'>Complete — " + session.processed()
+                + " image(s) counted. Results written to: "
+                + (dir != null ? dir.replace("&", "&amp;").replace("<", "&lt;") : "(unknown)")
+                + "</body></html>");
+            // Nothing left to count -- both buttons stay disabled (set by
+            // runFinish()'s done() callback; re-asserted here too since
+            // render() runs on every poll tick while a scan is active).
+            startButton.setEnabled(false);
+            pauseButton.setEnabled(false);
         } else if (session.scanning) {
             statusLabel.setText("Scanning… " + session.processed() + " / " + session.totalImages());
+            startButton.setEnabled(false);
+            pauseButton.setEnabled(true);
         } else if (session.stopRequested) {
-            statusLabel.setText("Stopping after " + session.processed() + " image(s)…");
+            statusLabel.setText("Paused after " + session.processed() + " / " + session.totalImages() + " image(s)");
+            startButton.setText("Resume");
+            startButton.setEnabled(true);
+            pauseButton.setEnabled(false);
+        } else if (session.isStarted()) {
+            // Scanning just finished naturally but finishRequested hasn't
+            // been set yet -- pollStatus() is about to trigger runFinish()
+            // in the background. Keep both buttons disabled through this
+            // one transitional tick rather than briefly showing Start as
+            // clickable, which would race a fresh startNewSession() against
+            // finish() still reading/writing the same session.
+            statusLabel.setText("Finishing…");
+            startButton.setEnabled(false);
+            pauseButton.setEnabled(false);
         } else {
             statusLabel.setText("Ready");
+            startButton.setText("Start Counting");
+            startButton.setEnabled(true);
+            pauseButton.setEnabled(false);
         }
     }
 

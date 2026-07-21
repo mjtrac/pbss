@@ -55,8 +55,8 @@
             <strong th:text="${r}"></strong>
             <span th:switch="${r.name()}" style="color:var(--muted);font-size:.85rem">
               <span th:case="'ADMIN'"> — manage users and roles; full counter and viewer access</span>
-              <span th:case="'COUNTER_OPERATOR'"> — configure, start, and stop counting (port 8081)</span>
-              <span th:case="'VIEWER'"> — review scanned ballot images (port 8082)</span>
+              <span th:case="'COUNTER_OPERATOR'" th:text="' — configure, start, and stop counting (port ' + ${counterPort} + ')'"></span>
+              <span th:case="'VIEWER'" th:text="' — review scanned ballot images (port ' + ${viewerPort} + ')'"></span>
             </span>
           </label>
         </div>

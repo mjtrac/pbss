@@ -124,6 +124,10 @@ public class CountingService {
 
         s.imageQueue = voteRecord.findImagesRecursive(imgDir);
         if (s.imageQueue.isEmpty()) {
+            if (voteRecord.anyAlreadyCounted(imgDir)) {
+                throw new IllegalArgumentException("All images in this folder have already "
+                    + "been counted — nothing new to scan.");
+            }
             throw new IllegalArgumentException("No image files found in: " + s.imageFolder
                 + " (looking for .png, .jpg, .tif, .bmp)");
         }

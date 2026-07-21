@@ -8,6 +8,7 @@ import com.mjtrac.counter.entity.CounterUser;
 import com.mjtrac.counter.repository.CounterUserRepository;
 import com.mjtrac.counter.service.AuditLogService;
 import com.mjtrac.counter.service.CounterUserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,12 +32,25 @@ public class AdminController {
     private final CounterUserRepository userRepo;
     private final AuditLogService       auditLog;
 
+    @Value("${server.port:8081}")
+    private int counterPort;
+
+    @Value("${viewer.server.port:8082}")
+    private int viewerPort;
+
     public AdminController(CounterUserService userService,
                             CounterUserRepository userRepo,
                             AuditLogService auditLog) {
         this.userService = userService;
         this.userRepo    = userRepo;
         this.auditLog    = auditLog;
+    }
+
+    /** So user-form.html's role descriptions show the actual configured ports, not hardcoded ones. */
+    @ModelAttribute
+    public void addPorts(Model model) {
+        model.addAttribute("counterPort", counterPort);
+        model.addAttribute("viewerPort", viewerPort);
     }
 
     @GetMapping

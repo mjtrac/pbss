@@ -35,10 +35,13 @@ Shared library (not a runnable app) holding the scanner-driving engine that
 local to bScanner — blScanner's FX login and `scanner`'s Swing login
 (`LoginDialog`) both authenticate directly against
 `ScannerUserRepository` + `PasswordEncoder` instead, so neither needs a
-copy of `ScannerUserDetailsService`. `DataInitializer` (seeds the default
-admin user) also stays local to each app that has a login, even though
-it's currently byte-identical across bScanner/blScanner/scanner — same
-reasoning as counter-core's `CounterDataInitializer`: app bootstrap
+copy of `ScannerUserDetailsService`. A `DataInitializer` (seeds the
+default admin user on an empty `scanner_users` table) also stays local to
+each app — bScanner's and blScanner's are byte-identical
+(`com.mjtrac.scanner.service.DataInitializer`); `scanner`'s own
+(`com.mjtrac.scannerui.ScannerDataInitializer`) does the same thing but
+isn't literally the same file, since it lives in a different package.
+Same reasoning as counter's own `CounterDataInitializer`: app bootstrap
 policy, not shared engine logic.
 
 ## Using it

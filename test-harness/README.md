@@ -53,7 +53,40 @@ Options:
 ./run_all.sh --copies 1                        # single copy, fastest run
 ./run_all.sh --reset --dpi 150                 # wipe bCounter's DB + writeins/scribbles/reports
                                                 # first (prompts for confirmation)
+./run_all.sh --use-counter-app                 # skip bCounter entirely — only needs
+                                                # bBuilder running. Launches the `counter`
+                                                # Swing app (foreground, folders pre-filled)
+                                                # so you can watch it count interactively,
+                                                # then launches `viewer` on the same database
+                                                # once you close counter. See
+                                                # "Want to just watch counter count?" below.
 ```
+
+### Want to just watch `counter` count?
+
+If bCounter keeps timing out (or you'd simply rather watch the Swing app
+count in real time than drive the web version), use `--use-counter-app`.
+It runs the exact same Steps 0–4 (build election, mark ballots, apply
+distortions) — the only thing that changes is Step 6: instead of waiting
+for and driving bCounter over HTTP, it launches `counter` in the
+foreground with the ballot-images and ballot-templates folders already
+pre-filled. Sign in (`admin` / `ChangeMe123!` — seeded automatically on a
+fresh `counter_results.db` by `CounterDataInitializer`), confirm the
+folders, click **Start Counting**, and watch it go. Close the window when
+it's done and the script continues: `verify_results.py` runs exactly as
+usual, then `viewer` launches on the same database so you can review the
+ballots it just counted.
+
+Only bBuilder needs to be running for this mode — no bCounter, no
+`localhost:8081` at all. Even bBuilder is optional: Step 1 now only waits
+10 attempts (~30s, not the old 3-minute wait) before falling back —
+regardless of `--use-counter-app` — to creating the test election
+directly via `builder`'s own repositories (`TestElectionBuilder`, no
+bBuilder/HTTP involved at all). It's a smaller test election than
+`build_election.py`'s full multi-precinct/multi-party one (see "What It
+Does" below), but real: a genuine PDF+YAML pair, written into the same
+`~/pbss_data/db/election_ballot.db` bBuilder itself would use, idempotent
+across repeated runs.
 
 ---
 
