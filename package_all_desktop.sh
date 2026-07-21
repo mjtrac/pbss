@@ -20,15 +20,20 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BASE_MODULES="java.base,java.desktop,java.sql,java.net.http,java.naming,java.security.jgss,jdk.crypto.ec,java.logging,java.management,jdk.unsupported,java.instrument"
 
-# dir:jarName:mainClass:extraModules:coreModule
+# dir:artifactId:mainClass:extraModules:coreModule
+# The built jar's actual filename (artifactId-version.jar) is resolved by
+# glob after packaging, not hardcoded here — a hardcoded "-0.9.13.jar" per
+# entry went stale the moment the project bumped to 0.9.14, breaking this
+# script on a fresh clone (cp: target/builder-0.9.13.jar: No such file or
+# directory) even though nothing about the packaging itself was broken.
 APPS=(
-  "builder:builder-0.9.13.jar:com.mjtrac.builderui.Launcher:java.xml:builder-core"
-  "counter:counter-0.9.13.jar:com.mjtrac.counterui.Launcher:java.xml:counter-core"
-  "scanner:scanner-0.9.13.jar:com.mjtrac.scannerui.Launcher::scanner-core"
-  "viewer:viewer-0.9.13.jar:com.mjtrac.viewerui.Launcher::counter-core"
-  "blBuilder:bBuilder-0.9.13.jar:com.mjtrac.ballot.fx.Launcher:java.scripting:builder-core"
-  "blCounter:bCounter-0.9.13.jar:com.mjtrac.counter.fx.Launcher:java.scripting:counter-core"
-  "blScanner:bScanner-0.9.13.jar:com.mjtrac.scanner.fx.Launcher:java.scripting:scanner-core"
+  "builder:builder:com.mjtrac.builderui.Launcher:java.xml:builder-core"
+  "counter:counter:com.mjtrac.counterui.Launcher:java.xml:counter-core"
+  "scanner:scanner:com.mjtrac.scannerui.Launcher::scanner-core"
+  "viewer:viewer:com.mjtrac.viewerui.Launcher::counter-core"
+  "blBuilder:bBuilder:com.mjtrac.ballot.fx.Launcher:java.scripting:builder-core"
+  "blCounter:bCounter:com.mjtrac.counter.fx.Launcher:java.scripting:counter-core"
+  "blScanner:bScanner:com.mjtrac.scanner.fx.Launcher:java.scripting:scanner-core"
 )
 
 WANTED=("$@")
@@ -46,7 +51,7 @@ for core in counter-core scanner-core builder-core; do
 done
 
 for entry in "${APPS[@]}"; do
-  IFS=: read -r dir jar mainclass extra core <<< "$entry"
+  IFS=: read -r dir artifactId mainclass extra core <<< "$entry"
   wanted "$dir" || continue
 
   echo ""
@@ -54,8 +59,25 @@ for entry in "${APPS[@]}"; do
   cd "$SCRIPT_DIR/$dir"
 
   ./mvnw -q clean package -DskipTests
+
+  # Resolve the actual built jar by glob instead of a hardcoded version —
+  # excludes -sources.jar/-javadoc.jar in case the build ever produces them.
+  jar_matches=(target/"$artifactId"-*.jar)
+  jar_path=""
+  for candidate in "${jar_matches[@]}"; do
+    case "$candidate" in
+      *-sources.jar|*-javadoc.jar) continue ;;
+    esac
+    [[ -f "$candidate" ]] && jar_path="$candidate" && break
+  done
+  if [[ -z "$jar_path" ]]; then
+    echo "ERROR: no target/${artifactId}-*.jar found after packaging $dir — build likely failed." >&2
+    exit 1
+  fi
+  jar="$(basename "$jar_path")"
+
   mkdir -p target/lib
-  cp "target/$jar" target/lib/
+  cp "$jar_path" target/lib/
 
   modules="$BASE_MODULES"
   [[ -n "$extra" ]] && modules="$modules,$extra"

@@ -120,6 +120,24 @@ class CountingPipelineGuiTest {
                     + "Original error: " + ex.getMessage());
         }
 
+        // Fail fast with the actual error text if handleStart() rejected the
+        // folders — most commonly because the corpus is already fully
+        // counted from a prior run (findImagesRecursive() skips already-
+        // .counted files, so a stale corpus makes startNewSession() throw
+        // "already been counted" immediately). The alternative is a silent
+        // 20-minute hang below: on that path openResultsButton never gets
+        // enabled and the session never starts, so Pause.pause() just times
+        // out with a generic message that never surfaces the real cause.
+        CountingService countingServiceEarlyCheck = springContext.getBean(CountingService.class);
+        if (!countingServiceEarlyCheck.getSession().isStarted()) {
+            throw new AssertionError("Start Counting did not start a scan — session never entered "
+                + "the started state. messageLabel text: \"" + window.label("messageLabel").text() + "\" "
+                + "(imageFolderField=\"" + window.textBox("imageFolderField").text()
+                + "\", reportFolderField=\"" + window.textBox("reportFolderField").text() + "\") "
+                + "— if the message mentions ballots already being counted, regenerate the corpus: "
+                + "see test-harness/README-desktop.md.");
+        }
+
         // MainFrame auto-runs finish() as soon as scanning completes (no
         // separate Finish button, unlike blCounter's fuller screen) and only
         // enables "Open Results Folder" once that finish() SwingWorker's
