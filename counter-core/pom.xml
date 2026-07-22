@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>counter-core</artifactId>
-  <version>0.9.17</version>
+  <version>0.9.18</version>
   <packaging>jar</packaging>
   <name>counter-core</name>
   <description>Shared ballot-counting engine: entities, repositories, model, and services — pulled from bCounter/blCounter/viewer/counter's identical duplicate copies</description>

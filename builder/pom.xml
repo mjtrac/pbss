@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>builder</artifactId>
-  <version>0.9.17</version>
+  <version>0.9.18</version>
   <name>builder</name>
   <description>Standalone Swing ballot-design tool — full CRUD (jurisdictions, elections, parties, contests, ballot templates) plus PDF generation</description>
 
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>builder-core</artifactId>
-      <version>0.9.17</version>
+      <version>0.9.18</version>
     </dependency>
 
     <!-- Password hashing only — no web filter chain needed -->

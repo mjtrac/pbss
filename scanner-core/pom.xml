@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>scanner-core</artifactId>
-  <version>0.9.17</version>
+  <version>0.9.18</version>
   <packaging>jar</packaging>
   <name>scanner-core</name>
   <description>Shared scanner-driving engine: entity, repository, model, ScanService, ScannerConfig — pulled from bScanner/blScanner's identical duplicate copies</description>

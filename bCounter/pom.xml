@@ -19,7 +19,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bCounter</artifactId>
-  <version>0.9.17</version>
+  <version>0.9.18</version>
   <name>bCounter</name>
   <description>Ballot image scanner and vote counter</description>
 
@@ -36,7 +36,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>counter-core</artifactId>
-      <version>0.9.17</version>
+      <version>0.9.18</version>
     </dependency>
 
     <!-- Web + Thymeleaf UI -->

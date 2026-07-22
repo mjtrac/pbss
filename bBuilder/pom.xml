@@ -7,7 +7,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bBuilder</artifactId>
-  <version>0.9.17</version>
+  <version>0.9.18</version>
   <packaging>jar</packaging>
 
   <parent>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>builder-core</artifactId>
-      <version>0.9.17</version>
+      <version>0.9.18</version>
     </dependency>
 
     <!-- ── Spring Boot Web + Thymeleaf UI ───────────────────────────── -->

@@ -38,6 +38,12 @@ class BallotViewPanelLayoutTest {
         // Back, Prev, Next, Fit, +, − — the toolbar this bug made disappear.
         assertThat(buttons).as("toolbar buttons should exist in the component tree").hasSizeGreaterThanOrEqualTo(6);
         for (JButton button : buttons) {
+            // The Hold button starts intentionally hidden (auto-advance is
+            // off by default, matching viewer-view.js's holdBtn.style.
+            // display='none' in that state) — invisible components get no
+            // real layout space by design, which isn't the bug this test
+            // guards against.
+            if (!button.isVisible()) continue;
             assertThat(button.getWidth()).as(button.getText() + " width").isGreaterThan(0);
             assertThat(button.getHeight()).as(button.getText() + " height").isGreaterThan(0);
         }
