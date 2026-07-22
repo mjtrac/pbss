@@ -47,6 +47,13 @@ public class ScreenshotGenerator {
             "--scanner.backend=command",
             "--scanner.custom.command=cp " + sourcePng + " {output}scanned_ballot_0001.png",
         };
+        // ScannerApp.main() isn't used here (this bypasses it to build the
+        // Spring context with test-only datasource overrides), so the
+        // look-and-feel install() call it would normally do has to happen
+        // here instead — same ordering requirement: before MainFrame gets
+        // eagerly constructed as a Spring bean.
+        PbssTheme.install();
+
         ConfigurableApplicationContext ctx = new SpringApplicationBuilder(ScannerApp.class)
             .web(WebApplicationType.NONE)
             .headless(false)

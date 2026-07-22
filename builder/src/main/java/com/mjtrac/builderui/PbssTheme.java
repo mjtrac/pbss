@@ -5,7 +5,11 @@ package com.mjtrac.builderui;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.UIManager;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 
@@ -38,6 +42,23 @@ final class PbssTheme {
     /** Default per-card palette for HomePanel's step dashboard — overridable via dashboard.card.colors. */
     static final String DEFAULT_DASHBOARD_COLORS =
         "#FDF6E3,#FBEFDD,#F8E7D6,#F3E1DC,#EEE0E8,#E4E6EE,#DCEAE6,#CFE3DC";
+
+    // Every SimpleCrudPanel screen's raw DB primary key column — hidden by
+    // default (not meaningful to jurisdiction election staff), toggleable
+    // from MainFrame's View menu. Listeners let already-built screens (all
+    // 9 CRUD panels are constructed once, eagerly, at startup) update their
+    // table live instead of only on next navigation/refresh.
+    private static boolean showIdColumn = false;
+    private static final java.util.List<Runnable> idColumnListeners = new java.util.ArrayList<>();
+
+    static boolean isShowIdColumn() { return showIdColumn; }
+
+    static void setShowIdColumn(boolean v) {
+        showIdColumn = v;
+        for (Runnable r : idColumnListeners) r.run();
+    }
+
+    static void addIdColumnListener(Runnable r) { idColumnListeners.add(r); }
 
     static void install() {
         FlatLightLaf.setup();
@@ -89,6 +110,52 @@ final class PbssTheme {
         // is dense forms/tables, where the utility sans reads best small).
         Font ui = pickAvailable(13f, "Inter", "IBM Plex Sans", "Segoe UI", "Helvetica Neue");
         UIManager.put("defaultFont", ui);
+    }
+
+    /**
+     * Display serif for screen titles only — paired with the utility sans
+     * everywhere else. Georgia was designed for on-screen legibility at
+     * small sizes (unlike more decorative serifs), and reads as an official
+     * printed-document heading rather than a stylistic flourish, matching
+     * what this software actually produces (paper ballots).
+     */
+    static Font displayFont(float size) {
+        return pickAvailable(size, "Georgia", "PT Serif", "Palatino", "Times New Roman");
+    }
+
+    /**
+     * Standard screen-title treatment: a serif heading over this session's
+     * signature element — a row of small dots evoking a paper ballot's
+     * perforated tear-off stub. Used consistently everywhere a screen title
+     * appears (every SimpleCrudPanel screen, its New/Edit dialogs, Home,
+     * Print) rather than as a one-off decoration.
+     */
+    static JPanel titleBlock(String title) {
+        // BorderLayout, not BoxLayout: BoxLayout implements LayoutManager2,
+        // so when this block sits inside ANOTHER BoxLayout(Y_AXIS) stack
+        // (as it does in scanner's/viewer's MainFrame), that outer layout
+        // queries this container's alignment via
+        // BoxLayout.getLayoutAlignmentX(), which computes its own answer
+        // from this container's *children* — completely ignoring any
+        // setAlignmentX() called on the block itself. That silently broke
+        // left-alignment (a confirmed real bug, not a hypothetical: it
+        // rendered flush-right at roughly x=309 of a 620px-wide window
+        // instead of flush-left). BorderLayout reports a fixed alignment
+        // regardless of children, matching the other (also BorderLayout/
+        // FlowLayout-based) sibling rows in those same BoxLayout stacks.
+        JPanel block = new JPanel(new BorderLayout());
+        block.setOpaque(false);
+        JLabel label = new JLabel(title);
+        label.setFont(displayFont(18f));
+        label.setForeground(INK);
+        block.add(label, BorderLayout.NORTH);
+        PerforationDivider divider = new PerforationDivider();
+        JPanel dividerWrap = new JPanel(new BorderLayout());
+        dividerWrap.setOpaque(false);
+        dividerWrap.setBorder(BorderFactory.createEmptyBorder(6, 0, 4, 0));
+        dividerWrap.add(divider, BorderLayout.CENTER);
+        block.add(dividerWrap, BorderLayout.SOUTH);
+        return block;
     }
 
     /** Falls back through a preference list to whatever's actually installed, ending at the platform default. */

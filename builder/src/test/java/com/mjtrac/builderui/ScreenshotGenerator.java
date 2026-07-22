@@ -116,6 +116,32 @@ public class ScreenshotGenerator {
                 System.out.println("WARNING: contest New dialog did not open");
             }
 
+            // ContestCandidatesDialog isn't reachable via a button from here
+            // without a full New/Edit round-trip — call it directly (same
+            // package) against the seeded Mayor contest instead, polling
+            // for the modal dialog the same way openDialogViaButton() does.
+            Contest mayor = ctx.getBean(ContestRepository.class).findAll().stream()
+                .filter(x -> "Mayor".equals(x.getTitle())).findFirst().orElseThrow();
+            java.util.Set<Window> beforeCandidates = java.util.Set.of(Window.getWindows());
+            SwingUtilities.invokeLater(() -> ContestCandidatesDialog.show(
+                frame, mayor, ctx.getBean(ContestRepository.class),
+                ctx.getBean(BallotLanguageRepository.class), ctx.getBean(CandidateTranslationRepository.class),
+                () -> {}));
+            JDialog candidatesDialog = null;
+            for (int i = 0; i < 50 && candidatesDialog == null; i++) {
+                for (Window w : Window.getWindows()) {
+                    if (w instanceof JDialog d && d.isVisible() && !beforeCandidates.contains(w)) { candidatesDialog = d; break; }
+                }
+                if (candidatesDialog == null) Thread.sleep(100);
+            }
+            if (candidatesDialog != null) {
+                shoot(candidatesDialog, "builder_2c_candidates_dialog.png");
+                JDialog toDispose = candidatesDialog;
+                SwingUtilities.invokeAndWait(toDispose::dispose);
+            } else {
+                System.out.println("WARNING: candidates dialog did not open");
+            }
+
             navigate(frame, "Print");
             shoot(frame, "builder_3_print.png");
 

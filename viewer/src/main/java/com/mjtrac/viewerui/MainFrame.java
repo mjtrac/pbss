@@ -38,7 +38,7 @@ class MainFrame extends JFrame {
               BallotViewService viewService,
               @Value("${app.login-title:pbss Ballot Viewer}") String title,
               @Value("${spring.datasource.url}") String datasourceUrl) {
-        super(title);
+        super(title + " v" + Launcher.readVersion());
         this.authContext = authContext;
         this.loginDialog = loginDialog;
         this.listPanel = listPanel;

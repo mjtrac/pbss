@@ -60,7 +60,7 @@ public class MainFrame extends JFrame {
               @Value("${counter.dark-pct-min:8.0}") double fixedDarkPctMin,
               @Value("${counter.dpi:200}") int fixedDpi,
               @Value("${counter.assumed-paper-width-in:8.5}") double fixedPaperWidthIn) {
-        super("pbss Ballot Counter");
+        super("pbss Ballot Counter v" + Launcher.readVersion());
         this.countingService = countingService;
         this.authContext = authContext;
         this.loginDialog = loginDialog;
@@ -118,6 +118,9 @@ public class MainFrame extends JFrame {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
         int row = 0;
+
+        c.gridy = row++;
+        root.add(PbssTheme.titleBlock("pbss Ballot Counter"), c);
 
         c.gridy = row++;
         root.add(new JLabel("Ballot images folder:"), c);

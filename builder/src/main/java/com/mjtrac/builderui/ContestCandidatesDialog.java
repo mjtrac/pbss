@@ -14,6 +14,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -38,11 +39,27 @@ final class ContestCandidatesDialog {
         JDialog dialog = new JDialog(owner, "Candidates — " + contest.getTitle(), Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setName("candidatesDialog");
 
+        // Contest.candidates already has @OrderBy("displayOrder ASC") at the
+        // JPA level, but sort explicitly here too rather than relying on
+        // `contest` having just come from a fresh fetch — this is the same
+        // in-memory list edited live below, so it needs to stay correct
+        // regardless of how the caller obtained `contest`.
         List<Candidate> working = new ArrayList<>(contest.getCandidates());
+        working.sort(Comparator.comparingInt(Candidate::getDisplayOrder));
         CandidateTableModel model = new CandidateTableModel(working);
         JTable table = new JTable(model);
         table.setName("candidatesTable");
         table.setRowHeight(24);
+        // "Name" (column 0) otherwise defaults to the same narrow
+        // auto-width JTable gives every column here — wide enough for a
+        // real candidate name (many run 20-30+ characters) that the user
+        // shouldn't have to manually drag it wider every time this dialog
+        // opens. "M" is one of the widest common letters, so 30 of them is
+        // a deliberate over-estimate — real names mix narrower letters too
+        // — guaranteeing at least 30 characters actually fit, not just on
+        // average.
+        FontMetrics nameFm = table.getFontMetrics(table.getFont());
+        table.getColumnModel().getColumn(0).setPreferredWidth(nameFm.stringWidth("M") * 30);
         // "Order" (column 3) is numeric entry — a spinner constrains input
         // to valid integers directly, rather than free text parsed (and
         // silently ignored on bad input) after the fact.
@@ -125,7 +142,11 @@ final class ContestCandidatesDialog {
         });
 
         dialog.getContentPane().add(root);
-        dialog.setSize(760, 420);
+        // Widened from 760: the Name column now takes noticeably more of
+        // the row width (see nameFm above), so the remaining free-text
+        // columns (Party, Prefix/Suffix/Explanatory Text) need the extra
+        // room to stay usable rather than being squeezed to near-zero.
+        dialog.setSize(900, 420);
         dialog.setLocationRelativeTo(owner);
         dialog.setVisible(true);
     }
@@ -182,7 +203,17 @@ final class ContestCandidatesDialog {
                 case 8 -> c.setExplanatoryText((String) value);
                 case 9 -> c.setPrintExplanatoryText((Boolean) value);
             }
-            fireTableCellUpdated(row, col);
+            if (col == 3) {
+                // Re-sort immediately on committing a new Order value (the
+                // spinner editor commits when the user leaves the cell/row —
+                // clicking elsewhere, Tab, or Enter — not on every arrow
+                // click while still editing), so the table always shows
+                // print order without needing a close/reopen round-trip.
+                candidates.sort(Comparator.comparingInt(Candidate::getDisplayOrder));
+                fireTableDataChanged();
+            } else {
+                fireTableCellUpdated(row, col);
+            }
         }
     }
 

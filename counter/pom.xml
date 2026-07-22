@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>counter</artifactId>
-  <version>0.9.18</version>
+  <version>0.9.19</version>
   <name>counter</name>
   <description>Standalone Swing ballot-counting control panel — folders, start/stop, results only</description>
 
@@ -25,6 +25,16 @@
   <dependencies>
     <!-- Swing is part of java.desktop (JDK-bundled) — no UI framework dependency needed. -->
 
+    <!-- Modern flat look-and-feel — real theming (colors/fonts/flat design)
+         isn't achievable through UIManager defaults alone. Same version as
+         builder/scanner/viewer's PbssTheme.java, which this module's own
+         copy mirrors. -->
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf</artifactId>
+      <version>3.7.2</version>
+    </dependency>
+
     <!-- Shared ballot-counting engine (entities, repositories, model,
          services) — see counter-core/README.md. Requires
          `mvn install` from ~/pbss2/counter-core before building this
@@ -32,7 +42,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>counter-core</artifactId>
-      <version>0.9.18</version>
+      <version>0.9.19</version>
     </dependency>
 
     <!-- JPA + SQLite — counting writes vote records here, same DB bCounter/blCounter use.

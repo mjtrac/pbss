@@ -77,7 +77,10 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
         JSpinner maxChoicesSpinner = new JSpinner(new SpinnerNumberModel(Math.max(c.getMaxChoices(), 1), 1, 20, 1));
         JSpinner maxRankSpinner = new JSpinner(new SpinnerNumberModel(c.getMaxRankChoices(), 0, 20, 1));
         JSpinner displayOrderSpinner = new JSpinner(new SpinnerNumberModel(c.getDisplayOrder(), 0, 999, 1));
-        JTextArea instructionsArea = wrappingTextArea(c.getInstructions(), 2, 24);
+        // 60 columns (was 24) — wide enough that a typical instructional
+        // sentence doesn't wrap after 3-4 words; still just 2 rows tall, so
+        // a genuinely long paragraph scrolls rather than growing the form.
+        JTextArea instructionsArea = wrappingTextArea(c.getInstructions(), 2, 60);
         titleField.setName("titleField");
         methodCombo.setName("methodCombo");
         maxChoicesSpinner.setName("maxChoicesSpinner");
@@ -90,17 +93,17 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
         groupingLabelField.setName("groupingLabelField");
         printGroupingLabel.setName("printGroupingLabel");
 
-        JTextArea preambleArea = wrappingTextArea(c.getPreamble(), 2, 24);
+        JTextArea preambleArea = wrappingTextArea(c.getPreamble(), 2, 60);
         JCheckBox printPreamble = new JCheckBox("", c.isPrintPreamble());
         preambleArea.setName("preambleArea");
         printPreamble.setName("printPreamble");
 
-        JTextArea postambleArea = wrappingTextArea(c.getPostamble(), 2, 24);
+        JTextArea postambleArea = wrappingTextArea(c.getPostamble(), 2, 60);
         JCheckBox printPostamble = new JCheckBox("", c.isPrintPostamble());
         postambleArea.setName("postambleArea");
         printPostamble.setName("printPostamble");
 
-        JTextArea explanatoryTextArea = wrappingTextArea(c.getExplanatoryText(), 2, 24);
+        JTextArea explanatoryTextArea = wrappingTextArea(c.getExplanatoryText(), 2, 60);
         JCheckBox printExplanatoryText = new JCheckBox("", c.isPrintExplanatoryText());
         JTextField explanatoryLocationField = new JTextField(c.getExplanatoryTextLocation(), 20);
         explanatoryTextArea.setName("explanatoryTextArea");
@@ -145,7 +148,16 @@ class ContestPanel extends SimpleCrudPanel<Contest> {
         addField(grid, row++, "Related:", subScreenButtons);
 
         JScrollPane scroller = new JScrollPane(grid);
-        scroller.setPreferredSize(new Dimension(620, 520));
+        // Widened from 620: that fixed width used to be wider than the grid's
+        // own content, so it was setting the visible/dialog size. Now that
+        // the preamble/postamble/instructions/explanatory text areas are
+        // wider (60 columns, see wrappingTextArea() calls above), the grid's
+        // own preferred width (942px) exceeds the old cap — which didn't
+        // grow the dialog, it just hid the extra width behind a horizontal
+        // scrollbar inside this same fixed viewport, silently undoing the
+        // point of widening those fields. 960 comfortably covers the grid's
+        // current content plus scrollbar/border allowance.
+        scroller.setPreferredSize(new Dimension(960, 520));
         JPanel scrollerWrap = new JPanel(new BorderLayout());
         scrollerWrap.add(scroller, BorderLayout.CENTER);
 

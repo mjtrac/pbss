@@ -19,7 +19,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>bCounter</artifactId>
-  <version>0.9.18</version>
+  <version>0.9.19</version>
   <name>bCounter</name>
   <description>Ballot image scanner and vote counter</description>
 
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>counter-core</artifactId>
-      <version>0.9.18</version>
+      <version>0.9.19</version>
     </dependency>
 
     <!-- JavaFX desktop UI -->

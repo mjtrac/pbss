@@ -100,8 +100,8 @@
     "semantic_hash": "3bba759b28c7925b387ee64541b35156"
   },
   "bCounter/pom.xml": {
-    "mtime": 1784652534.575588,
-    "ast_hash": "56d2188a5140e1752ea87739fc06991f",
+    "mtime": 1784744693.4960787,
+    "ast_hash": "4c284417117f16233757fbac0613c845",
     "semantic_hash": ""
   },
   "bCounter/src/main/resources/static/js/counter-index.js": {
@@ -135,8 +135,8 @@
     "semantic_hash": "3bba759b28c7925b387ee64541b35156"
   },
   "bScanner/pom.xml": {
-    "mtime": 1784652534.5915322,
-    "ast_hash": "edd8b8c7ce46431e78f9e48e7c84430e",
+    "mtime": 1784744693.5196688,
+    "ast_hash": "7bef4e5ad129b0fc854550adfcd219f0",
     "semantic_hash": ""
   },
   "pbss.app/Contents/MacOS/pbss": {
@@ -245,8 +245,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1784659740.5431483,
-    "ast_hash": "0ae48d797f0e474e7beab6391bc52fd4",
+    "mtime": 1784677390.367819,
+    "ast_hash": "7450504c86fcfd90179b528e91049acb",
     "semantic_hash": ""
   },
   "bBuilder/README.md": {
@@ -1195,8 +1195,8 @@
     "semantic_hash": ""
   },
   "blBuilder/pom.xml": {
-    "mtime": 1784652534.5834687,
-    "ast_hash": "ccc8010282a2315b110ff0e527c7629b",
+    "mtime": 1784744693.5025687,
+    "ast_hash": "ef63ec542ce2dc5a2d9251c4e7e1972f",
     "semantic_hash": ""
   },
   "blBuilder/src/main/java/com/mjtrac/ballot/BBuilderFxApplication.java": {
@@ -1375,8 +1375,8 @@
     "semantic_hash": ""
   },
   "blScanner/pom.xml": {
-    "mtime": 1784652534.6108968,
-    "ast_hash": "e17358715b827f1e674ebc9e70de8311",
+    "mtime": 1784744693.514253,
+    "ast_hash": "8dc17d8ddade2f4ed656124a65875892",
     "semantic_hash": ""
   },
   "blScanner/src/main/java/com/mjtrac/scanner/fx/AuthContext.java": {
@@ -1460,8 +1460,8 @@
     "semantic_hash": ""
   },
   "blCounter/pom.xml": {
-    "mtime": 1784652534.5796132,
-    "ast_hash": "d13c0732eb017f9092e4ca4f4bf3ef7b",
+    "mtime": 1784744693.508541,
+    "ast_hash": "40c7c06b66abefc32c8be384ce649585",
     "semantic_hash": ""
   },
   "blCounter/src/main/java/com/mjtrac/counter/CounterFxApplication.java": {
@@ -1675,8 +1675,8 @@
     "semantic_hash": ""
   },
   "builder-core/pom.xml": {
-    "mtime": 1784652534.5957613,
-    "ast_hash": "255ecdcc4921162006370174f4ed8528",
+    "mtime": 1784744693.5250773,
+    "ast_hash": "53d73fa9f6258f089c47b5539a3c68fe",
     "semantic_hash": ""
   },
   "builder-core/src/main/java/com/mjtrac/ballot/config/DatabaseConfig.java": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "builder/pom.xml": {
-    "mtime": 1784672406.6311352,
-    "ast_hash": "40b57d074995c0f701ae1e0dd5f37506",
+    "mtime": 1784744693.530861,
+    "ast_hash": "472b3a0dff8c9e6abca3c060235fcbf6",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/AdminPanel.java": {
@@ -1900,8 +1900,8 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/BallotDesignTemplatePanel.java": {
-    "mtime": 1784672582.3134253,
-    "ast_hash": "3f70d42a58f356d7e1f4bca0ab8b0248",
+    "mtime": 1784696438.0858607,
+    "ast_hash": "c98354192e8d0648e44bdc4c5587128b",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/BallotLanguagePanel.java": {
@@ -1915,23 +1915,23 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/BuilderApp.java": {
-    "mtime": 1784485360.799043,
-    "ast_hash": "2f25c0551f781a4245ae93c192966483",
+    "mtime": 1784678329.5080824,
+    "ast_hash": "347e7711f20b3d899cd06710b8bd303c",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/CandidateTranslationDialog.java": {
-    "mtime": 1784673965.0902557,
-    "ast_hash": "d5c2dd031b90f297a988d600a2d469c1",
+    "mtime": 1784676592.9443564,
+    "ast_hash": "c548d580e3a5e7cf60c388af65a4ac00",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/ContestCandidatesDialog.java": {
-    "mtime": 1784674705.5961394,
-    "ast_hash": "4935acf3c6dbe2150666b602c90edb95",
+    "mtime": 1784744188.0213194,
+    "ast_hash": "7c4b676c2c1c64e70bbb0b3a97df43b0",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/ContestPanel.java": {
-    "mtime": 1784674709.133343,
-    "ast_hash": "25e1baa0de9d2662ce27f8cf0dff0c6a",
+    "mtime": 1784744520.513578,
+    "ast_hash": "39140197c81afff8ca81f5ebc76ca4b7",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/ContestRegionsDialog.java": {
@@ -1940,8 +1940,8 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/ContestTranslationDialog.java": {
-    "mtime": 1784673969.6962104,
-    "ast_hash": "a42b297c0032a83413c63a9009e09bdf",
+    "mtime": 1784676598.715164,
+    "ast_hash": "bd0f757a4aa290536ec0954949fe9ba6",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/ElectionPanel.java": {
@@ -1950,8 +1950,8 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/HomePanel.java": {
-    "mtime": 1784573012.3526187,
-    "ast_hash": "0cd22e590d5e5929c733cada5b704c6d",
+    "mtime": 1784741913.5843472,
+    "ast_hash": "bb905d7310941fdc21bd13828f3348a3",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/JurisdictionCombo.java": {
@@ -1960,18 +1960,18 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/JurisdictionPanel.java": {
-    "mtime": 1784672506.5000384,
-    "ast_hash": "4e4a4f229fd02ee53f375c500eaeeb49",
+    "mtime": 1784676587.8164232,
+    "ast_hash": "6e8d7afed7b64796b6881de8802c9cf4",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/Launcher.java": {
-    "mtime": 1784485113.6872478,
-    "ast_hash": "8f235956eba2b6438de9ee54265fcba8",
+    "mtime": 1784742788.7579648,
+    "ast_hash": "8dc2339f6a6e86abd062827eb774af30",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/MainFrame.java": {
-    "mtime": 1784672440.8942096,
-    "ast_hash": "a0a64c5cc4f981f84888ed1eacc95275",
+    "mtime": 1784742793.510137,
+    "ast_hash": "e0e03928989154091b21f926a2e600a6",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/PartyPanel.java": {
@@ -1980,8 +1980,8 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/PrintPanel.java": {
-    "mtime": 1784672683.7470975,
-    "ast_hash": "68ba8560c2adc8bdaa3dc6d29c00b7f5",
+    "mtime": 1784741906.147991,
+    "ast_hash": "156fc753964f8fba6d0f171a211f8d33",
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/RegionPanel.java": {
@@ -1990,8 +1990,8 @@
     "semantic_hash": ""
   },
   "builder/src/main/java/com/mjtrac/builderui/SimpleCrudPanel.java": {
-    "mtime": 1784672456.9065394,
-    "ast_hash": "4f3890c51e9aa0552bae11afbfc8d49f",
+    "mtime": 1784742401.2752862,
+    "ast_hash": "720aae9ccf469bc29933c47dfb2a1c2c",
     "semantic_hash": ""
   },
   "builder/src/test/java/com/mjtrac/builderui/BuilderEndToEndTest.java": {
@@ -2000,13 +2000,13 @@
     "semantic_hash": ""
   },
   "builder/src/test/java/com/mjtrac/builderui/ScreenshotGenerator.java": {
-    "mtime": 1784673724.654118,
-    "ast_hash": "a17e3c9cb3e6f27a0dc3ef9f6b0f5fce",
+    "mtime": 1784744297.0178666,
+    "ast_hash": "931a23edecb5d0251ceffd3b443968d9",
     "semantic_hash": ""
   },
   "counter-core/pom.xml": {
-    "mtime": 1784652534.614448,
-    "ast_hash": "4187b579cae2dff0b562c4e28dea620f",
+    "mtime": 1784744693.5359988,
+    "ast_hash": "c06ed37b5c2754bf2c3ad1b239343d72",
     "semantic_hash": ""
   },
   "counter-core/src/main/java/com/mjtrac/counter/config/PasswordEncoderConfig.java": {
@@ -2195,8 +2195,8 @@
     "semantic_hash": ""
   },
   "counter/pom.xml": {
-    "mtime": 1784652534.6038754,
-    "ast_hash": "fe086d2061e2dfa1d1530dcab0b7996e",
+    "mtime": 1784744693.5408182,
+    "ast_hash": "071f629b48732eb1a0f8a7f7d6cd3fdd",
     "semantic_hash": ""
   },
   "counter/src/main/java/com/mjtrac/counterui/AuthContext.java": {
@@ -2205,13 +2205,13 @@
     "semantic_hash": ""
   },
   "counter/src/main/java/com/mjtrac/counterui/CounterApp.java": {
-    "mtime": 1784504197.7619028,
-    "ast_hash": "2c85851943fbdc10a123e4018be6c76d",
+    "mtime": 1784742963.8612728,
+    "ast_hash": "622543df04147949f72cdf4c99fb2f26",
     "semantic_hash": ""
   },
   "counter/src/main/java/com/mjtrac/counterui/Launcher.java": {
-    "mtime": 1784479944.7507143,
-    "ast_hash": "cf2cc533e7e07962cf554e64d81f83b6",
+    "mtime": 1784742788.7644982,
+    "ast_hash": "880b57fb39881dbb5ad4ab8d4ab6c5ff",
     "semantic_hash": ""
   },
   "counter/src/main/java/com/mjtrac/counterui/LoginDialog.java": {
@@ -2220,8 +2220,8 @@
     "semantic_hash": ""
   },
   "counter/src/main/java/com/mjtrac/counterui/MainFrame.java": {
-    "mtime": 1784594888.3660083,
-    "ast_hash": "65c92832646b9b852dc0d154e6388570",
+    "mtime": 1784743049.2013347,
+    "ast_hash": "37f07f305f33f5a0f72621cc9e2af1ae",
     "semantic_hash": ""
   },
   "counter/src/test/java/com/mjtrac/counter/service/CountingServiceIntegrationTest.java": {
@@ -2235,8 +2235,8 @@
     "semantic_hash": ""
   },
   "counter/src/test/java/com/mjtrac/counterui/ScreenshotGenerator.java": {
-    "mtime": 1784506848.5162446,
-    "ast_hash": "3c1544ae3701db0aee465e149ad6172e",
+    "mtime": 1784743950.643337,
+    "ast_hash": "2a551538ea04acd53ad65d78b385554f",
     "semantic_hash": ""
   },
   "package_all_desktop.sh": {
@@ -2245,8 +2245,8 @@
     "semantic_hash": ""
   },
   "scanner-core/pom.xml": {
-    "mtime": 1784652534.6073437,
-    "ast_hash": "e80e4bb0dfe11ba82646fe08eb29148b",
+    "mtime": 1784744693.545745,
+    "ast_hash": "185220e388a6d6744810cf80d879ae41",
     "semantic_hash": ""
   },
   "scanner-core/src/main/java/com/mjtrac/scanner/config/ScannerConfig.java": {
@@ -2295,8 +2295,8 @@
     "semantic_hash": ""
   },
   "scanner/pom.xml": {
-    "mtime": 1784652534.6000364,
-    "ast_hash": "65fbbda239f38a5299571042e8db0954",
+    "mtime": 1784744693.5503707,
+    "ast_hash": "f080b1914150a804c17443313a5e316e",
     "semantic_hash": ""
   },
   "scanner/src/main/java/com/mjtrac/scannerui/AuthContext.java": {
@@ -2310,8 +2310,8 @@
     "semantic_hash": ""
   },
   "scanner/src/main/java/com/mjtrac/scannerui/Launcher.java": {
-    "mtime": 1784482985.9598618,
-    "ast_hash": "ed85ece89ad44b0725d01f7d9d9cf04e",
+    "mtime": 1784742788.7700691,
+    "ast_hash": "383b656f7f4aafe743a4de43dab399f4",
     "semantic_hash": ""
   },
   "scanner/src/main/java/com/mjtrac/scannerui/LoginDialog.java": {
@@ -2320,18 +2320,18 @@
     "semantic_hash": ""
   },
   "scanner/src/main/java/com/mjtrac/scannerui/MainFrame.java": {
-    "mtime": 1784501072.1532211,
-    "ast_hash": "c7a1d3885461382d632189b471902675",
+    "mtime": 1784743913.469242,
+    "ast_hash": "73372b24be4837c66de42ec786c2fd1d",
     "semantic_hash": ""
   },
   "scanner/src/main/java/com/mjtrac/scannerui/ScannerApp.java": {
-    "mtime": 1784500834.127219,
-    "ast_hash": "4d8352564c80d0b6cade2d688303db26",
+    "mtime": 1784742971.8503227,
+    "ast_hash": "134387c3ba953fe70155ba261396cc88",
     "semantic_hash": ""
   },
   "scanner/src/test/java/com/mjtrac/scannerui/ScreenshotGenerator.java": {
-    "mtime": 1784507105.4041412,
-    "ast_hash": "14ac9a328c85929a3ad327b14de856b7",
+    "mtime": 1784743956.1594179,
+    "ast_hash": "0e4e7c3886c2a7494dc22795f2344f91",
     "semantic_hash": ""
   },
   "test-harness/run_desktop_gui_pipeline.sh": {
@@ -2345,8 +2345,8 @@
     "semantic_hash": ""
   },
   "viewer/pom.xml": {
-    "mtime": 1784652534.620519,
-    "ast_hash": "0c3fde49a39b7bc9c670e6c97776e9ff",
+    "mtime": 1784744693.5556169,
+    "ast_hash": "5a8eeccb8d6ebdb48103cff7c3ecfa59",
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/AuthContext.java": {
@@ -2355,13 +2355,13 @@
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/BallotListPanel.java": {
-    "mtime": 1784503865.0654876,
-    "ast_hash": "8dcf26f0dabe9edee8a332b221375dc0",
+    "mtime": 1784743101.782844,
+    "ast_hash": "d00ae1e72d9a6f93f0f90a8f3ef294fe",
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/BallotViewPanel.java": {
-    "mtime": 1784525185.9159951,
-    "ast_hash": "109bdb071db3db1dc99a16ef253509dd",
+    "mtime": 1784739608.4868357,
+    "ast_hash": "a204ec5e2046aaddd72ecb30508bf8b7",
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/ContestCandidateWindow.java": {
@@ -2375,8 +2375,8 @@
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/Launcher.java": {
-    "mtime": 1784503908.0692885,
-    "ast_hash": "94e9e3cc54985fd10cfd4780c9bc2ae4",
+    "mtime": 1784742788.7756147,
+    "ast_hash": "d445abb514b323fe507c90f92f991f05",
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/LoginDialog.java": {
@@ -2385,8 +2385,8 @@
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/MainFrame.java": {
-    "mtime": 1784525324.005041,
-    "ast_hash": "d5c7a78ae6f53cb5b3f4c8e4f7236f51",
+    "mtime": 1784742807.04307,
+    "ast_hash": "8672cff0c0a19cbdfc1ae700bf16ada8",
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/OverlayImagePanel.java": {
@@ -2395,13 +2395,13 @@
     "semantic_hash": ""
   },
   "viewer/src/main/java/com/mjtrac/viewerui/ViewerApp.java": {
-    "mtime": 1784503865.058591,
-    "ast_hash": "f9a64f2c755df5d0faff13c972b727eb",
+    "mtime": 1784742978.7423577,
+    "ast_hash": "9d883ebd72b91eab67c65922ddea7db4",
     "semantic_hash": ""
   },
   "viewer/src/test/java/com/mjtrac/viewerui/BallotViewPanelLayoutTest.java": {
-    "mtime": 1784525467.7358115,
-    "ast_hash": "c8aba4e06aaf770e39ece7f4abfac5a6",
+    "mtime": 1784737144.9024234,
+    "ast_hash": "0b6a74cd067621bbc39cb47e5f300efc",
     "semantic_hash": ""
   },
   "viewer/src/test/java/com/mjtrac/viewerui/ContestCandidateWindowTest.java": {
@@ -2415,8 +2415,8 @@
     "semantic_hash": ""
   },
   "viewer/src/test/java/com/mjtrac/viewerui/ScreenshotGenerator.java": {
-    "mtime": 1784525741.4934874,
-    "ast_hash": "7d9f9f18194cb02a710d32e0b907e617",
+    "mtime": 1784743961.3206587,
+    "ast_hash": "edfd4f92c60afcda31fb64d59888c424",
     "semantic_hash": ""
   },
   "blCounter/README.md": {
@@ -2535,8 +2535,8 @@
     "semantic_hash": ""
   },
   "builder/src/test/java/com/mjtrac/builderui/AbstractBuilderGuiTest.java": {
-    "mtime": 1784673724.648974,
-    "ast_hash": "e6da71371dcba1f1b2cd5533d1ee9e3f",
+    "mtime": 1784696083.5748699,
+    "ast_hash": "554293ad961dc38a5c6199d24a5ec865",
     "semantic_hash": ""
   },
   "builder/src/test/java/com/mjtrac/builderui/AdminUserCrudGuiTest.java": {
@@ -2620,8 +2620,53 @@
     "semantic_hash": ""
   },
   "builder/src/test/java/com/mjtrac/builderui/DesktopElectionBuilder.java": {
-    "mtime": 1784675751.0410895,
-    "ast_hash": "cb11ab43ef354d105892a141671ad109",
+    "mtime": 1784696097.3162637,
+    "ast_hash": "56eccb4426d38e4042dc61c3ccc4af34",
+    "semantic_hash": ""
+  },
+  "builder/src/main/java/com/mjtrac/builderui/PbssTheme.java": {
+    "mtime": 1784743819.4455345,
+    "ast_hash": "fe5e7941187ba0816a7f4901f7f27f57",
+    "semantic_hash": ""
+  },
+  "builder/src/test/java/com/mjtrac/builderui/CandidateOrderSpinnerGuiTest.java": {
+    "mtime": 1784696545.893836,
+    "ast_hash": "2a10a53df87ab79335bcae6108037761",
+    "semantic_hash": ""
+  },
+  "builder/src/main/java/com/mjtrac/builderui/PerforationDivider.java": {
+    "mtime": 1784741890.2485359,
+    "ast_hash": "1cda9d53c85a8a7f0bd313e239e77245",
+    "semantic_hash": ""
+  },
+  "counter/src/main/java/com/mjtrac/counterui/PbssTheme.java": {
+    "mtime": 1784743867.947149,
+    "ast_hash": "0c47810e91fd2e2a97fd369174a82f38",
+    "semantic_hash": ""
+  },
+  "counter/src/main/java/com/mjtrac/counterui/PerforationDivider.java": {
+    "mtime": 1784742939.7238615,
+    "ast_hash": "46e2a8c67c03ec0e46a1a4f0e9ea4def",
+    "semantic_hash": ""
+  },
+  "scanner/src/main/java/com/mjtrac/scannerui/PbssTheme.java": {
+    "mtime": 1784743875.3202817,
+    "ast_hash": "10d486521effdb016aa4a5aa99096cf1",
+    "semantic_hash": ""
+  },
+  "scanner/src/main/java/com/mjtrac/scannerui/PerforationDivider.java": {
+    "mtime": 1784742946.983094,
+    "ast_hash": "3525747b35a169d55c0c574ece128415",
+    "semantic_hash": ""
+  },
+  "viewer/src/main/java/com/mjtrac/viewerui/PbssTheme.java": {
+    "mtime": 1784743875.323668,
+    "ast_hash": "fd403de14310fa43de5f5fb29d3c99bc",
+    "semantic_hash": ""
+  },
+  "viewer/src/main/java/com/mjtrac/viewerui/PerforationDivider.java": {
+    "mtime": 1784742953.5378804,
+    "ast_hash": "03753d8bc94d67e3c196ff6a6509f127",
     "semantic_hash": ""
   }
 }

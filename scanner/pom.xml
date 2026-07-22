@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>scanner</artifactId>
-  <version>0.9.18</version>
+  <version>0.9.19</version>
   <name>scanner</name>
   <description>Standalone Swing scanner-driving control panel — output folder, start/stop, start/end notes, results only</description>
 
@@ -25,6 +25,16 @@
   <dependencies>
     <!-- Swing is part of java.desktop (JDK-bundled) — no UI framework dependency needed. -->
 
+    <!-- Modern flat look-and-feel — real theming (colors/fonts/flat design)
+         isn't achievable through UIManager defaults alone. Same version as
+         builder/counter/viewer's PbssTheme.java, which this module's own
+         copy mirrors. -->
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf</artifactId>
+      <version>3.7.2</version>
+    </dependency>
+
     <!-- Shared scanner-driving engine (entity, repository, model,
          ScanService, ScannerConfig) — see scanner-core/README.md. Requires
          `mvn install` from ~/pbss2/scanner-core before building this
@@ -32,7 +42,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>scanner-core</artifactId>
-      <version>0.9.18</version>
+      <version>0.9.19</version>
     </dependency>
 
     <!-- SQLite driver + dialect — this app's own datasource concern -->

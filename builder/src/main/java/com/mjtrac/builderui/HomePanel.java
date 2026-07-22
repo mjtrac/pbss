@@ -82,9 +82,7 @@ class HomePanel extends JPanel {
         super(new BorderLayout(8, 8));
         setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        JLabel title = new JLabel("pbss Ballot Builder");
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 20f));
-        add(title, BorderLayout.NORTH);
+        add(PbssTheme.titleBlock("pbss Ballot Builder"), BorderLayout.NORTH);
 
         JPanel steps = new JPanel();
         steps.setLayout(new BoxLayout(steps, BoxLayout.Y_AXIS));

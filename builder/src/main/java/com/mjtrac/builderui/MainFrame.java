@@ -30,7 +30,7 @@ public class MainFrame extends JFrame {
               BallotDesignTemplatePanel ballotDesignTemplatePanel, ContestPanel contestPanel,
               PrintPanel printPanel,
               @Value("${dashboard.card.colors:" + PbssTheme.DEFAULT_DASHBOARD_COLORS + "}") String dashboardCardColors) {
-        super("pbss Ballot Builder");
+        super("pbss Ballot Builder v" + Launcher.readVersion());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 780);
         setLocationRelativeTo(null);
@@ -95,6 +95,14 @@ public class MainFrame extends JFrame {
         addItem(admin, "Jurisdictions");
         addItem(admin, "Admin (Users)");
         bar.add(admin);
+
+        JMenu view = new JMenu("View");
+        view.setName("viewMenu");
+        JCheckBoxMenuItem showIdColumn = new JCheckBoxMenuItem("Show ID Column", PbssTheme.isShowIdColumn());
+        showIdColumn.setName("showIdColumnMenuItem");
+        showIdColumn.addActionListener(e -> PbssTheme.setShowIdColumn(showIdColumn.isSelected()));
+        view.add(showIdColumn);
+        bar.add(view);
 
         return bar;
     }

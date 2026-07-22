@@ -46,7 +46,7 @@ public class MainFrame extends JFrame {
     private Timer pollTimer;
 
     MainFrame(ScanService scanService, ScannerConfig config, AuthContext authContext, LoginDialog loginDialog) {
-        super("pbss Scanner");
+        super("pbss Scanner v" + Launcher.readVersion());
         this.scanService = scanService;
         this.config = config;
         this.authContext = authContext;
@@ -71,6 +71,12 @@ public class MainFrame extends JFrame {
         JPanel root = new JPanel();
         root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
         root.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+        JPanel titleBlock = PbssTheme.titleBlock("pbss Scanner");
+        // Stretch to the full row width, same as every field below it —
+        // capping only height, not width, to Integer.MAX_VALUE.
+        titleBlock.setMaximumSize(new Dimension(Integer.MAX_VALUE, titleBlock.getPreferredSize().height));
+        root.add(titleBlock);
 
         root.add(labeled("Output folder:", folderRow(outputDirField)));
         root.add(Box.createVerticalStrut(8));

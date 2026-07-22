@@ -99,7 +99,7 @@ class PrintPanel extends JPanel {
         buttons.add(generateBtn);
         buttons.add(openFolderButton);
 
-        add(new JLabel("Generate Ballot PDF"), BorderLayout.NORTH);
+        add(PbssTheme.titleBlock("Generate Ballot PDF"), BorderLayout.NORTH);
         add(grid, BorderLayout.CENTER);
         JPanel south = new JPanel(new BorderLayout());
         south.add(messageLabel, BorderLayout.NORTH);

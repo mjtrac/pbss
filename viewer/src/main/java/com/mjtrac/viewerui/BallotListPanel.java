@@ -90,7 +90,16 @@ class BallotListPanel extends JPanel {
         pathRow.add(showPathBox);
         filters.add(pathRow);
 
-        add(filters, BorderLayout.NORTH);
+        JPanel north = new JPanel();
+        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
+        JPanel titleBlock = PbssTheme.titleBlock("Ballots");
+        // java.awt.Component fully qualified: org.springframework.stereotype.Component
+        // is imported explicitly above and shadows the java.awt.* wildcard's Component.
+        titleBlock.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        filters.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        north.add(titleBlock);
+        north.add(filters);
+        add(north, BorderLayout.NORTH);
 
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getColumnModel().getColumn(0).setMaxWidth(80);

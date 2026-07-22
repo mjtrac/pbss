@@ -14,7 +14,7 @@
 
   <groupId>com.mjtrac</groupId>
   <artifactId>viewer</artifactId>
-  <version>0.9.18</version>
+  <version>0.9.19</version>
   <name>viewer</name>
   <description>Standalone Swing ballot image viewer — reads the same counter_results.db as bCounter/blCounter</description>
 
@@ -26,6 +26,16 @@
     <!-- Swing is part of java.desktop (JDK-bundled) — no UI framework
          dependency needed, unlike blScanner/blBuilder/blCounter's JavaFX. -->
 
+    <!-- Modern flat look-and-feel — real theming (colors/fonts/flat design)
+         isn't achievable through UIManager defaults alone. Same version as
+         builder/counter/scanner's PbssTheme.java, which this module's own
+         copy mirrors. -->
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf</artifactId>
+      <version>3.7.2</version>
+    </dependency>
+
     <!-- Shared ballot-counting engine (entities, repositories,
          BallotViewService, PasswordEncoderConfig) — see
          counter-core/README.md. Requires `mvn install` from
@@ -36,7 +46,7 @@
     <dependency>
       <groupId>com.mjtrac</groupId>
       <artifactId>counter-core</artifactId>
-      <version>0.9.18</version>
+      <version>0.9.19</version>
     </dependency>
 
     <!-- SQLite driver + dialect — this app's own datasource concern -->

@@ -20,7 +20,7 @@ public class Launcher {
         return readProperty("name", "scanner");
     }
 
-    private static String readVersion() {
+    static String readVersion() {
         return readProperty("version", "unknown");
     }
 

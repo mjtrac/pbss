@@ -38,6 +38,15 @@ public class ScannerApp {
     }
 
     public static void main(String[] args) {
+        // Must run before the Spring context is built below, not after: the
+        // context eagerly constructs MainFrame as part of bean
+        // initialization, so a look-and-feel installed afterward has
+        // nothing left to affect. (The old post-hoc
+        // UIManager.setLookAndFeel() call this replaces ran too late to
+        // matter for the same reason — it only affects components created
+        // after it runs, and MainFrame was already fully built by then.)
+        PbssTheme.install();
+
         // Spring Boot sets java.awt.headless=true by default — must be
         // turned off explicitly or every AWT/Swing window constructor
         // throws HeadlessException.
@@ -46,13 +55,6 @@ public class ScannerApp {
             .headless(false)
             .run(args);
 
-        SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ignored) {
-                // Fall back to the default cross-platform look and feel.
-            }
-            ctx.getBean(MainFrame.class).start();
-        });
+        SwingUtilities.invokeLater(() -> ctx.getBean(MainFrame.class).start());
     }
 }

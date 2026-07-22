@@ -5,6 +5,8 @@ package com.mjtrac.builderui;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -24,6 +26,10 @@ abstract class SimpleCrudPanel<T> extends JPanel {
     private final RowModel model;
     private final JTable table;
     private final JPanel buttons;
+    // Every screen's first column, by the class-level convention every
+    // subclass follows ({"ID", ...}) — captured once so it can be removed
+    // from / restored to the column model as PbssTheme's global toggle changes.
+    private final TableColumn idColumn;
     private boolean firstRefreshDone = false;
 
     SimpleCrudPanel(String title, String[] columnNames, Function<T, Object[]> rowValues) {
@@ -48,9 +54,12 @@ abstract class SimpleCrudPanel<T> extends JPanel {
         this.model = new RowModel();
         this.table = new JTable(model);
         table.setName(idPrefix + "Table");
+        this.idColumn = table.getColumnModel().getColumn(0);
+        applyIdColumnVisibility();
+        PbssTheme.addIdColumnListener(this::applyIdColumnVisibility);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        add(new JLabel(title), BorderLayout.NORTH);
+        add(PbssTheme.titleBlock(title), BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -95,6 +104,21 @@ abstract class SimpleCrudPanel<T> extends JPanel {
 
     private final String[] columnNames;
     private final Function<T, Object[]> rowValues;
+
+    /** Adds/removes the ID column to match PbssTheme's global toggle — idempotent, safe to call from the listener on every flip. */
+    private void applyIdColumnVisibility() {
+        TableColumnModel cm = table.getColumnModel();
+        boolean present = false;
+        for (int i = 0; i < cm.getColumnCount(); i++) {
+            if (cm.getColumn(i) == idColumn) { present = true; break; }
+        }
+        if (PbssTheme.isShowIdColumn() && !present) {
+            cm.addColumn(idColumn);
+            cm.moveColumn(cm.getColumnCount() - 1, 0);
+        } else if (!PbssTheme.isShowIdColumn() && present) {
+            cm.removeColumn(idColumn);
+        }
+    }
 
     /** Lets a subclass add its own button(s) next to New/Edit/Delete/Refresh — e.g. a quick-setup shortcut. */
     protected final void addToolbarButton(JButton button) {
@@ -147,7 +171,7 @@ abstract class SimpleCrudPanel<T> extends JPanel {
     static JPanel formShell(String title, JPanel fields, Runnable onSave, Runnable onCancel) {
         JPanel root = new JPanel(new BorderLayout(8, 8));
         root.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-        root.add(new JLabel(title), BorderLayout.NORTH);
+        root.add(PbssTheme.titleBlock(title), BorderLayout.NORTH);
         root.add(fields, BorderLayout.CENTER);
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton save = new JButton("Save");

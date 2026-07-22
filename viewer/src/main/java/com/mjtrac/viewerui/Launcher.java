@@ -23,7 +23,7 @@ public class Launcher {
         return readProperty("name", "viewer");
     }
 
-    private static String readVersion() {
+    static String readVersion() {
         return readProperty("version", "unknown");
     }
 
