@@ -42,18 +42,22 @@
     <h3>Print Audit Log</h3>
     <table>
       <thead>
-        <tr><th>User</th><th>Combination ID</th><th>Paper Size</th><th>Copies</th><th>Printed At</th></tr>
+        <tr><th>User</th><th>OS User</th><th>Hostname</th><th>Machine Serial</th>
+            <th>Combination ID</th><th>Paper Size</th><th>Copies</th><th>Printed At</th></tr>
       </thead>
       <tbody>
         <tr th:each="l : ${printLogs}">
           <td th:text="${l.printedBy != null ? l.printedBy.username : '—'}"></td>
+          <td th:text="${l.osUsername != null ? l.osUsername : '—'}"></td>
+          <td th:text="${l.hostname != null ? l.hostname : '—'}"></td>
+          <td th:text="${l.machineSerial != null ? l.machineSerial : '—'}"></td>
           <td th:text="${l.ballotCombination != null ? l.ballotCombination.id : '—'}"></td>
           <td th:text="${l.paperSize}"></td>
           <td th:text="${l.copies}"></td>
           <td th:text="${l.printedAt}"></td>
         </tr>
         <tr th:if="${#lists.isEmpty(printLogs)}">
-          <td colspan="5" class="empty">No ballots printed yet.</td>
+          <td colspan="8" class="empty">No ballots printed yet.</td>
         </tr>
       </tbody>
     </table>

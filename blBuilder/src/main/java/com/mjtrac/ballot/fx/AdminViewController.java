@@ -125,7 +125,20 @@ public class AdminViewController {
         paperCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("paperSize"));
         paperCol.setPrefWidth(140);
 
-        printLogTable.getColumns().setAll(List.of(whenCol, byCol, copiesCol, paperCol));
+        TableColumn<PrintLog, String> osUserCol = new TableColumn<>("OS User");
+        osUserCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("osUsername"));
+        osUserCol.setPrefWidth(110);
+
+        TableColumn<PrintLog, String> hostnameCol = new TableColumn<>("Hostname");
+        hostnameCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("hostname"));
+        hostnameCol.setPrefWidth(140);
+
+        TableColumn<PrintLog, String> serialCol = new TableColumn<>("Machine Serial");
+        serialCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("machineSerial"));
+        serialCol.setPrefWidth(140);
+
+        printLogTable.getColumns().setAll(
+            List.of(whenCol, byCol, osUserCol, hostnameCol, serialCol, copiesCol, paperCol));
     }
 
     private void refresh() {

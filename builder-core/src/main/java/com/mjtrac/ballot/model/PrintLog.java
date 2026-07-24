@@ -44,6 +44,22 @@ public class PrintLog {
     /** Snapshot of the paper size used at time of printing. */
     private String paperSize;
 
+    // ── Machine identity (see MachineIdentityService) ──────────────────
+    // These three capture *where* and *as whom, at the OS level* the print
+    // actually ran -- distinct from printedBy above, which is the pbss
+    // User asserted through the GUI's own "Printed by" picker. All three
+    // are best-effort and may be null (e.g. machineSerial is frequently
+    // unavailable on Linux without root).
+
+    /** OS account the app process was running under when this print happened. */
+    private String osUsername;
+
+    /** Machine hostname at the time of printing. */
+    private String hostname;
+
+    /** Hardware serial number, if the platform/permissions allowed reading it. */
+    private String machineSerial;
+
     // ── Getters & Setters ─────────────────────────────────────
 
     public Long getId() { return id; }
@@ -65,4 +81,13 @@ public class PrintLog {
 
     public String getPaperSize() { return paperSize; }
     public void setPaperSize(String paperSize) { this.paperSize = paperSize; }
+
+    public String getOsUsername() { return osUsername; }
+    public void setOsUsername(String osUsername) { this.osUsername = osUsername; }
+
+    public String getHostname() { return hostname; }
+    public void setHostname(String hostname) { this.hostname = hostname; }
+
+    public String getMachineSerial() { return machineSerial; }
+    public void setMachineSerial(String machineSerial) { this.machineSerial = machineSerial; }
 }

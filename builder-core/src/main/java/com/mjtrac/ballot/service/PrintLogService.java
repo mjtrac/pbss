@@ -20,6 +20,8 @@ import com.mjtrac.ballot.model.BallotCombination;
 import com.mjtrac.ballot.model.PrintLog;
 import com.mjtrac.ballot.model.User;
 import com.mjtrac.ballot.repository.PrintLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,21 +34,40 @@ import java.util.List;
 @Service
 public class PrintLogService {
 
-    private final PrintLogRepository printLogRepo;
+    private static final Logger log = LoggerFactory.getLogger(PrintLogService.class);
 
-    public PrintLogService(PrintLogRepository printLogRepo) {
+    private final PrintLogRepository printLogRepo;
+    private final MachineIdentityService machineIdentity;
+
+    public PrintLogService(PrintLogRepository printLogRepo, MachineIdentityService machineIdentity) {
         this.printLogRepo = printLogRepo;
+        this.machineIdentity = machineIdentity;
     }
 
     @Transactional
     public PrintLog record(User user, BallotCombination combination,
                            String paperSize, int copies) {
-        PrintLog log = new PrintLog();
-        log.setPrintedBy(user);
-        log.setBallotCombination(combination);
-        log.setPaperSize(paperSize);
-        log.setCopies(copies);
-        return printLogRepo.save(log);
+        PrintLog entry = new PrintLog();
+        entry.setPrintedBy(user);
+        entry.setBallotCombination(combination);
+        entry.setPaperSize(paperSize);
+        entry.setCopies(copies);
+        // The GUI's own asserted "Printed by" user, plus the OS-level
+        // identity of who/what machine actually ran the print -- these can
+        // legitimately differ (e.g. one shared login attributing prints to
+        // different pbss Users), and both matter for an audit trail.
+        entry.setOsUsername(machineIdentity.osUsername());
+        entry.setHostname(machineIdentity.hostname());
+        entry.setMachineSerial(machineIdentity.machineSerial());
+        entry = printLogRepo.save(entry);
+
+        log.info("Ballot printed: printedByUser={} osUsername={} hostname={} machineSerial={} "
+                + "combinationId={} paperSize={} copies={} printedAt={}",
+            user != null ? user.getUsername() : null, entry.getOsUsername(), entry.getHostname(),
+            entry.getMachineSerial() != null ? entry.getMachineSerial() : "(unavailable)",
+            combination != null ? combination.getId() : null, paperSize, copies, entry.getPrintedAt());
+
+        return entry;
     }
 
     public List<PrintLog> getByUser(Long userId) {
