@@ -1,0 +1,89 @@
+name: Build desktop executables
+
+# Builds native app-image executables for macOS (Apple Silicon), Windows,
+# and Linux using this repo's own package_all_desktop.sh -- jpackage does
+# not cross-compile, so each platform's build has to actually run on that
+# platform; a GitHub Actions matrix gives us all three without needing
+# real Windows/Linux hardware.
+#
+# Trigger it either by:
+#   - pushing a version tag (git tag v0.9.22 && git push origin v0.9.22)
+#     -- creates/updates a GitHub Release for that tag and attaches the
+#     zipped executables to it, or
+#   - the "Run workflow" button on the Actions tab (workflow_dispatch)
+#     -- builds and uploads as workflow artifacts only, no public Release,
+#     useful for testing this workflow itself before cutting a real tag.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # only actually needed for the tag-triggered Release step
+
+# The four native Swing/Spring Boot desktop apps -- see package_all_desktop.sh's
+# own header comment ("the four recommended ones"). blBuilder/blCounter/
+# blScanner (JavaFX) can be added here too; see the README note below.
+env:
+  APPS: builder counter scanner viewer
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            platform: macos-arm64
+          - os: windows-latest
+            platform: windows-x64
+          - os: ubuntu-22.04
+            platform: linux-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build native app images
+        shell: bash
+        run: ./package_all_desktop.sh $APPS
+
+      - name: Zip each app image for download
+        shell: bash
+        run: |
+          mkdir -p dist-zips
+          for app in $APPS; do
+            src="$app/target/dist"
+            if [ -d "$src" ]; then
+              python3 -c "import shutil; shutil.make_archive('dist-zips/${app}-${{ matrix.platform }}', 'zip', '$src')"
+            else
+              echo "WARNING: $src not found -- $app build likely failed" >&2
+              exit 1
+            fi
+          done
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.platform }}
+          path: dist-zips/*.zip
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --title "${{ github.ref_name }}" \
+            --notes "Automated desktop build for ${{ github.ref_name }}." \
+            || true
+          gh release upload "${{ github.ref_name }}" dist-zips/*.zip \
+            --repo "${{ github.repository }}" --clobber
