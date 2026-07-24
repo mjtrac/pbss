@@ -38,6 +38,12 @@ which remain available and are described further down.
 | **scanner** | Drive a physical document scanner (NAPS2, `scanimage`, or a custom command) to produce ballot images, plus operator start/end notes. | `ScannerUser` — `ADMINISTRATOR` or `OPERATOR` |
 | **viewer** | Review scanned ballot images with vote-indicator overlays, read-only. | `CounterUser` — `VIEWER` or `ADMIN` |
 
+**Download pre-built apps:** no need to build from source — the
+**[Releases page](https://github.com/mjtrac/pbss/releases/latest)** has
+ready-to-run downloads of all four for macOS (Apple Silicon), Windows, and
+Linux. Each is a self-contained zip with its own bundled Java runtime —
+unzip and run, nothing else to install.
+
 **Default login for counter/scanner/viewer:** `admin` / `ChangeMe123!` —
 each app seeds this account automatically the first time it runs against
 an empty database, so you can sign in immediately to explore. Change the
